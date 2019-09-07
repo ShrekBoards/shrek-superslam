@@ -4,18 +4,27 @@ use byteorder::{LittleEndian, BigEndian, ReadBytesExt};
 
 use crate::args::Console;
 
+/// Type representing a single entry in the game's MASTER.DIR file, which in
+/// turn describes a single compressed file in the MASTER.DAT file.
 pub struct MasterDirEntry {
-    pub offset : u32,
-    pub malloc_size : u32,
-    pub orig_size : u32,
-    pub name : String,
+    pub offset : u32,      // The offset of the file in the MASTER.DAT file
+    pub malloc_size : u32, // A number related to the decompressed size
+    pub orig_size : u32,   // The compressed size of the file
+    pub name : String,     // The path of the file, relative from data/
 }
 
+/// Type representing the MASTER.DIR file - a collection of MasterDirEntry
 pub struct MasterDir {
     pub entries: Vec<MasterDirEntry>,
 }
 
 impl MasterDirEntry {
+    /// Create a new MasterDirEntry
+    ///
+    /// \param entry   The bytes making up the entry in the MASTER.DIR file
+    /// \param console The console this version of the file is from
+    ///
+    /// \returns A new MASTER.DIR entry from the provided bytes
     pub fn new(entry : &[u8], console : &Console) -> MasterDirEntry {
 
         let offset = match console {
@@ -43,6 +52,12 @@ impl MasterDirEntry {
 }
 
 impl MasterDir {
+    /// Creates a new MasterDir object from the MASTER.DIR file
+    ///
+    /// \param master_dir The bytes of the entire MASTER.DIR file
+    /// \param console    The console this version of the file is from
+    ///
+    /// \returns A new MasterDir of the enumerated MASTER.DIR entries
     pub fn new(master_dir : Vec<u8>, console : &Console) -> MasterDir { 
 
         // The file begins as a series of 32-bit offsets to the real entries
@@ -68,7 +83,7 @@ impl MasterDir {
         // These offsets can now be used to index each entry within the file
         let mut entries : Vec<MasterDirEntry> = vec!();
         let mut it = offsets.iter().enumerate().peekable();
-        while let Some((idx, offset)) = it.next() {
+        while let Some((_, offset)) = it.next() {
             let lower = *offset as usize;
             let upper = match it.peek() {
                 Some((_, x)) => (**x - 1) as usize,

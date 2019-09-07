@@ -2,10 +2,13 @@ use std::env;
 use std::fs;
 use std::process;
 
-mod args;
-mod dir;
+extern crate shrek_superslam;
+use shrek_superslam::master_dir::MasterDir;
 
+mod args;
+mod dat;
 use args::Config;
+use dat::dump_master_dat;
 
 fn main() {
     let config = Config::new(env::args()).unwrap_or_else(|err| {
@@ -15,13 +18,9 @@ fn main() {
     let master_dir = fs::read(&config.master_dir_path)
        .expect("unable to read master.dir");
 
-    let dir = dir::MasterDir::new(master_dir, &config.console);
-    for d in dir.entries {
-        println!("{} (0x{:x}, 0x{:x}, 0x{:x})",
-            d.name,
-            d.offset,
-            d.malloc_size,
-            d.orig_size
-        );
-    }
+    let master_dat = fs::read(&config.master_dat_path)
+       .expect("unable to read master.dat");
+
+    let dir = MasterDir::new(master_dir, &config.console);
+    dump_master_dat(master_dat, dir, &config);
 }

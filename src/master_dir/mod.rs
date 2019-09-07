@@ -2,7 +2,7 @@ use std::str;
 
 use byteorder::{LittleEndian, BigEndian, ReadBytesExt};
 
-use crate::args::Console;
+use crate::console::Console;
 
 /// Type representing a single entry in the game's MASTER.DIR file, which in
 /// turn describes a single compressed file in the MASTER.DAT file.

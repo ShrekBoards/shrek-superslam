@@ -1,13 +1,4 @@
-use std::env::Args;
-
-/// The different console versions of the game, used to determine which
-/// endianness to use when reading numbers from files
-pub enum Console {
-    Gamecube,
-    PC,
-    PS2,
-    Xbox,
-}
+use shrek_superslam::console::Console;
 
 /// Possible arguments to the program
 pub struct Config {

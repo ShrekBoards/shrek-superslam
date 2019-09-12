@@ -1,14 +1,16 @@
+use std::path::PathBuf;
+
 use getopts::Options;
 
 use shrek_superslam::console::Console;
 
 /// Possible arguments to the program
 pub struct Config {
-    pub master_dat_path: String, // The path to the MASTER.DAT file
-    pub master_dir_path: String, // The path to the MASTER.DIR file
-    pub decompress: bool,        // Whether the extracted files should be decompressed
-    pub extract_texpack: bool,   // Whether decompressed texpacks should be extracted
-    pub console: Console,        // The console version of the files
+    pub master_dat_path: PathBuf, // The path to the MASTER.DAT file
+    pub master_dir_path: PathBuf, // The path to the MASTER.DIR file
+    pub decompress: bool,         // Whether the extracted files should be decompressed
+    pub extract_texpack: bool,    // Whether decompressed texpacks should be extracted
+    pub console: Console,         // The console version of the files
 }
 
 impl Config {
@@ -33,11 +35,12 @@ impl Config {
         let args : Vec<String> = args.collect();
         let matches = match opts.parse(&args[1..]) {
             Ok(m) => m,
-            Err(f) => panic!(f.to_string()),
+//            Err(f) => return Err(f.to_string()),
+            Err(f) => return Err("failed"),
         };
 
-        let dat = matches.opt_str("a").unwrap();
-        let dir = matches.opt_str("i").unwrap();
+        let dat = PathBuf::from(matches.opt_str("a").unwrap());
+        let dir = PathBuf::from(matches.opt_str("i").unwrap());
         let console = match matches.opt_str("c") {
             Some(c) => match c.as_ref() {
                 "gc" => Console::Gamecube,

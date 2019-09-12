@@ -1,3 +1,5 @@
+use getopts::Options;
+
 use shrek_superslam::console::Console;
 
 /// Possible arguments to the program
@@ -17,32 +19,40 @@ impl Config {
     /// \returns An Ok(Config) populated with the passed commandline arguments,
     ///          or an Err(str) containing an error message if the arguments
     ///          could not be parsed.
-    pub fn new(mut args: std::env::Args) -> Result<Config, &'static str> {
+    pub fn new(args: std::env::Args) -> Result<Config, &'static str> {
+
         if args.len() < 2 {
             return Err("not enough arguments");
         }
 
-        args.next();
-        let dir = match args.next() {
-            Some(arg) => arg,
-            _ => return Err("didn't get dir path")
+        let mut opts = Options::new();
+        opts.reqopt("a", "dat", "path to MASTER.DAT", "MASTER.DAT");
+        opts.reqopt("i", "dir", "path to MASTER.DIR", "MASTER.DIR");
+        opts.reqopt("c", "console", "target console", "gc|pc|ps2|xbox");
+        opts.optflag("d", "decompress", "decompress files");
+        let args : Vec<String> = args.collect();
+        let matches = match opts.parse(&args[1..]) {
+            Ok(m) => m,
+            Err(f) => panic!(f.to_string()),
         };
 
-        let console = match args.next() {
-            Some(arg) => match arg.as_ref() {
+        let dat = matches.opt_str("a").unwrap();
+        let dir = matches.opt_str("i").unwrap();
+        let console = match matches.opt_str("c") {
+            Some(c) => match c.as_ref() {
                 "gc" => Console::Gamecube,
                 "pc" => Console::PC,
                 "ps2" => Console::PS2,
                 "xbox" => Console::Xbox,
-                _ => return Err("unrecognised console")
+                _ => return Err("unrecognised console"),
             },
-            _ => return Err("didn't get console")
+            _ => return Err("unrecognised console")
         };
 
         Ok(Config {
-            master_dat_path: "".to_string(),
+            master_dat_path: dat,
             master_dir_path: dir,
-            decompress: true,
+            decompress: false,
             extract_texpack: true,
             console: console
         })

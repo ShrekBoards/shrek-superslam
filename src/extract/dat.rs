@@ -17,7 +17,7 @@ fn create_destination_directory(path : &String) -> path::PathBuf {
     for part in path.split('\\') {
         filepath.push(part.trim_matches(char::from(0)));
     }
-    fs::create_dir_all(filepath.parent().unwrap());
+    fs::create_dir_all(filepath.parent().unwrap()).unwrap();
     filepath
 }
 

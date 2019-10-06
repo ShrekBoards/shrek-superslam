@@ -1,5 +1,9 @@
+use std::char;
 use std::fs;
 use std::path;
+use std::sync::Arc;
+
+use crossbeam::thread;
 
 use crate::args::Config;
 use shrek_superslam::compression::decompress;
@@ -39,12 +43,14 @@ fn dump_entries(master_dat : &Vec<u8>, entries : &[MasterDirEntry], config : &Co
         let entry = &master_dat[lower..upper];
 
         // Decompress the entry if requested
-        if config.decompress {
-            let decompressed = decompress(entry);
-        }
+        let output = if config.decompress {
+            decompress(entry)
+        } else {
+            entry.to_vec()
+        };
 
         // Write the data to the filepath
-        fs::write(filepath, entry).expect("Unable to write file");
+        fs::write(filepath, output).expect("Unable to write file");
     }
 }
 
@@ -57,8 +63,12 @@ fn dump_entries(master_dat : &Vec<u8>, entries : &[MasterDirEntry], config : &Co
 pub fn dump_master_dat(master_dat : Vec<u8>, master_dir : MasterDir, config : &Config) {
 
     let chunk_size = master_dir.entries.len() / 4;
+    let master_dat_arc = Arc::new(master_dat);
 
-    for chunk in master_dir.entries.chunks(chunk_size) {
-        dump_entries(&master_dat, chunk, config);
-    }
+    thread::scope(|scope| {
+        for entries in master_dir.entries.chunks(chunk_size) {
+            let master_dat = master_dat_arc.clone();
+            scope.spawn(move |_| dump_entries(&master_dat, entries, &config));
+        }
+    }).unwrap();
 }

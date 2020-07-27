@@ -2,7 +2,6 @@ use std::fs;
 use std::path::PathBuf;
 
 use crate::console::Console;
-use crate::util::read32;
 
 /// Type representing a single entry in the game's MASTER.DIR file, which in
 /// turn describes a single compressed file in the MASTER.DAT file.
@@ -37,9 +36,9 @@ impl MasterDirEntry {
     ///
     /// \returns A new MASTER.DIR entry from the provided bytes
     pub fn new(entry : &[u8], console : Console) -> MasterDirEntry {
-        let offset = read32(&entry[0..4], console);
-        let decomp_size = read32(&entry[4..8], console);
-        let comp_size = read32(&entry[8..12], console);
+        let offset = console.read32(&entry[0..4]);
+        let decomp_size = console.read32(&entry[4..8]);
+        let comp_size = console.read32(&entry[8..12]);
 
         MasterDirEntry {
             offset: offset,
@@ -81,7 +80,7 @@ impl MasterDir {
         // section. We can then read every 4-byte integer between the start of the
         // file and that offset, and use the int as an offset within the file to
         // read each section.
-        let first_section_length = read32(&master_dir[0..4], console);
+        let first_section_length = console.read32(&master_dir[0..4]);
 
         let mut entries : Vec<MasterDirEntry> = vec!();
         for index in (0..first_section_length).step_by(4) {
@@ -90,11 +89,11 @@ impl MasterDir {
             // Using the offset to this section and the next section, determine the
             // size of this section to read. If the next section offset is 0, then
             // we are on the last entry, which runs until the end of the file
-            let entry_offset = read32(&master_dir[i..i + 4], console) as usize;
+            let entry_offset = console.read32(&master_dir[i..i + 4]) as usize;
             if entry_offset == 0 {
                 continue;
             }
-            let next_entry_offset = read32(&master_dir[i + 4..i + 8], console) as usize;
+            let next_entry_offset = console.read32(&master_dir[i + 4..i + 8]) as usize;
             let entry_length = match next_entry_offset {
                 0 => master_dir.len() - entry_offset,
                 _ => next_entry_offset - entry_offset

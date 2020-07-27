@@ -22,7 +22,6 @@ impl Config {
     ///          or an Err(str) containing an error message if the arguments
     ///          could not be parsed.
     pub fn new(args: std::env::Args) -> Result<Config, &'static str> {
-
         if args.len() < 2 {
             return Err("not enough arguments");
         }
@@ -31,7 +30,7 @@ impl Config {
         opts.reqopt("a", "dat", "path to MASTER.DAT", "MASTER.DAT");
         opts.reqopt("i", "dir", "path to MASTER.DIR", "MASTER.DIR");
         opts.reqopt("c", "console", "target console", "gc|pc|ps2|xbox");
-        opts.optflag("d", "decompress", "decompress files");
+        opts.optflag("", "no-decompress", "do not decompress files");
         let args : Vec<String> = args.collect();
         let matches = match opts.parse(&args[1..]) {
             Ok(m) => m,
@@ -55,8 +54,8 @@ impl Config {
         Ok(Config {
             master_dat_path: dat,
             master_dir_path: dir,
-            decompress: false,
-            extract_texpack: true,
+            decompress: !matches.opt_present("no-decompress"),
+            extract_texpack: false,
             console: console
         })
     }

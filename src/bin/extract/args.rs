@@ -54,7 +54,7 @@ impl Config {
         Ok(Config {
             master_dat_path: dat,
             master_dir_path: dir,
-            decompress: !matches.opt_present("no-decompress"),
+            decompress: false,// !matches.opt_present("no-decompress"),
             extract_texpack: false,
             console: console
         })

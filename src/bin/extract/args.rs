@@ -21,34 +21,33 @@ impl Config {
     /// \returns An Ok(Config) populated with the passed commandline arguments,
     ///          or an Err(str) containing an error message if the arguments
     ///          could not be parsed.
-    pub fn new(args: std::env::Args) -> Result<Config, &'static str> {
+    pub fn new(args: std::env::Args) -> Result<Config, String> {
         if args.len() < 2 {
-            return Err("not enough arguments");
+            return Err(String::from("not enough arguments"));
         }
 
         let mut opts = Options::new();
         opts.reqopt("a", "dat", "path to MASTER.DAT", "MASTER.DAT");
         opts.reqopt("i", "dir", "path to MASTER.DIR", "MASTER.DIR");
-        opts.reqopt("c", "console", "target console", "gc|pc|ps2|xbox");
+        opts.optflag("", "console", "target console");
         opts.optflag("", "no-decompress", "do not decompress files");
         let args : Vec<String> = args.collect();
         let matches = match opts.parse(&args[1..]) {
             Ok(m) => m,
-//            Err(f) => return Err(f.to_string()),
-            Err(f) => return Err("failed"),
+            Err(f) => return Err(f.to_string()),
         };
 
         let dat = PathBuf::from(matches.opt_str("a").unwrap());
         let dir = PathBuf::from(matches.opt_str("i").unwrap());
-        let console = match matches.opt_str("c") {
+        let console = match matches.opt_str("console") {
             Some(c) => match c.as_ref() {
                 "gc" => Console::Gamecube,
                 "pc" => Console::PC,
                 "ps2" => Console::PS2,
                 "xbox" => Console::Xbox,
-                _ => return Err("unrecognised console"),
+                _ => return Err(String::from("unrecognised console")),
             },
-            _ => return Err("unrecognised console")
+            _ => Console::PC
         };
 
         Ok(Config {

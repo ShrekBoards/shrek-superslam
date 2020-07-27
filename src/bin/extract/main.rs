@@ -35,6 +35,12 @@ fn create_destination_directory(path: &String) -> PathBuf {
 /// \param config     The program config
 fn dump_entries(master_dat: &MasterDat, files: &[&String], config: &Config) {
     for path in files {
+        if path.contains("italian.dds") {
+            continue;
+        }
+        if path.contains("british.dds") {
+            continue;
+        }
         // Create the destination directory to write the file to
         let output_path = create_destination_directory(&path);
 
@@ -46,7 +52,7 @@ fn dump_entries(master_dat: &MasterDat, files: &[&String], config: &Config) {
             master_dat.compressed_file(&path)
         };
         */
-        let output = master_dat.compressed_file(&path);
+        let output = master_dat.decompressed_file(&path);
 
         // Write the data to disk
         match output {

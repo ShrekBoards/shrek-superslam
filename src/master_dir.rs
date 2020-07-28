@@ -31,10 +31,14 @@ pub struct MasterDir {
 impl MasterDirEntry {
     /// Create a new MasterDirEntry
     ///
-    /// \param entry   The bytes making up the entry in the MASTER.DIR file
-    /// \param console The console this version of the file is from
+    /// # Parameters
     ///
-    /// \returns A new MASTER.DIR entry from the provided bytes
+    /// - `entry`: The bytes making up the entry in the MASTER.DIR file
+    /// - `param`: console The console this version of the file is from
+    ///
+    /// # Returns
+    ///
+    /// A new MASTER.DIR entry from the provided bytes
     pub fn new(entry : &[u8], console : Console) -> MasterDirEntry {
         let offset = console.read32(&entry[0..4]);
         let decomp_size = console.read32(&entry[4..8]);
@@ -51,10 +55,14 @@ impl MasterDirEntry {
 
 impl MasterDir {
     /// Creates an empty MASTER.DIR object
-    /// 
-    /// \param console The console this version of the file is for
     ///
-    /// \returns A new MasterDir of the enumerated MASTER.DIR entries
+    /// # Parameters
+    ///
+    /// - `console`: The console this version of the file is for
+    ///
+    /// # Returns
+    ///
+    /// A new `MasterDir` of the enumerated MASTER.DIR entries
     pub fn new(console: Console) -> MasterDir {
         MasterDir {
             entries: vec!(),
@@ -64,10 +72,14 @@ impl MasterDir {
 
     /// Creates a new MasterDir object from the passed bytes
     ///
-    /// \param master_dir The bytes of the entire MASTER.DIR file
-    /// \param console    The console this version of the file is from
+    /// # Parameters
     ///
-    /// \returns A new MasterDir of the enumerated MASTER.DIR entries
+    /// - `master_dir`: The bytes of the entire MASTER.DIR file
+    /// - `console`: The console this version of the file is from
+    ///
+    /// # Returns
+    ///
+    /// A new MasterDir of the enumerated MASTER.DIR entries
     pub fn from_bytes(master_dir: &Vec<u8>, console: Console) -> MasterDir { 
         // The MASTER.DIR is split into two sections:
         // * The first is a list of 4-byte integers that serve as offsets in the
@@ -112,10 +124,14 @@ impl MasterDir {
 
     /// Creates a new MasterDir object from the passed file
     ///
-    /// \param path    The path to the MASTER.DIR file to read
-    /// \param console The console this version of the file is from
+    /// # Parameters
     ///
-    /// \returns A new MasterDir of the enumerated MASTER.DIR entries
+    /// - `path`: The path to the MASTER.DIR file to read
+    /// - `console`: The console this version of the file is from
+    ///
+    /// # Returns
+    ///
+    /// A new MasterDir of the enumerated MASTER.DIR entries
     pub fn from_file(path: &PathBuf, console: Console) -> MasterDir {
         // Read all of the file to a byte array
         let file_contents = fs::read(&path).expect("unable to read master.dir");

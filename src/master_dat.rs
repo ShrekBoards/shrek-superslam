@@ -23,7 +23,9 @@ pub struct MasterDat {
 impl MasterDat {
     /// Creates a new empty MasterDat object
     ///
-    /// \param console The console this MASTER.DAT is for
+    /// # Parameters
+    ///
+    /// - `console`: The console this MASTER.DAT is for
     pub fn new(console : Console) -> MasterDat {
         MasterDat {
             files: HashMap::new(),
@@ -34,9 +36,11 @@ impl MasterDat {
 
     /// Loads an existing MASTER.DAT file
     ///
-    /// \param path       The path to the MASTER.DAT file to load
-    /// \param master_dir The associated MASTER.DIR file
-    /// \param console    The console this MASTER.DAT file is from
+    /// # Parameters
+    ///
+    /// - `path`: The path to the MASTER.DAT file to load
+    /// - `master_dir`: The associated MASTER.DIR file
+    /// - `console`: The console this MASTER.DAT file is from
     pub fn from_file(path: &PathBuf, master_dir: MasterDir, console: Console) -> MasterDat {
         let mut f = File::open(path).expect("unable to read master.dat");
         
@@ -59,20 +63,31 @@ impl MasterDat {
 
     /// Get a compressed file from the MASTER.DAT
     ///
-    /// \param path The path of the file to retrieve
+    /// # Parameters
     ///
-    /// \returns A reference to the bytes of the compressed file if it exists
-    ///          in the MASTER.DAT, otherwise None
-    pub fn compressed_file(&self, path: &str) -> Option<&Vec<u8>> {
-        self.files.get(path)
+    /// - `path`: The path of the file to retrieve
+    ///
+    /// # Returns
+    ///
+    /// A copy of the bytes of the compressed file if it exists in the
+    /// MASTER.DAT, otherwise `None`
+    pub fn compressed_file(&self, path: &str) -> Option<Vec<u8>> {
+        match self.files.get(path) {
+            Some(f) => Some(f.clone()),
+            _ => None
+        }
     }
 
     /// Get and decompress a file from the MASTER.DAT
     ///
-    /// \param path The path of the file to retrieve
+    /// # Parameters
     ///
-    /// \returns The decompressed bytes of the file if it exists in the
-    ///          MASTER.DAT, otherwise None
+    /// - `path`: The path of the file to retrieve
+    ///
+    /// # Returns
+    ///
+    /// The decompressed bytes of the file if it exists in the MASTER.DAT,
+    /// otherwise `None`
     pub fn decompressed_file(&self, path: &str) -> Option<Vec<u8>> {
         match self.files.get(path) {
             Some(f) => Some(decompress(&f)),
@@ -80,9 +95,9 @@ impl MasterDat {
         }
     }
 
-    /// Get the filenames within the MASTER.DAT
+    /// # Returns
     ///
-    /// \returns The filenames within the MASTER.DAT
+    /// The filenames within the MASTER.DAT
     pub fn files(&self) -> Vec<&String> {
         self.files.keys().collect()
     }

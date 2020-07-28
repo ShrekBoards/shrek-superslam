@@ -1,8 +1,12 @@
 /// Decompress compressed Shrek SuperSlam data
 ///
-/// \param compressed The compressed data to extract
+/// # Parameters
 ///
-/// \returns The extracted data
+/// - `compressed`: The compressed data to extract
+///
+/// # Returns
+///
+/// The extracted data
 pub fn decompress(compressed : &[u8]) -> Vec<u8> {
     const MAX_DISTANCE : usize = 0x1011D;
 

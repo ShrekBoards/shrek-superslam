@@ -16,11 +16,15 @@ pub struct Config {
 impl Config {
     /// Parse the commandline arguments and return them as a new Config
     ///
-    /// \param args The commandline arguments passed to the program
+    /// # Parameters
     ///
-    /// \returns An Ok(Config) populated with the passed commandline arguments,
-    ///          or an Err(str) containing an error message if the arguments
-    ///          could not be parsed.
+    /// - `args`: The commandline arguments passed to the program
+    ///
+    /// # Returns
+    ///
+    /// An `Ok(Config)` populated with the passed commandline arguments, or an
+    /// `Err(str)` containing an error message if the arguments could not be
+    /// parsed.
     pub fn new(args: std::env::Args) -> Result<Config, String> {
         if args.len() < 2 {
             return Err(String::from("not enough arguments"));
@@ -53,7 +57,7 @@ impl Config {
         Ok(Config {
             master_dat_path: dat,
             master_dir_path: dir,
-            decompress: false,// !matches.opt_present("no-decompress"),
+            decompress: !matches.opt_present("no-decompress"),
             extract_texpack: false,
             console: console
         })

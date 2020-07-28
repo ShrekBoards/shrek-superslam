@@ -13,9 +13,13 @@ pub enum Console {
 impl Console {
     /// Read a 32-bit unsigned integer from the given bytes from the given console
     ///
-    /// \param bytes   The bytes to read as an integer
+    /// # Parameters
     ///
-    /// \returns The 32-bit unsigned integer from the bytes
+    /// - `bytes`: The bytes to read as an integer
+    ///
+    /// # Returns
+    ///
+    /// The 32-bit unsigned integer from the bytes
     pub fn read32(&self, bytes : &[u8]) -> u32 {
         match self {
             Console::Gamecube => (&bytes[0..4]).read_u32::<BigEndian>().unwrap(),

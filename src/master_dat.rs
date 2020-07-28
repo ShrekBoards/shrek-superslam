@@ -98,7 +98,7 @@ impl MasterDat {
     /// # Returns
     ///
     /// The filenames within the MASTER.DAT
-    pub fn files(&self) -> Vec<&String> {
-        self.files.keys().collect()
+    pub fn files(&self) -> Vec<String> {
+        self.files.keys().cloned().collect()
     }
 }

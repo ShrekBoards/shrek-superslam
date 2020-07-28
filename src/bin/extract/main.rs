@@ -41,7 +41,7 @@ fn create_destination_directory(path: &String) -> PathBuf {
 /// - `files`: The list of files to extract from the MASTER.DAT. Must be a
 ///    subset of `master_dat.files()`
 /// - `config`: The program config
-fn dump_entries(master_dat: &MasterDat, files: &[&String], config: &Config) {
+fn dump_entries(master_dat: &MasterDat, files: &[String], config: &Config) {
     for path in files {
         if path.contains("italian.dds") || path.contains("british.dds") {
             continue;
@@ -81,20 +81,15 @@ fn main() {
 
     // Split the list of files within the MASTER.DAT, and use a different thread
     // to decompress the files in each part
-    /*
     let files = master_dat.files();
     let chunk_size = files.len() / 4;
     let master_dat_arc = Arc::new(master_dat);
+    let config_arc = Arc::new(config);
     thread::scope(|scope| {
         for entries in files.chunks(chunk_size) {
             let master_dat = master_dat_arc.clone();
+            let config = config_arc.clone();
             scope.spawn(move |_| dump_entries(&master_dat, entries, &config));
         }
     }).unwrap();
-    */
-
-    let chunk_size = master_dat.files().len();
-    for entries in master_dat.files().chunks(chunk_size) {
-        dump_entries(&master_dat, entries, &config);
-    }
 }

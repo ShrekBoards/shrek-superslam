@@ -33,7 +33,7 @@ impl Config {
         let mut opts = Options::new();
         opts.reqopt("a", "dat", "path to MASTER.DAT", "MASTER.DAT");
         opts.reqopt("i", "dir", "path to MASTER.DIR", "MASTER.DIR");
-        opts.optflag("", "console", "target console");
+        opts.optopt("c", "console", "target console", "gc|pc|ps2|xbox");
         opts.optflag("", "no-decompress", "do not decompress files");
         let args : Vec<String> = args.collect();
         let matches = match opts.parse(&args[1..]) {

@@ -39,7 +39,7 @@ mod test {
         let data3 = vec!(0x01, 0x02, 0x03, 0x04);
 
         assert_eq!(Console::PC.read32(&data1[0..4]), 0);
-        //assert_eq!(Console::PC::read32(&data2[0..4]), u32::MAX);
+        assert_eq!(Console::PC.read32(&data2[0..4]), u32::MAX);
         assert_eq!(Console::PC.read32(&data3[0..4]), 0x04030201);
     }
 
@@ -50,7 +50,7 @@ mod test {
         let data3 = vec!(0x01, 0x02, 0x03, 0x04);
 
         assert_eq!(Console::Gamecube.read32(&data1[0..4]), 0);
-        //assert_eq!(Console::Gamecube::read32(&data2[0..4]), u32::MAX);
+        assert_eq!(Console::Gamecube.read32(&data2[0..4]), u32::MAX);
         assert_eq!(Console::Gamecube.read32(&data3[0..4]), 0x01020304);
     }
 }

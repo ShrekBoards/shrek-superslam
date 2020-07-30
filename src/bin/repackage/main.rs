@@ -21,7 +21,7 @@ fn main() {
     let mut master_dat = MasterDat::new(config.console);
 
     // Add each file in the data/ directory to the MASTER.DAT
-    for file in WalkDir::new(&config.data_path).sort_by(|a,b| a.file_name().cmp(b.file_name())).into_iter()
+    for file in WalkDir::new(&config.data_path).into_iter()
         .filter_map(|e| e.ok()).filter(|d| d.file_type().is_file())
     {
         // Read the file

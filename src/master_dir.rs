@@ -1,5 +1,8 @@
 use std::fs;
-use std::path::PathBuf;
+use std::fs::File;
+use std::io::Write;
+use std::iter::repeat;
+use std::path::Path;
 
 use crate::console::Console;
 
@@ -21,7 +24,7 @@ pub struct MasterDirEntry {
 
 /// Type representing the MASTER.DIR file - a collection of MasterDirEntry
 pub struct MasterDir {
-    /// The entries within the MASTETR.DIR
+    /// The entries within the MASTER.DIR
     pub entries: Vec<MasterDirEntry>,
     
     /// The console this MASTER.DIR is from or for
@@ -50,6 +53,41 @@ impl MasterDirEntry {
             comp_size: comp_size,
             name: String::from_utf8(entry[12..].to_vec()).unwrap()
         }
+    }
+
+    /// Get the raw, padded bytes of the MASTER.DIR entry
+    ///
+    /// # Parameters
+    ///
+    /// - `console`: The console this entry is for
+    ///
+    /// # Returns
+    ///
+    /// The bytes that make up this entry, padded and for the given console
+    pub fn padded(&self, console: Console) -> Vec<u8> {
+        let mut padded : Vec<u8> = vec!();
+        padded.extend(&console.write32(self.offset));
+        padded.extend(&console.write32(self.decomp_size));
+        padded.extend(&console.write32(self.comp_size));
+        padded.extend(self.name.as_bytes());
+        padded.push(0);
+        padded.extend(repeat(0).take((self.padded_size() - self.size()) as usize));
+
+        return padded;
+    }
+
+    /// # Returns
+    ///
+    /// The size in bytes of the MASTER.DIR entry after padding
+    pub fn padded_size(&self) -> u32 {
+        &self.size() + (&self.size() % 4)
+    }
+
+    /// # Returns
+    ///
+    /// The size in bytes of the MASTER.DIR entry
+    pub fn size(&self) -> u32 {
+        (12 + self.name.len() + 1) as u32
     }
 }
 
@@ -132,12 +170,44 @@ impl MasterDir {
     /// # Returns
     ///
     /// A new MasterDir of the enumerated MASTER.DIR entries
-    pub fn from_file(path: &PathBuf, console: Console) -> MasterDir {
+    pub fn from_file(path: &Path, console: Console) -> MasterDir {
         // Read all of the file to a byte array
         let file_contents = fs::read(&path).expect("unable to read master.dir");
 
         // Parse the bytes to a MasterDir object
         return MasterDir::from_bytes(&file_contents, console);
+    }
+
+    /// Writes the MASTER.DIR to a new file
+    ///
+    /// # Parameters
+    ///
+    /// - `path`: The path to write the new file to
+    pub fn write(&self, path: &Path) {
+        let mut f = File::create(&path).expect("unable to create file");
+
+        // The total size of the first section - which is a list of offsets to
+        // each entry in the second section - is determined from the total
+        // number of entries, plus one for the terminator offset. Since the
+        // second section starts immediately after, the first offset is also
+        // this value
+        let mut offset = ((self.entries.len() + 2) * 4) as u32;
+        f.write_all(&self.console.write32(offset)).expect("error writing file");
+
+        // Each subsequent offset is determined by adding the padded size of
+        // the previous entry
+        for entry in &self.entries {
+            offset = offset + entry.padded_size();
+            f.write_all(&self.console.write32(offset)).expect("error writing file");
+        }
+
+        // Write the terminating offset
+        f.write_all(&[0x00, 0x00, 0x00, 0x00]).expect("error writing file");
+
+        // Now the actual entries need to be written
+        for entry in &self.entries {
+            f.write_all(&entry.padded(self.console)).expect("error writing file");
+        }
     }
 }
 

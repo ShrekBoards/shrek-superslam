@@ -73,11 +73,7 @@ fn main() {
 
     // Read the MASTER.DIR and MASTER.DAT files
     let master_dir = MasterDir::from_file(&config.master_dir_path, config.console);
-    let master_dat = MasterDat::from_file(
-        &config.master_dat_path,
-        master_dir,
-        config.console
-    );
+    let master_dat = MasterDat::from_file(&config.master_dat_path, master_dir);
 
     // Split the list of files within the MASTER.DAT, and use a different thread
     // to decompress the files in each part

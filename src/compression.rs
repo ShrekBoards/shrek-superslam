@@ -38,7 +38,7 @@ pub fn compress(decompressed: &[u8]) -> Vec<u8> {
         let header = remaining - 0x11E;
         compressed.push((header & 0x000000FF) as u8);
         compressed.push((header >> 8) as u8);
-    } else if decompressed.len() - index > 0x1D {
+    } else if remaining > 0x1D {
         compressed.push(0xF0);
         let header = remaining - 0x1E;
         compressed.push(header as u8);

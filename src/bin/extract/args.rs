@@ -59,7 +59,7 @@ impl Config {
             master_dir_path: dir,
             decompress: !matches.opt_present("no-decompress"),
             extract_texpack: false,
-            console: console
+            console
         })
     }
 }

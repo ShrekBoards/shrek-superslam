@@ -23,7 +23,7 @@ use args::Config;
 /// # Returns
 ///
 /// A `PathBuf` to the created directory
-fn create_destination_directory(path: &String) -> PathBuf {
+fn create_destination_directory(path: &str) -> PathBuf {
     let mut filepath = PathBuf::new();
     for part in path.split('\\') {
         filepath.push(part.trim_matches(char::from(0)));
@@ -58,10 +58,9 @@ fn dump_entries(master_dat: &MasterDat, files: &[String], config: &Config) {
         };
 
         // Write the data to disk
-        match output {
-            Some(f) => fs::write(output_path, f).expect("Unable to write file"),
-            _ => ()
-        };
+        if let Some(f) = output {
+            fs::write(output_path, f).expect("Unable to write file")
+        }
     }
 }
 

@@ -50,7 +50,7 @@ impl Config {
 
         Ok(Config {
             data_path: data,
-            console: console
+            console
         })
     }
 }

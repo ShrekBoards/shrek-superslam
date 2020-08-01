@@ -23,7 +23,7 @@ impl MasterDat {
     /// # Parameters
     ///
     /// - `console`: The console this MASTER.DAT is for
-    pub fn new(console : Console) -> MasterDat {
+    pub fn new(console: Console) -> MasterDat {
         MasterDat {
             files: HashMap::new(),
             master_dir: MasterDir::new(console),
@@ -39,21 +39,19 @@ impl MasterDat {
     /// - `console`: The console this MASTER.DAT file is from
     pub fn from_file(path: &Path, master_dir: MasterDir) -> MasterDat {
         let mut f = File::open(path).expect("unable to read master.dat");
-        
+
         // Iterate over the entries within the associated MASTER.DIR, and use it to
         // read out each compressed file from the MASTER.DAT
         let mut files: HashMap<String, Vec<u8>> = HashMap::new();
         for entry in &master_dir.entries {
             let mut file: Vec<u8> = vec![0; entry.comp_size as usize];
-            f.seek(SeekFrom::Start(entry.offset as u64)).expect("failed to seek");
+            f.seek(SeekFrom::Start(entry.offset as u64))
+                .expect("failed to seek");
             f.read_exact(&mut file).expect("unable to read master.dat");
             files.insert(entry.name.clone(), file);
         }
 
-        MasterDat {
-            files: files,
-            master_dir: master_dir,
-        }
+        MasterDat { files, master_dir }
     }
 
     /// Adds a file to the MASTER.DAT
@@ -62,19 +60,22 @@ impl MasterDat {
     ///
     /// - `path`: The path to the file within the MASTER.DAT
     /// - `data`: The uncompressed data of the file to add
-    pub fn add_file(&mut self, path: String, data: &Vec<u8>) {
+    pub fn add_file(&mut self, path: String, data: &[u8]) {
         // Compress the file
         let compressed = compress(data);
 
         // Create an entry for the file in the MASTER.DAT. The offset of the
         // file within the MASTER.DAT (which is a field in the MASTER.DIR) is
         // determined by the sum of all the padded sizes of the current files.
-        let offset = self.files.values().fold(0, |acc, x| acc + padded_size(x.len()));
-        self.master_dir.entries.push(MasterDirEntry{
+        let offset = self
+            .files
+            .values()
+            .fold(0, |acc, x| acc + padded_size(x.len()));
+        self.master_dir.entries.push(MasterDirEntry {
             offset: offset as u32,
             decomp_size: data.len() as u32,
             comp_size: compressed.len() as u32,
-            name: path.clone()
+            name: path.clone(),
         });
 
         // Add the compressed file to the MASTER.DAT
@@ -94,7 +95,7 @@ impl MasterDat {
     pub fn compressed_file(&self, path: &str) -> Option<Vec<u8>> {
         match self.files.get(path) {
             Some(f) => Some(f.clone()),
-            _ => None
+            _ => None,
         }
     }
 
@@ -111,7 +112,7 @@ impl MasterDat {
     pub fn decompressed_file(&self, path: &str) -> Option<Vec<u8>> {
         match self.files.get(path) {
             Some(f) => Some(decompress(&f)),
-            _ => None
+            _ => None,
         }
     }
 
@@ -132,7 +133,8 @@ impl MasterDat {
         self.master_dir.write(&master_dir_path);
         let mut f = File::create(path).expect("unable to create file");
         for master_dir_entry in &self.master_dir.entries {
-            f.write(&pad(self.files.get(&master_dir_entry.name).unwrap())).expect("unable to write");
+            f.write_all(&pad(self.files.get(&master_dir_entry.name).unwrap()))
+                .expect("unable to write");
         }
     }
 }
@@ -159,17 +161,17 @@ fn padded_size(size: usize) -> usize {
 /// # Returns
 ///
 /// The padded bytes
-fn pad(data: &Vec<u8>) -> Vec<u8> {
-    const PADDING : [u8; 4] = [
-        'S' as u8,
-        'H' as u8,
-        'A' as u8,
-        'B' as u8
-    ];
+fn pad(data: &[u8]) -> Vec<u8> {
+    const PADDING: [u8; 4] = [b'S', b'H', b'A', b'B'];
 
-    let mut padded : Vec<u8> = vec!();
+    let mut padded: Vec<u8> = vec![];
     padded.extend(data);
-    padded.extend(PADDING.iter().cycle().take(padded_size(data.len()) - data.len()));
+    padded.extend(
+        PADDING
+            .iter()
+            .cycle()
+            .take(padded_size(data.len()) - data.len()),
+    );
 
-    return padded;
+    padded
 }

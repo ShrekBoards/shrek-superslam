@@ -1,4 +1,6 @@
-const MAX_DISTANCE : usize = 0x1011D;
+use std::cmp::Ordering;
+
+const MAX_DISTANCE: usize = 0x1011D;
 
 /// Compress data to be compatible with Shrek SuperSlam
 ///
@@ -15,10 +17,10 @@ const MAX_DISTANCE : usize = 0x1011D;
 /// This method does not actually compress the data, but instead inserts
 /// markers throughout the file to allow the game to read the uncompressed
 /// stream. The returned data is therefore slightly larger than the input.
-pub fn compress(decompressed : &[u8]) -> Vec<u8> {
+pub fn compress(decompressed: &[u8]) -> Vec<u8> {
     // Adapted from code provided by zed0
-	// <https://reverseengineering.stackexchange.com/questions/16021/>
-    let mut compressed : Vec<u8> = vec!();
+    // <https://reverseengineering.stackexchange.com/questions/16021/>
+    let mut compressed: Vec<u8> = vec![];
     let mut index = 0;
 
     // Repeat as many max-length blocks as we can
@@ -49,7 +51,7 @@ pub fn compress(decompressed : &[u8]) -> Vec<u8> {
     // Add the special case 0 length back reference to end the stream
     compressed.extend(&[0x00, 0x00]);
 
-    return compressed;
+    compressed
 }
 
 /// Decompress compressed Shrek SuperSlam data
@@ -61,9 +63,9 @@ pub fn compress(decompressed : &[u8]) -> Vec<u8> {
 /// # Returns
 ///
 /// The extracted data
-pub fn decompress(compressed : &[u8]) -> Vec<u8> {
-    let mut decompressed : Vec<u8> = vec!();
-    let mut index : usize = 0;
+pub fn decompress(compressed: &[u8]) -> Vec<u8> {
+    let mut decompressed: Vec<u8> = vec![];
+    let mut index: usize = 0;
 
     loop {
         let mut current = compressed[index] as usize;
@@ -71,27 +73,32 @@ pub fn decompress(compressed : &[u8]) -> Vec<u8> {
         let mut length = (current & 7) + 1;
         let mut distance = current >> 3;
 
-        if distance == 0x1E {
-            current = compressed[index] as usize;
-            index += 1;
-            distance = current + 0x1E;
-        } else if distance > 0x1E {
-            distance += compressed[index] as usize;
-            index += 1;
-            current = compressed[index] as usize;
-            index += 1;
-            distance += (current << 8) + 0xFF;
-            if distance == MAX_DISTANCE {
-                length -= 1;
-            }
-        }
+        match distance.cmp(&0x1E) {
+            Ordering::Equal => {
+                current = compressed[index] as usize;
+                index += 1;
+                distance = current + 0x1E;
+            },
+            Ordering::Greater => {
+                distance += compressed[index] as usize;
+                index += 1;
+                current = compressed[index] as usize;
+                index += 1;
+                distance += (current << 8) + 0xFF;
+                if distance == MAX_DISTANCE {
+                    length -= 1;
+                }
+            },
+            _ => (),
+        };
 
         if distance != 0 {
             decompressed.extend(&compressed[index..(index + distance)]);
             index += distance;
         }
 
-        for _ in 0..length {
+        let bound = length;
+        for _ in 0..bound {
             current = compressed[index] as usize;
             index += 1;
             length = current & 7;
@@ -101,23 +108,27 @@ pub fn decompress(compressed : &[u8]) -> Vec<u8> {
                 length = compressed[index] as usize;
                 index += 1;
                 if length == 0 {
-                    return decompressed
+                    return decompressed;
                 }
                 length += 7;
             }
 
-            if distance == 0x1E {
-                current = compressed[index] as usize;
-                index += 1;
-                distance = current + 0x1E;
-            } else if distance > 0x1E {
-                current = compressed[index] as usize;
-                distance += current;
-                index += 1;
-                current = compressed[index] as usize;
-                distance += (current << 8) + 0xFF;
-                index += 1;
-            }
+            match distance.cmp(&0x1E) {
+                Ordering::Equal => {
+                    current = compressed[index] as usize;
+                    index += 1;
+                    distance = current + 0x1E;
+                },
+                Ordering::Greater => {
+                    current = compressed[index] as usize;
+                    distance += current;
+                    index += 1;
+                    current = compressed[index] as usize;
+                    distance += (current << 8) + 0xFF;
+                    index += 1;
+                },
+                _ => (),
+            };
 
             for _ in 0..length {
                 let backwards = decompressed[decompressed.len() - 1 - distance];
@@ -126,7 +137,6 @@ pub fn decompress(compressed : &[u8]) -> Vec<u8> {
         }
     }
 }
-
 
 #[cfg(test)]
 mod test {

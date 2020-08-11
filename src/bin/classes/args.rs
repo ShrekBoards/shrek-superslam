@@ -8,8 +8,6 @@ use shrek_superslam::console::Console;
 pub struct Config {
     pub master_dat_path: PathBuf, // The path to the MASTER.DAT file
     pub master_dir_path: PathBuf, // The path to the MASTER.DIR file
-    pub decompress: bool,         // Whether the extracted files should be decompressed
-    pub extract_texpack: bool,    // Whether decompressed texpacks should be extracted
     pub console: Console,         // The console version of the files
 }
 
@@ -34,7 +32,6 @@ impl Config {
         opts.reqopt("a", "dat", "path to MASTER.DAT", "MASTER.DAT");
         opts.reqopt("i", "dir", "path to MASTER.DIR", "MASTER.DIR");
         opts.optopt("c", "console", "target console", "gc|pc|ps2|xbox");
-        opts.optflag("", "no-decompress", "do not decompress files");
         let args: Vec<String> = args.collect();
         let matches = match opts.parse(&args[1..]) {
             Ok(m) => m,
@@ -57,8 +54,6 @@ impl Config {
         Ok(Config {
             master_dat_path: dat,
             master_dir_path: dir,
-            decompress: !matches.opt_present("no-decompress"),
-            extract_texpack: false,
             console,
         })
     }

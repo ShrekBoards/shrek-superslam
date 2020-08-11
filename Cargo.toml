@@ -5,6 +5,10 @@ authors = ["alex <kirby@cpan.org>"]
 edition = "2018"
 
 [[bin]]
+name = "shreksuperslam-classes"
+path = "src/bin/classes/main.rs"
+
+[[bin]]
 name = "shreksuperslam-extract"
 path = "src/bin/extract/main.rs"
 

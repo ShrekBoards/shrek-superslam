@@ -78,7 +78,7 @@ pub fn decompress(compressed: &[u8]) -> Vec<u8> {
                 current = compressed[index] as usize;
                 index += 1;
                 distance = current + 0x1E;
-            },
+            }
             Ordering::Greater => {
                 distance += compressed[index] as usize;
                 index += 1;
@@ -88,7 +88,7 @@ pub fn decompress(compressed: &[u8]) -> Vec<u8> {
                 if distance == MAX_DISTANCE {
                     length -= 1;
                 }
-            },
+            }
             _ => (),
         };
 
@@ -118,7 +118,7 @@ pub fn decompress(compressed: &[u8]) -> Vec<u8> {
                     current = compressed[index] as usize;
                     index += 1;
                     distance = current + 0x1E;
-                },
+                }
                 Ordering::Greater => {
                     current = compressed[index] as usize;
                     distance += current;
@@ -126,7 +126,7 @@ pub fn decompress(compressed: &[u8]) -> Vec<u8> {
                     current = compressed[index] as usize;
                     distance += (current << 8) + 0xFF;
                     index += 1;
-                },
+                }
                 _ => (),
             };
 

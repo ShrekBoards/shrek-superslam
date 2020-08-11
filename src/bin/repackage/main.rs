@@ -21,8 +21,10 @@ fn main() {
     let mut master_dat = MasterDat::new(config.console);
 
     // Add each file in the data/ directory to the MASTER.DAT
-    for file in WalkDir::new(&config.data_path).into_iter()
-        .filter_map(|e| e.ok()).filter(|d| d.file_type().is_file())
+    for file in WalkDir::new(&config.data_path)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|d| d.file_type().is_file())
     {
         // Read the file
         let contents = fs::read(file.path()).expect("could not open file");
@@ -36,8 +38,13 @@ fn main() {
             prefix = prefix.join(part);
         }
 
-        let relative_path = file.path().strip_prefix(prefix)
-            .unwrap().to_str().unwrap().replace('\\', "/");
+        let relative_path = file
+            .path()
+            .strip_prefix(prefix)
+            .unwrap()
+            .to_str()
+            .unwrap()
+            .replace('\\', "/");
 
         // Add the file to the MASTER.DAT
         master_dat.add_file(relative_path, &contents);

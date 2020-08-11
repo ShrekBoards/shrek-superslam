@@ -28,9 +28,14 @@ impl Config {
         }
 
         let mut opts = Options::new();
-        opts.reqopt("d", "data", "path to the extracted data/ directory", "data/");
+        opts.reqopt(
+            "d",
+            "data",
+            "path to the extracted data/ directory",
+            "data/",
+        );
         opts.optopt("c", "console", "target console", "gc|pc|ps2|xbox");
-        let args : Vec<String> = args.collect();
+        let args: Vec<String> = args.collect();
         let matches = match opts.parse(&args[1..]) {
             Ok(m) => m,
             Err(f) => return Err(f.to_string()),
@@ -45,12 +50,12 @@ impl Config {
                 "xbox" => Console::Xbox,
                 _ => return Err(String::from("unrecognised console")),
             },
-            _ => Console::PC
+            _ => Console::PC,
         };
 
         Ok(Config {
             data_path: data,
-            console
+            console,
         })
     }
 }

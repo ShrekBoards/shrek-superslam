@@ -7,8 +7,8 @@ use std::sync::Arc;
 use crossbeam::thread;
 
 extern crate shrek_superslam;
-use shrek_superslam::master_dir::MasterDir;
 use shrek_superslam::master_dat::MasterDat;
+use shrek_superslam::master_dir::MasterDir;
 
 mod args;
 use args::Config;
@@ -86,5 +86,6 @@ fn main() {
             let config = config_arc.clone();
             scope.spawn(move |_| dump_entries(&master_dat, entries, &config));
         }
-    }).unwrap();
+    })
+    .unwrap();
 }

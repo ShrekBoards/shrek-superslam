@@ -102,7 +102,10 @@ impl MasterDir {
     ///
     /// A new `MasterDir` of the enumerated MASTER.DIR entries
     pub fn new(console: Console) -> MasterDir {
-        MasterDir { entries: vec![], console }
+        MasterDir {
+            entries: vec![],
+            console,
+        }
     }
 
     /// Creates a new MasterDir object from the passed bytes

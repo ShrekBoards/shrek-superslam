@@ -44,10 +44,6 @@ fn create_destination_directory(path: &str) -> PathBuf {
 /// - `config`: The program config
 fn dump_entries(master_dat: &MasterDat, files: &[String], config: &Config) {
     for path in files {
-        if path.contains("italian.dds") || path.contains("british.dds") {
-            continue;
-        }
-
         // Create the destination directory to write the file to
         let output_path = create_destination_directory(&path);
 

@@ -46,3 +46,24 @@ Where:
     - `gc`: Gamecube
     - `ps2`: PS2
     - `xbox`: Xbox
+
+## shreksuperslam-classes
+
+Prints the name and offset of every serialised object within the game's .bin
+files.
+
+### Usage
+
+```sh
+./shreksuperslam-classes --dat MASTER.DAT --dir MASTER.DIR --console gc
+```
+
+Where:
+
+* `--dat` is the path to the MASTER.DAT
+* `--dir` is the path to the associated MASTER.DIR
+* `--console` is the game version the files are from. Defaults to `pc` if not given:
+    - `pc`: PC
+    - `gc`: Gamecube
+    - `ps2`: PS2
+    - `xbox`: Xbox

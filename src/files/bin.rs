@@ -30,11 +30,18 @@ impl BinHeader {
     }
 }
 
-/// Poorly-named struct that represents a 'section' within a bin, that serves
-/// as a kind of map to other parts of the file?
+/// Poorly-named struct that represents the description a 'section' within a
+/// .bin - a small 16-byte area that describes and points to a big list of
+/// offsets to entries of a certain type within the file
 struct BinSection {
+    /// Determines the type of each thing being pointed to
     pub number: u32,
+
+    /// The number of pointers in the section
     pub size: u32,
+
+    /// What offset the section begins within the file
+    pub offset: u32,
 }
 
 impl BinSection {
@@ -44,10 +51,11 @@ impl BinSection {
     ///
     /// - `raw`: The 16 bytes corresponding to the 'section' in the .bin file
     /// - `console`: The console the .bin comes from
-    fn new(raw: &[u8], console: Console) -> BinSection {
+    fn new(raw: &[u8], offset: u32, console: Console) -> BinSection {
         BinSection {
             number: console.read32(&raw[0x00..0x04]),
             size: console.read32(&raw[0x04..0x08]),
+            offset,
         }
     }
 }
@@ -117,27 +125,40 @@ impl Bin {
         let section_begin_offset = file_begin_offset + header.offset1;
         let dependencies_begin_offset = section_begin_offset + (header.sections * 0x10);
         let ptr4_begin_offset = dependencies_begin_offset + (header.dependencies * 0x80);
-        let mut object_ptrs_begin_offset = ptr4_begin_offset + (header.offset4 * 0x40);
 
-        // Create an object for each serialised game object in the .bin
-        let mut objects: Vec<BinObject> = vec![];
+        // Create an entry for each 'section', which is later used to access
+        // different parts of the file
+        let mut section_dst_offset = ptr4_begin_offset + (header.offset4 * 0x40);
+        let mut sections: Vec<BinSection> = vec!();
         for i in 0..header.sections {
-            // The 'section' with a value of 1 in its first field details the
-            // number of objects within the .bin file
             let section_offset = (section_begin_offset + (i * 0x10)) as usize;
             let next_section_offset = section_offset + 0x10;
-            let section = BinSection::new(&raw[section_offset..next_section_offset], console);
+            let section = BinSection::new(
+                &raw[section_offset..next_section_offset],
+                section_dst_offset,
+                console
+            );
+            let section_size = section.size;
+            sections.push(section);
+
+            section_dst_offset += section_size * 4;
+        }
+
+        // Create an object for each serialised game object in the .bin
+        let mut objects: Vec<BinObject> = vec!();
+        for section in sections {
+            // The 'section' with a value of 1 in its first field details the
+            // number of objects within the .bin file
             if section.number == 1 {
                 // This region contains a list of offsets within the file to
                 // each object contained within it
                 for j in 0..section.size {
-                    let object_ptr_offset = (object_ptrs_begin_offset + (j * 0x04)) as usize;
+                    let object_ptr_offset = (section.offset + (j * 0x04)) as usize;
                     let object_offset =
                         console.read32(&raw[object_ptr_offset..(object_ptr_offset + 0x04)]);
                     objects.push(BinObject::new(&raw, object_offset, console).unwrap());
                 }
             }
-            object_ptrs_begin_offset += section.size * 4;
         }
 
         Bin {

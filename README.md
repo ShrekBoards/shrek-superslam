@@ -2,12 +2,17 @@
 
 A Rust library and programs for interacting with the Shrek SuperSlam game files.
 
-## shreksuperslam-extract
+## Binaries
+
+This repository includes multiple programs for reading, interacting with and
+modifying the game's files.
+
+### shreksuperslam-extract
 
 A program for extracting the game's compressed file - MASTER.DAT, using the
 associated MASTER.DIR file. Tested and working for PC and Gamecube versions.
 
-### Usage
+#### Usage
 
 ```sh
 ./shreksuperslam-extract --dat MASTER.DAT --dir MASTER.DIR --console gc
@@ -23,14 +28,14 @@ Where:
     - `ps2`: PS2
     - `xbox`: Xbox
 
-## shreksuperslam-repackage
+### shreksuperslam-repackage
 
 A program for taking an extracted pair of files and repacking them into the
 files to be read by the game. This can be used to facilitate modification of the
 game's files, for example changing attack values or textures. Tested and working
 for PC and Gamecube versions.
 
-### Usage
+#### Usage
 
 ```sh
 ./shreksuperslam-repackage --data data/ --console gc
@@ -47,12 +52,12 @@ Where:
     - `ps2`: PS2
     - `xbox`: Xbox
 
-## shreksuperslam-classes
+### shreksuperslam-classes
 
 Prints the name and offset of every serialised object within the game's .bin
 files.
 
-### Usage
+#### Usage
 
 ```sh
 ./shreksuperslam-classes --dat MASTER.DAT --dir MASTER.DIR --console gc

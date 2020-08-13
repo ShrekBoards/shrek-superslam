@@ -36,7 +36,6 @@ impl MasterDat {
     ///
     /// - `path`: The path to the MASTER.DAT file to load
     /// - `master_dir`: The associated MASTER.DIR file
-    /// - `console`: The console this MASTER.DAT file is from
     pub fn from_file(path: &Path, master_dir: MasterDir) -> MasterDat {
         let mut f = File::open(path).expect("unable to read master.dat");
 
@@ -127,7 +126,7 @@ impl MasterDat {
     ///
     /// # Parameters
     ///
-    /// - `path`: The path for the destination file
+    /// - `path`: The path for the destination MASTER.DAT file
     /// - `master_dir_path`: The path for the destination MASTER.DIR file
     pub fn write(&self, path: &Path, master_dir_path: &Path) {
         self.master_dir.write(&master_dir_path);

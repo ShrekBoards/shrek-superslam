@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use getopts::Options;
 
-use shrek_superslam::console::Console;
+use shrek_superslam::Console;
 
 /// Possible arguments to the program
 pub struct Config {

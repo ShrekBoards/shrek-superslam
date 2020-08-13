@@ -3,9 +3,8 @@ use std::path::Path;
 use std::process;
 
 extern crate shrek_superslam;
-use shrek_superslam::bin_file::Bin;
-use shrek_superslam::master_dat::MasterDat;
-use shrek_superslam::master_dir::MasterDir;
+use shrek_superslam::{MasterDat, MasterDir};
+use shrek_superslam::files::Bin;
 
 mod args;
 use args::Config;

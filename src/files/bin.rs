@@ -101,7 +101,7 @@ pub struct Bin {
 }
 
 impl Bin {
-    /// Read a .db.bin file from the decompressed Shrek SuperSlam files
+    /// Read a .bin file from the decompressed Shrek SuperSlam files
     ///
     /// # Parameters
     ///

@@ -7,8 +7,7 @@ use std::sync::Arc;
 use crossbeam::thread;
 
 extern crate shrek_superslam;
-use shrek_superslam::master_dat::MasterDat;
-use shrek_superslam::master_dir::MasterDir;
+use shrek_superslam::{MasterDat, MasterDir};
 
 mod args;
 use args::Config;

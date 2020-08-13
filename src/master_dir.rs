@@ -8,7 +8,7 @@ use crate::console::Console;
 
 /// Type representing a single entry in the game's MASTER.DIR file, which in
 /// turn describes a single compressed file in the MASTER.DAT file.
-pub struct MasterDirEntry {
+pub(crate) struct MasterDirEntry {
     /// The offset of the file in the MASTER.DAT file
     pub offset: u32,
 
@@ -25,7 +25,7 @@ pub struct MasterDirEntry {
 /// Type representing the MASTER.DIR file - a collection of MasterDirEntry
 pub struct MasterDir {
     /// The entries within the MASTER.DIR
-    pub entries: Vec<MasterDirEntry>,
+    pub(crate) entries: Vec<MasterDirEntry>,
 
     /// The console this MASTER.DIR is from or for
     console: Console,
@@ -97,10 +97,6 @@ impl MasterDir {
     /// # Parameters
     ///
     /// - `console`: The console this version of the file is for
-    ///
-    /// # Returns
-    ///
-    /// A new `MasterDir` of the enumerated MASTER.DIR entries
     pub fn new(console: Console) -> MasterDir {
         MasterDir {
             entries: vec![],
@@ -114,10 +110,6 @@ impl MasterDir {
     ///
     /// - `master_dir`: The bytes of the entire MASTER.DIR file
     /// - `console`: The console this version of the file is from
-    ///
-    /// # Returns
-    ///
-    /// A new MasterDir of the enumerated MASTER.DIR entries
     pub fn from_bytes(master_dir: &[u8], console: Console) -> MasterDir {
         // The MASTER.DIR is split into two sections:
         // * The first is a list of 4-byte integers that serve as offsets in the
@@ -163,10 +155,6 @@ impl MasterDir {
     ///
     /// - `path`: The path to the MASTER.DIR file to read
     /// - `console`: The console this version of the file is from
-    ///
-    /// # Returns
-    ///
-    /// A new MasterDir of the enumerated MASTER.DIR entries
     pub fn from_file(path: &Path, console: Console) -> MasterDir {
         // Read all of the file to a byte array
         let file_contents = fs::read(&path).expect("unable to read master.dir");
@@ -180,7 +168,7 @@ impl MasterDir {
     /// # Parameters
     ///
     /// - `path`: The path to write the new file to
-    pub fn write(&self, path: &Path) {
+    pub(crate) fn write(&self, path: &Path) {
         let mut f = File::create(&path).expect("unable to create file");
 
         // The total size of the first section - which is a list of offsets to

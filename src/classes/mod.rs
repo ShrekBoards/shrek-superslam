@@ -12,7 +12,17 @@ pub trait ShrekSuperSlamGameObject {
     fn name() -> &'static str;
 }
 
-pub fn hash_lookup(hash: u32) -> Option<&'static str> {
+/// Lookup a hash value and retrieve the name of the class corresponding to the hash
+///
+/// # Parameters
+///
+/// - `hash`: The hash to lookup
+///
+/// # Returns
+///
+/// A Some(&'static str) of the matching class name, if any. None if the hash
+/// given does not match any class names.
+pub(crate) fn hash_lookup(hash: u32) -> Option<&'static str> {
     match hash {
         0xB974E53B => Some("Game::GameWorld"),
         0xC239E1AB => Some("Game::RotationObject"),

@@ -6,7 +6,7 @@ use std::process;
 use walkdir::WalkDir;
 
 extern crate shrek_superslam;
-use shrek_superslam::master_dat::MasterDat;
+use shrek_superslam::MasterDat;
 
 mod args;
 use args::Config;

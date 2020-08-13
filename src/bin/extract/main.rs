@@ -1,3 +1,4 @@
+use std::cmp;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
@@ -5,6 +6,7 @@ use std::process;
 use std::sync::Arc;
 
 use crossbeam::thread;
+use num_cpus;
 
 extern crate shrek_superslam;
 use shrek_superslam::{MasterDat, MasterDir};
@@ -76,7 +78,7 @@ fn main() {
     // Split the list of files within the MASTER.DAT, and use a different thread
     // to decompress the files in each part
     let files = master_dat.files();
-    let chunk_size = files.len() / 4;
+    let chunk_size = files.len() / cmp::max(1, num_cpus::get());
     let master_dat_arc = Arc::new(master_dat);
     let config_arc = Arc::new(config);
     thread::scope(|scope| {

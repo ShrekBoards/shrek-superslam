@@ -129,14 +129,14 @@ impl Bin {
         // Create an entry for each 'section', which is later used to access
         // different parts of the file
         let mut section_dst_offset = ptr4_begin_offset + (header.offset4 * 0x40);
-        let mut sections: Vec<BinSection> = vec!();
+        let mut sections: Vec<BinSection> = vec![];
         for i in 0..header.sections {
             let section_offset = (section_begin_offset + (i * 0x10)) as usize;
             let next_section_offset = section_offset + 0x10;
             let section = BinSection::new(
                 &raw[section_offset..next_section_offset],
                 section_dst_offset,
-                console
+                console,
             );
             let section_size = section.size;
             sections.push(section);
@@ -145,7 +145,7 @@ impl Bin {
         }
 
         // Create an object for each serialised game object in the .bin
-        let mut objects: Vec<BinObject> = vec!();
+        let mut objects: Vec<BinObject> = vec![];
         for section in sections {
             // The 'section' with a value of 1 in its first field details the
             // number of objects within the .bin file

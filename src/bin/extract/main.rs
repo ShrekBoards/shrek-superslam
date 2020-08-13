@@ -6,7 +6,6 @@ use std::process;
 use std::sync::Arc;
 
 use crossbeam::thread;
-use num_cpus;
 
 extern crate shrek_superslam;
 use shrek_superslam::{MasterDat, MasterDir};

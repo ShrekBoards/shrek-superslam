@@ -1,6 +1,6 @@
 use std::fs;
 use std::fs::File;
-use std::io::Write;
+use std::io::{Error, Write};
 use std::iter::repeat;
 use std::path::Path;
 
@@ -155,12 +155,17 @@ impl MasterDir {
     ///
     /// - `path`: The path to the MASTER.DIR file to read
     /// - `console`: The console this version of the file is from
-    pub fn from_file(path: &Path, console: Console) -> MasterDir {
+    ///
+    /// # Returns
+    ///
+    /// An `Ok(MasterDir)` on success, or an `Err(std:io::Error)` if there is
+    /// an error while reading the file
+    pub fn from_file(path: &Path, console: Console) -> Result<MasterDir, Error> {
         // Read all of the file to a byte array
-        let file_contents = fs::read(&path).expect("unable to read master.dir");
+        let file_contents = fs::read(&path)?;
 
         // Parse the bytes to a MasterDir object
-        MasterDir::from_bytes(&file_contents, console)
+        Ok(MasterDir::from_bytes(&file_contents, console))
     }
 
     /// Writes the MASTER.DIR to a new file
@@ -168,8 +173,13 @@ impl MasterDir {
     /// # Parameters
     ///
     /// - `path`: The path to write the new file to
-    pub(crate) fn write(&self, path: &Path) {
-        let mut f = File::create(&path).expect("unable to create file");
+    ///
+    /// # Returns
+    ///
+    /// `Ok(())` on success, otherwise a `Err(std::io::Error)` if the file
+    /// cannot be written to
+    pub(crate) fn write(&self, path: &Path) -> Result<(), Error> {
+        let mut f = File::create(&path)?;
 
         // The total size of the first section - which is a list of offsets to
         // each entry in the second section - is determined from the total
@@ -177,26 +187,24 @@ impl MasterDir {
         // second section starts immediately after, the first offset is also
         // this value
         let mut offset = ((self.entries.len() + 2) * 4) as u32;
-        f.write_all(&self.console.write32(offset))
-            .expect("error writing file");
+        f.write_all(&self.console.write32(offset))?;
 
         // Each subsequent offset is determined by adding the padded size of
         // the previous entry
         for entry in &self.entries {
             offset += entry.padded_size();
-            f.write_all(&self.console.write32(offset))
-                .expect("error writing file");
+            f.write_all(&self.console.write32(offset))?;
         }
 
         // Write the terminating offset
-        f.write_all(&[0x00, 0x00, 0x00, 0x00])
-            .expect("error writing file");
+        f.write_all(&[0x00, 0x00, 0x00, 0x00])?;
 
         // Now the actual entries need to be written
         for entry in &self.entries {
-            f.write_all(&entry.padded(self.console))
-                .expect("error writing file");
+            f.write_all(&entry.padded(self.console))?;
         }
+
+        Ok(())
     }
 }
 

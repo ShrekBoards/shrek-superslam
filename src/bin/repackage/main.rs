@@ -51,5 +51,8 @@ fn main() {
     }
 
     // Write the new MASTER.DAT and MASTER.DIR to files
-    master_dat.write(&PathBuf::from("MASTER.DAT"), &PathBuf::from("MASTER.DIR"));
+    match master_dat.write(&PathBuf::from("MASTER.DAT"), &PathBuf::from("MASTER.DIR")) {
+        Err(e) => panic!("failed to write \"MASTER.DAT\" or \"MASTER.DIR\": {}", e),
+        _ => ()
+    };
 }

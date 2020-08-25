@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::{Read, Seek, SeekFrom, Write};
+use std::io::{Error, Read, Seek, SeekFrom, Write};
 use std::path::Path;
 
 use crate::compression::{compress, decompress};
@@ -36,21 +36,25 @@ impl MasterDat {
     ///
     /// - `path`: The path to the MASTER.DAT file to load
     /// - `master_dir`: The associated MASTER.DIR file
-    pub fn from_file(path: &Path, master_dir: MasterDir) -> MasterDat {
-        let mut f = File::open(path).expect("unable to read master.dat");
+    ///
+    /// # Returns
+    ///
+    /// An `Ok(MasterDat)` if successfully constructed, or an `Err(std::io::Error)`
+    /// if there is an error reading the file.
+    pub fn from_file(path: &Path, master_dir: MasterDir) -> Result<MasterDat, Error> {
+        let mut f = File::open(path)?;
 
         // Iterate over the entries within the associated MASTER.DIR, and use it to
         // read out each compressed file from the MASTER.DAT
         let mut files: HashMap<String, Vec<u8>> = HashMap::new();
         for entry in &master_dir.entries {
             let mut file: Vec<u8> = vec![0; entry.comp_size as usize];
-            f.seek(SeekFrom::Start(entry.offset as u64))
-                .expect("failed to seek");
-            f.read_exact(&mut file).expect("unable to read master.dat");
+            f.seek(SeekFrom::Start(entry.offset as u64))?;
+            f.read_exact(&mut file)?;
             files.insert(entry.name.clone(), file);
         }
 
-        MasterDat { files, master_dir }
+        Ok(MasterDat { files, master_dir })
     }
 
     /// Adds a file to the MASTER.DAT
@@ -128,13 +132,19 @@ impl MasterDat {
     ///
     /// - `path`: The path for the destination MASTER.DAT file
     /// - `master_dir_path`: The path for the destination MASTER.DIR file
-    pub fn write(&self, path: &Path, master_dir_path: &Path) {
-        self.master_dir.write(&master_dir_path);
-        let mut f = File::create(path).expect("unable to create file");
+    ///
+    /// # Returns
+    ///
+    /// `Ok(())` on success, or an `Err(std::io::Error)` if there is a failure
+    /// writing to either of the files
+    pub fn write(&self, path: &Path, master_dir_path: &Path) -> Result<(), Error> {
+        self.master_dir.write(&master_dir_path)?;
+        let mut f = File::create(path)?;
         for master_dir_entry in &self.master_dir.entries {
-            f.write_all(&pad(self.files.get(&master_dir_entry.name).unwrap()))
-                .expect("unable to write");
+            f.write_all(&pad(self.files.get(&master_dir_entry.name).unwrap()))?;
         }
+
+        Ok(())
     }
 }
 

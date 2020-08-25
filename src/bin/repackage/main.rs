@@ -51,8 +51,7 @@ fn main() {
     }
 
     // Write the new MASTER.DAT and MASTER.DIR to files
-    match master_dat.write(&PathBuf::from("MASTER.DAT"), &PathBuf::from("MASTER.DIR")) {
-        Err(e) => panic!("failed to write \"MASTER.DAT\" or \"MASTER.DIR\": {}", e),
-        _ => ()
-    };
+    if let Err(e) = master_dat.write(&PathBuf::from("MASTER.DAT"), &PathBuf::from("MASTER.DIR")) {
+        panic!("failed to write \"MASTER.DAT\" or \"MASTER.DIR\": {}", e);
+    }
 }

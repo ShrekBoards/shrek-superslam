@@ -21,11 +21,11 @@ impl BinHeader {
     /// - `console`: The console the .bin file comes from
     fn new(raw: &[u8], console: Console) -> BinHeader {
         BinHeader {
-            offset1: console.read32(&raw[0x10..0x14]),
-            sections: console.read32(&raw[0x18..0x1C]),
-            offset2: console.read32(&raw[0x1C..0x20]),
-            dependencies: console.read32(&raw[0x24..0x28]),
-            offset4: console.read32(&raw[0x2C..0x30]),
+            offset1: console.read_u32(&raw[0x10..0x14]),
+            sections: console.read_u32(&raw[0x18..0x1C]),
+            offset2: console.read_u32(&raw[0x1C..0x20]),
+            dependencies: console.read_u32(&raw[0x24..0x28]),
+            offset4: console.read_u32(&raw[0x2C..0x30]),
         }
     }
 }
@@ -53,8 +53,8 @@ impl BinSection {
     /// - `console`: The console the .bin comes from
     fn new(raw: &[u8], offset: u32, console: Console) -> BinSection {
         BinSection {
-            number: console.read32(&raw[0x00..0x04]),
-            size: console.read32(&raw[0x04..0x08]),
+            number: console.read_u32(&raw[0x00..0x04]),
+            size: console.read_u32(&raw[0x04..0x08]),
             offset,
         }
     }
@@ -92,7 +92,8 @@ impl BinObject {
     /// Some(BinObject) detailing the object that begins at the offset, or None
     /// if there is no object starting at the given offset
     fn new(raw: &[u8], offset: u32, console: Console) -> Option<BinObject> {
-        let hash = console.read32(&raw[(0x40 + offset) as usize..(0x40 + offset + 0x04) as usize]);
+        let hash =
+            console.read_u32(&raw[(0x40 + offset) as usize..(0x40 + offset + 0x04) as usize]);
         match hash_lookup(hash) {
             Some(name) => Some(BinObject { hash, name, offset }),
             _ => None,
@@ -103,9 +104,10 @@ impl BinObject {
 /// Structure for reading and managing a .bin file from the extracted Shrek
 /// SuperSlam game files
 pub struct Bin {
-    _raw: Vec<u8>,
     _header: BinHeader,
     objects: Vec<BinObject>,
+    pub(crate) console: Console,
+    pub(crate) raw: Vec<u8>,
 }
 
 impl Bin {
@@ -155,21 +157,74 @@ impl Bin {
                 for j in 0..section.size {
                     let object_ptr_offset = (section.offset + (j * 0x04)) as usize;
                     let object_offset =
-                        console.read32(&raw[object_ptr_offset..(object_ptr_offset + 0x04)]);
+                        console.read_u32(&raw[object_ptr_offset..(object_ptr_offset + 0x04)]);
                     objects.push(BinObject::new(&raw, object_offset, console).unwrap());
                 }
             }
         }
 
         Bin {
-            _raw: raw,
             _header: header,
+            console,
             objects,
+            raw,
         }
     }
 
-    pub fn get_object_from_offset<T: ShrekSuperSlamGameObject>(_offset: u32) -> Result<T, ()> {
-        Err(())
+    /// Get an object at an offset within the .bin file as a full deserialised
+    /// game object type
+    ///
+    /// # Parameters
+    ///
+    /// - `offset`: The offset within the .bin that the object starts at
+    ///
+    /// # Type parameters
+    ///
+    /// - `T`: The game object type to deserialise to
+    ///
+    /// # Returns
+    ///
+    /// `Ok(T)` if the object exists at the given object and can be deserialised,
+    /// otherwise `Err()`.
+    pub fn get_object_from_offset<T: ShrekSuperSlamGameObject>(
+        &self,
+        offset: u32,
+    ) -> Result<T, ()> {
+        // Ensure the requested type exists at the given offset by checking the
+        // hash at the offset matches the expected hash of the type
+        let object_begin = (offset + 0x40) as usize;
+        let hash = self
+            .console
+            .read_u32(&self.raw[object_begin..object_begin + 4]);
+        if hash != T::hash() {
+            return Err(());
+        }
+
+        // Pass the offset to the game object's own constructor
+        Ok(T::new(&self, object_begin))
+    }
+
+    /// Get a string slice from an offset within the .bin file
+    ///
+    /// # Parameters
+    ///
+    /// - `offset`: The offset within the .bin file that the string starts at
+    ///
+    /// # Returns
+    ///
+    /// `Ok(&str)` if a string exists at the offset, or an `Err(Utf8Error)` if
+    /// the string fails to decode
+    pub fn get_str_from_offset(&self, offset: u32) -> Result<&str, str::Utf8Error> {
+        let str_begin = (offset + 0x40) as usize;
+
+        // Find the first NULL byte, which ends the string. If not found,
+        // default to the end of the slice, which will more than likely give us
+        // a Utf8Error later
+        let slice = &self.raw[str_begin..];
+        let size = slice.iter().position(|&b| b == 0x00).unwrap_or(0);
+
+        // Try to decode from the offset to the NULL byte as a UTF-8 string
+        str::from_utf8(&self.raw[str_begin..str_begin + size])
     }
 
     /// # Returns

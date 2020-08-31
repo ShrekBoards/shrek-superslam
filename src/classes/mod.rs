@@ -1,3 +1,7 @@
+pub mod attacks;
+
+use crate::files::Bin;
+
 /// Trait for structures representing serialised Shrek SuperSlam game objects
 /// that appear in the game's .bin files
 pub trait ShrekSuperSlamGameObject {
@@ -10,6 +14,18 @@ pub trait ShrekSuperSlamGameObject {
     ///
     /// The in-game name of the class
     fn name() -> &'static str;
+
+    /// Constructor
+    ///
+    /// # Parameters
+    ///
+    /// - `bin`: The .bin file the object is coming from
+    /// - `offset`: The offset the object begins at in the .bin file
+    ///
+    /// # Returns
+    ///
+    /// The constructed object
+    fn new(bin: &Bin, offset: usize) -> Self;
 }
 
 /// Lookup a hash value and retrieve the name of the class corresponding to the hash

@@ -26,6 +26,14 @@ pub trait ShrekSuperSlamGameObject {
     ///
     /// The constructed object
     fn new(bin: &Bin, offset: usize) -> Self;
+
+    /// Writes the game object to the given .bin file at the given offset
+    ///
+    /// # Parameters
+    ///
+    /// - `bin`: The .bin file to write the object to
+    /// - `offset`: The offset in the .bin file to write the object to
+    fn write(&self, bin: &mut Bin, offset: usize);
 }
 
 /// Lookup a hash value and retrieve the name of the class corresponding to the hash

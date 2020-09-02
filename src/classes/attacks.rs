@@ -35,6 +35,9 @@ pub struct AttackMoveRegion {
 
     /// The height of the hitbox - larger extends out wider
     pub radius: f32,
+
+    /// The offset of the object within the .bin file
+    offset: usize,
 }
 
 impl ShrekSuperSlamGameObject for AttackMoveType {
@@ -95,6 +98,27 @@ impl ShrekSuperSlamGameObject for AttackMoveType {
             name: bin.get_str_from_offset(name_offset).unwrap().to_owned(),
         }
     }
+
+    /// Writes the Game::AttackMoveType object back to its .bin file
+    ///
+    /// # Parameters
+    ///
+    /// - `bin`: The .bin file to write this object to
+    /// - `offset`: The offset to write this object back to
+    fn write(&self, bin: &mut Bin, offset: usize) {
+        // Write back only fixed-length numeric fields to the new object - other
+        // fields such as strings would modify the size of the file and
+        // invalidate all offsets
+        let c = bin.console;
+        bin.raw.splice(offset + 0x84..offset + 0x88, c.write_f32(self.damage1));
+        bin.raw.splice(offset + 0x88..offset + 0x8C, c.write_f32(self.damage2));
+        bin.raw.splice(offset + 0x8C..offset + 0x90, c.write_f32(self.damage3));
+
+        // Write the attack's hitboxes back to the .bin file too
+        for hitbox in &self.hitboxes {
+            hitbox.write(bin, hitbox.offset);
+        }
+    }
 }
 
 impl ShrekSuperSlamGameObject for AttackMoveRegion {
@@ -125,6 +149,23 @@ impl ShrekSuperSlamGameObject for AttackMoveRegion {
             delay: c.read_f32(&bin.raw[offset + 0x04..offset + 0x08]),
             width: c.read_f32(&bin.raw[offset + 0x30..offset + 0x34]),
             radius: c.read_f32(&bin.raw[offset + 0x38..offset + 0x3C]),
+            offset,
         }
+    }
+
+    /// Writes the Game::AttackMoveRegion object back to its .bin file
+    ///
+    /// # Paramters
+    ///
+    /// - `bin`: The .bin file to write this object to
+    /// - `offset`: The offset to write this object back to
+    fn write(&self, bin: &mut Bin, offset: usize) {
+        // Write back only fixed-length numeric fields to the new object - other
+        // fields such as strings would modify the size of the file and
+        // invalidate all offsets
+        let c = bin.console;
+        bin.raw.splice(offset + 0x04..offset + 0x08, c.write_f32(self.delay));
+        bin.raw.splice(offset + 0x30..offset + 0x34, c.write_f32(self.width));
+        bin.raw.splice(offset + 0x38..offset + 0x3C, c.write_f32(self.radius));
     }
 }

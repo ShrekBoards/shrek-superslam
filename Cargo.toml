@@ -13,6 +13,10 @@ name = "shreksuperslam-extract"
 path = "src/bin/extract/main.rs"
 
 [[bin]]
+name = "shreksuperslam-modify-attacks"
+path = "src/bin/modify_attacks/main.rs"
+
+[[bin]]
 name = "shreksuperslam-repackage"
 path = "src/bin/repackage/main.rs"
 

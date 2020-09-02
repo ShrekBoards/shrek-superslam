@@ -126,6 +126,45 @@ impl MasterDat {
         self.files.keys().cloned().collect()
     }
 
+    /// Update the contents of a file contained within the MASTER.DAT.
+    /// Currently, the new contents must be the same size as the old contents.
+    ///
+    /// # Paramters
+    ///
+    /// - `path`: The path of the file to update
+    /// - `data`: The uncompressed data of the file to update
+    ///
+    /// # Returns
+    ///
+    /// `Ok(())` if the replacement succeeded, or `Err(usize)` on failure,
+    /// containing the expected size of the file to replace that was not met
+    /// with the supplied data.
+    pub fn update_file(&mut self, path: &str, data: &[u8]) -> Result<(), usize> {
+        // Ensure the file to replace exists in the first place
+        let existing_length = match self.decompressed_file(path) {
+            Some(f) => f.len(),
+            _ => 0,
+        };
+
+        // Ensure the filesize of the new file is the same as the old
+        if data.len() != existing_length {
+            return Err(existing_length);
+        }
+
+        // Since our compression algorithm is not a perfect recreation of the
+        // original, we will need to update the MASTER.DIR's record of the
+        // compressed size too
+        let compressed = compress(data);
+        if let Some(e) = self.master_dir.entries.iter_mut().find(|e| e.name == path) {
+            e.decomp_size = compressed.len() as u32;
+        }
+
+        // Update the contents of the existing file
+        self.files.insert(path.to_string(), compress(data));
+
+        Ok(())
+    }
+
     /// Write the MASTER.DAT and its MASTER.DIR to new files
     ///
     /// # Parameters

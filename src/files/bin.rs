@@ -233,4 +233,42 @@ impl Bin {
     pub fn objects(&self) -> &Vec<BinObject> {
         &self.objects
     }
+
+    /// Overwrite an existing object at the given offset
+    ///
+    /// # Parameters
+    ///
+    /// - `offset`: The offset of the destination object to overwrite
+    /// - `object`: The source object to overwrite with
+    ///
+    /// # Returns
+    ///
+    /// `Ok(())` on success, `Err(())` if the given offset does not contain an
+    /// object of the type given.
+    pub fn overwrite_object<T: ShrekSuperSlamGameObject>(
+        &mut self,
+        offset: u32,
+        object: &T,
+    ) -> Result<(), ()> {
+        // Check that the given offset actually contains an object of the type
+        // given as a parameter before we overwrite it
+        let object_begin = (offset + 0x40) as usize;
+        let hash = self
+            .console
+            .read_u32(&self.raw[object_begin..object_begin + 4]);
+        if hash != T::hash() {
+            return Err(());
+        }
+
+        object.write(self, object_begin);
+
+        Ok(())
+    }
+
+    /// # Returns
+    ///
+    /// The raw bytes of the .bin file
+    pub fn raw(&self) -> &[u8] {
+        &self.raw
+    }
 }

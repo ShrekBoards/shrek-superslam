@@ -156,7 +156,7 @@ impl MasterDat {
         // compressed size too
         let compressed = compress(data);
         if let Some(e) = self.master_dir.entries.iter_mut().find(|e| e.name == path) {
-            e.decomp_size = compressed.len() as u32;
+            e.comp_size = compressed.len() as u32;
         }
 
         // Update the contents of the existing file
@@ -196,7 +196,7 @@ impl MasterDat {
 /// # Returns
 ///
 /// The size the compressed file would be after padding in the MASTER.DAT
-fn padded_size(size: usize) -> usize {
+const fn padded_size(size: usize) -> usize {
     size + (2048 - (size % 2048))
 }
 

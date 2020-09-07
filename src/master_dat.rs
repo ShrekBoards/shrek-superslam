@@ -129,7 +129,7 @@ impl MasterDat {
     /// Update the contents of a file contained within the MASTER.DAT.
     /// Currently, the new contents must be the same size as the old contents.
     ///
-    /// # Paramters
+    /// # Parameters
     ///
     /// - `path`: The path of the file to update
     /// - `data`: The uncompressed data of the file to update

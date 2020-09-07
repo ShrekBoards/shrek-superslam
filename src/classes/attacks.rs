@@ -188,7 +188,7 @@ impl ShrekSuperSlamGameObject for AttackMoveRegion {
 
     /// Writes the Game::AttackMoveRegion object back to its .bin file
     ///
-    /// # Paramters
+    /// # Parameters
     ///
     /// - `bin`: The .bin file to write this object to
     /// - `offset`: The offset to write this object back to

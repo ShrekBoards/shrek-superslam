@@ -15,11 +15,26 @@ pub struct AttackMoveType {
     /// The third damage field, unknown purpose
     pub damage3: f32,
 
+    /// If true, the attack cannot be used
+    pub disabled: bool,
+
+    /// Vertical movement vector - positive goes up, negative goes down
+    pub fall_speed: f32,
+
     /// The attack's hitboxes, if any
     pub hitboxes: Vec<AttackMoveRegion>,
 
+    /// If true, the attack passes through and does no damage or knockback
+    pub intangible: bool,
+
+    /// True if the attack knocks the opponent down, false if not
+    pub knocks_down: bool,
+
     /// The attack's name
     pub name: String,
+
+    /// If true, pushes back the attacker on contact
+    pub pushes_back: bool,
 }
 
 /// Structure representing the in-game `Game::AttackMoveRegion` object type,
@@ -65,10 +80,18 @@ impl ShrekSuperSlamGameObject for AttackMoveType {
         let raw = &bin.raw;
         let c = bin.console;
 
+        // Read numeric fields
+        let fall_speed = c.read_f32(&raw[offset + 0x14..offset + 0x18]);
         let damage1 = c.read_f32(&raw[offset + 0x84..offset + 0x88]);
         let damage2 = c.read_f32(&raw[offset + 0x88..offset + 0x8C]);
         let damage3 = c.read_f32(&raw[offset + 0x8C..offset + 0x90]);
         let name_offset = c.read_u32(&raw[offset + 0x28..offset + 0x2C]);
+
+        // Read boolean flag fields
+        let knocks_down = raw[offset + 0x34] != 0;
+        let disabled = raw[offset + 0x35] != 0;
+        let intangible = raw[offset + 0x3A] != 0;
+        let pushes_back = raw[offset + 0x3B] != 0;
 
         // Offset 0x20 of the AttackMoveType contains an offset within the .bin
         // file to a list of further offsets, each of which points to an
@@ -91,11 +114,16 @@ impl ShrekSuperSlamGameObject for AttackMoveType {
             .collect();
 
         AttackMoveType {
+            fall_speed,
             damage1,
             damage2,
             damage3,
+            disabled,
             hitboxes,
+            intangible,
+            knocks_down,
             name: bin.get_str_from_offset(name_offset).unwrap().to_owned(),
+            pushes_back,
         }
     }
 
@@ -110,6 +138,11 @@ impl ShrekSuperSlamGameObject for AttackMoveType {
         // fields such as strings would modify the size of the file and
         // invalidate all offsets
         let c = bin.console;
+        bin.raw.splice(offset + 0x14..offset + 0x18, c.write_f32(self.fall_speed));
+        bin.raw[offset + 0x34] = self.knocks_down as u8;
+        bin.raw[offset + 0x35] = self.disabled as u8;
+        bin.raw[offset + 0x3A] = self.intangible as u8;
+        bin.raw[offset + 0x3B] = self.pushes_back as u8;
         bin.raw.splice(offset + 0x84..offset + 0x88, c.write_f32(self.damage1));
         bin.raw.splice(offset + 0x88..offset + 0x8C, c.write_f32(self.damage2));
         bin.raw.splice(offset + 0x8C..offset + 0x90, c.write_f32(self.damage3));

@@ -17,6 +17,9 @@ pub trait ShrekSuperSlamGameObject {
 
     /// Constructor
     ///
+    /// Do not call directly, instead use bin::get_object_from_offset<T>() to
+    /// get objects from a .bin file.
+    ///
     /// # Parameters
     ///
     /// - `bin`: The .bin file the object is coming from

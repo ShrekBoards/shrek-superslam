@@ -157,6 +157,16 @@ impl MasterDat {
         let compressed = compress(data);
         if let Some(e) = self.master_dir.entries.iter_mut().find(|e| e.name == path) {
             e.comp_size = compressed.len() as u32;
+
+            // Having updated the size of this entry, the offsets to all
+            // subsequent entries will now be invalidated, as the new file
+            // is larger and will take up more space. We therefore recalculate
+            // each offset (it's easier to redo them all)
+            let mut total_size: u32 = 0;
+            for entry in self.master_dir.entries.iter_mut() {
+                entry.offset = total_size;
+                total_size += padded_size(entry.comp_size as usize) as u32;
+            }
         }
 
         // Update the contents of the existing file

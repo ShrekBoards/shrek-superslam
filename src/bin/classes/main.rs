@@ -28,15 +28,14 @@ fn main() {
     // Iterate over all objects in all .bin files, and print a sequential list
     // of the objects within each file and the offset of each of those objects
     for filepath in master_dat.files() {
-        let trimmed = &filepath.trim_end_matches(char::from(0));
-        if let Some(extension) = Path::new(&trimmed).extension() {
+        if let Some(extension) = Path::new(&filepath).extension() {
             if extension == "bin" {
                 let bin = Bin::new(
                     master_dat.decompressed_file(&filepath).unwrap(),
                     config.console,
                 );
                 if !bin.objects().is_empty() {
-                    println!("{} ({} objects)", trimmed, bin.objects().len());
+                    println!("{} ({} objects)", filepath, bin.objects().len());
                     for object in bin.objects() {
                         println!("\t+{:04x}: {}", object.offset, object.name);
                     }

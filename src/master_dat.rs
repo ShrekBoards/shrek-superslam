@@ -51,7 +51,7 @@ impl MasterDat {
             let mut file: Vec<u8> = vec![0; entry.comp_size as usize];
             f.seek(SeekFrom::Start(entry.offset as u64))?;
             f.read_exact(&mut file)?;
-            files.insert(entry.name.clone(), file);
+            files.insert(entry.name.trim_end_matches(char::from(0)).to_owned(), file);
         }
 
         Ok(MasterDat { files, master_dir })

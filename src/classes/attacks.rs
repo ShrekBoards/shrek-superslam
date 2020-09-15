@@ -22,6 +22,10 @@ pub struct AttackMoveType {
     /// If true, the attack cannot be used
     pub disabled: bool,
 
+    /// The amount of time (in seconds) the character is inactive for after
+    /// using the attack
+    pub endlag: f32,
+
     /// Vertical movement vector - positive goes up, negative goes down
     pub fall_speed: f32,
 
@@ -88,6 +92,7 @@ impl ShrekSuperSlamGameObject for AttackMoveType {
         let c = bin.console;
 
         // Read numeric fields
+        let endlag = c.read_f32(&raw[offset + 0x04..offset + 0x08]);
         let fall_speed = c.read_f32(&raw[offset + 0x14..offset + 0x18]);
         let damage1 = c.read_f32(&raw[offset + 0x84..offset + 0x88]);
         let damage2 = c.read_f32(&raw[offset + 0x88..offset + 0x8C]);
@@ -108,6 +113,7 @@ impl ShrekSuperSlamGameObject for AttackMoveType {
             .collect();
 
         AttackMoveType {
+            endlag,
             fall_speed,
             damage1,
             damage2,
@@ -133,6 +139,7 @@ impl ShrekSuperSlamGameObject for AttackMoveType {
         // fields such as strings would modify the size of the file and
         // invalidate all offsets
         let c = bin.console;
+        bin.raw.splice(offset + 0x04..offset + 0x08, c.write_f32(self.endlag));
         bin.raw
             .splice(offset + 0x14..offset + 0x18, c.write_f32(self.fall_speed));
         bin.raw[offset + 0x34] = self.knocks_down as u8;

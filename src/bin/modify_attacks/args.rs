@@ -4,11 +4,31 @@ use getopts::Options;
 
 use shrek_superslam::Console;
 
+/// The mode of the program
+pub enum Mode {
+    /// Reads the attacks and outputs to a JSON file
+    Read,
+
+    /// Reads the JSON file and writes out the attacks
+    Write,
+}
+
 /// Possible arguments to the program
 pub struct Config {
-    pub master_dat_path: PathBuf, // The path to the MASTER.DAT file
-    pub master_dir_path: PathBuf, // The path to the MASTER.DIR file
-    pub console: Console,         // The console version of the files
+    /// The path to the MASTER.DAT file
+    pub master_dat_path: PathBuf,
+
+    /// The path to the MASTER.DIR file
+    pub master_dir_path: PathBuf,
+
+    /// The path to the attacks JSON to read or write
+    pub json: PathBuf,
+
+    /// The mode of the program
+    pub mode: Mode,
+
+    /// The console version of the files
+    pub console: Console,
 }
 
 impl Config {
@@ -31,6 +51,13 @@ impl Config {
         let mut opts = Options::new();
         opts.reqopt("a", "dat", "path to MASTER.DAT", "MASTER.DAT");
         opts.reqopt("i", "dir", "path to MASTER.DIR", "MASTER.DIR");
+        opts.reqopt(
+            "j",
+            "json",
+            "path to the JSON file to read or write to",
+            "shreksuperslam-character-attacks.json",
+        );
+        opts.reqopt("m", "mode", "read or write mode", "read|write");
         opts.optopt("c", "console", "target console", "gc|pc|ps2|xbox");
         let args: Vec<String> = args.collect();
         let matches = match opts.parse(&args[1..]) {
@@ -40,13 +67,32 @@ impl Config {
 
         let dat = PathBuf::from(matches.opt_str("a").unwrap());
         let dir = PathBuf::from(matches.opt_str("i").unwrap());
+        let json = PathBuf::from(matches.opt_str("j").unwrap());
+        let mode = match matches.opt_str("m") {
+            Some(m) => match m.to_ascii_lowercase().as_ref() {
+                "read" => Mode::Read,
+                "write" => Mode::Write,
+                _ => {
+                    return Err(format!(
+                        "unrecognised mode '{}': must be 'read' or 'write'",
+                        m
+                    ))
+                }
+            },
+            _ => return Err(String::from("no mode given - must be 'read' or 'write'")),
+        };
         let console = match matches.opt_str("console") {
             Some(c) => match c.as_ref() {
                 "gc" => Console::Gamecube,
                 "pc" => Console::PC,
                 "ps2" => Console::PS2,
                 "xbox" => Console::Xbox,
-                _ => return Err(String::from("unrecognised console")),
+                _ => {
+                    return Err(format!(
+                        "unrecognised console '{}': must be one of 'gc', 'pc', 'ps2' or 'xbox'",
+                        c
+                    ))
+                }
             },
             _ => Console::PC,
         };
@@ -54,6 +100,8 @@ impl Config {
         Ok(Config {
             master_dat_path: dat,
             master_dir_path: dir,
+            json,
+            mode,
             console,
         })
     }

@@ -37,7 +37,7 @@ fn main() {
                 if !bin.objects().is_empty() {
                     println!("{} ({} objects)", filepath, bin.objects().len());
                     for object in bin.objects() {
-                        println!("\t+{:04x}: {}", object.offset, object.name);
+                        println!("\t+{:04x}: {}", object.offset + 0x40, object.name);
                     }
                 }
             }

@@ -155,7 +155,12 @@ impl MasterDat {
         // original, we will need to update the MASTER.DIR's record of the
         // compressed size too
         let compressed = compress(data);
-        if let Some(e) = self.master_dir.entries.iter_mut().find(|e| e.name == path) {
+        if let Some(e) = self
+            .master_dir
+            .entries
+            .iter_mut()
+            .find(|e| e.name.trim_end_matches(char::from(0)) == path)
+        {
             e.comp_size = compressed.len() as u32;
 
             // Having updated the size of this entry, the offsets to all
@@ -190,7 +195,8 @@ impl MasterDat {
         self.master_dir.write(&master_dir_path)?;
         let mut f = File::create(path)?;
         for master_dir_entry in &self.master_dir.entries {
-            f.write_all(&pad(self.files.get(&master_dir_entry.name).unwrap()))?;
+            let trimmed = master_dir_entry.name.trim_end_matches(char::from(0));
+            f.write_all(&pad(self.files.get(trimmed).unwrap()))?;
         }
 
         Ok(())

@@ -1,6 +1,8 @@
 use std::str;
 
-use crate::classes::{hash_lookup, ShrekSuperSlamGameObject};
+use crate::classes::{
+    hash_lookup, SerialisedShrekSuperSlamGameObject, WriteableShrekSuperSlamGameObject,
+};
 use crate::console::Console;
 
 /// Structure representing the header (the first 40 bytes) of a .bin file
@@ -186,7 +188,7 @@ impl Bin {
     ///
     /// `Ok(T)` if the object exists at the given object and can be deserialised,
     /// otherwise `Err()`.
-    pub fn get_object_from_offset<T: ShrekSuperSlamGameObject>(
+    pub fn get_object_from_offset<T: SerialisedShrekSuperSlamGameObject>(
         &self,
         offset: u32,
     ) -> Result<T, ()> {
@@ -245,11 +247,10 @@ impl Bin {
     ///
     /// `Ok(())` on success, `Err(())` if the given offset does not contain an
     /// object of the type given.
-    pub fn overwrite_object<T: ShrekSuperSlamGameObject>(
-        &mut self,
-        offset: u32,
-        object: &T,
-    ) -> Result<(), ()> {
+    pub fn overwrite_object<T>(&mut self, offset: u32, object: &T) -> Result<(), ()>
+    where
+        T: SerialisedShrekSuperSlamGameObject + WriteableShrekSuperSlamGameObject,
+    {
         // Check that the given offset actually contains an object of the type
         // given as a parameter before we overwrite it
         let object_begin = (offset + 0x40) as usize;

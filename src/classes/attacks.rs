@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::classes::ShrekSuperSlamGameObject;
+use crate::classes::{SerialisedShrekSuperSlamGameObject, WriteableShrekSuperSlamGameObject};
 use crate::files::Bin;
 use crate::Console;
 
@@ -66,7 +66,7 @@ pub struct AttackMoveRegion {
     pub radius: f32,
 }
 
-impl ShrekSuperSlamGameObject for AttackMoveType {
+impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
     /// # Returns
     ///
     /// The hashcode for the Game::AttackMoveType in-game object
@@ -127,7 +127,9 @@ impl ShrekSuperSlamGameObject for AttackMoveType {
             hitbox_offsets,
         }
     }
+}
 
+impl WriteableShrekSuperSlamGameObject for AttackMoveType {
     /// Writes the Game::AttackMoveType object back to its .bin file
     ///
     /// # Parameters
@@ -139,7 +141,8 @@ impl ShrekSuperSlamGameObject for AttackMoveType {
         // fields such as strings would modify the size of the file and
         // invalidate all offsets
         let c = bin.console;
-        bin.raw.splice(offset + 0x04..offset + 0x08, c.write_f32(self.endlag));
+        bin.raw
+            .splice(offset + 0x04..offset + 0x08, c.write_f32(self.endlag));
         bin.raw
             .splice(offset + 0x14..offset + 0x18, c.write_f32(self.fall_speed));
         bin.raw[offset + 0x34] = self.knocks_down as u8;
@@ -225,7 +228,7 @@ impl AttackMoveType {
     }
 }
 
-impl ShrekSuperSlamGameObject for AttackMoveRegion {
+impl SerialisedShrekSuperSlamGameObject for AttackMoveRegion {
     /// # Returns
     ///
     /// The hashcode for the Game::AttackMoveRegion in-game object
@@ -255,7 +258,9 @@ impl ShrekSuperSlamGameObject for AttackMoveRegion {
             radius: c.read_f32(&bin.raw[offset + 0x38..offset + 0x3C]),
         }
     }
+}
 
+impl WriteableShrekSuperSlamGameObject for AttackMoveRegion {
     /// Writes the Game::AttackMoveRegion object back to its .bin file
     ///
     /// # Parameters

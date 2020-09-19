@@ -4,7 +4,7 @@ use crate::files::Bin;
 
 /// Trait for structures representing serialised Shrek SuperSlam game objects
 /// that appear in the game's .bin files
-pub trait ShrekSuperSlamGameObject {
+pub trait SerialisedShrekSuperSlamGameObject {
     /// # Returns
     ///
     /// The hash value of of the class
@@ -29,7 +29,11 @@ pub trait ShrekSuperSlamGameObject {
     ///
     /// The constructed object
     fn new(bin: &Bin, offset: usize) -> Self;
+}
 
+/// Trait allowing value types representing Shrek SuperSlam game objects to be
+/// re-serialised and written back to the game's .bin file
+pub trait WriteableShrekSuperSlamGameObject {
     /// Writes the game object to the given .bin file at the given offset
     ///
     /// # Parameters

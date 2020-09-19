@@ -55,16 +55,13 @@ fn attacks_to_json(master_dat: &MasterDat, console: Console, json_path: &Path) {
 
     // Enumerate all files to find the player.db.bin files
     for filepath in master_dat.files() {
-        let path = Path::new(&filepath);
-        if path.file_name().unwrap() == "player.db.bin" {
+        // Get the filename of
+        let mut iter = filepath.rsplit("\\").take(2);
+        let filename = iter.next().unwrap();
+
+        if filename == "player.db.bin" {
             // Get the character name from the directory containing the file
-            let character = path
-                .parent()     // data\player\shrek
-                .unwrap()
-                .file_name()  // shrek
-                .unwrap()
-                .to_str()
-                .unwrap();
+            let character = iter.next().unwrap();
 
             // Read the player.db.bin file, grab all the Game::AttackMoveType
             // objects and convert them to JSON objects

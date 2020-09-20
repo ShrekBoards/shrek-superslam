@@ -186,14 +186,15 @@ impl MasterDir {
         // number of entries, plus one for the terminator offset. Since the
         // second section starts immediately after, the first offset is also
         // this value
-        let mut offset = ((self.entries.len() + 2) * 4) as u32;
+        let mut offset = ((self.entries.len() + 1) * 4) as u32;
         f.write_all(&self.console.write_u32(offset))?;
+        offset += &self.entries[0].padded_size();
 
         // Each subsequent offset is determined by adding the padded size of
         // the previous entry
-        for entry in &self.entries {
-            offset += entry.padded_size();
+        for entry in self.entries.iter().skip(1) {
             f.write_all(&self.console.write_u32(offset))?;
+            offset += entry.padded_size();
         }
 
         // Write the terminating offset

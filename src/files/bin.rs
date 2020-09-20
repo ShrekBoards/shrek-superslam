@@ -188,10 +188,9 @@ impl Bin {
     ///
     /// `Ok(T)` if the object exists at the given object and can be deserialised,
     /// otherwise `Err()`.
-    pub fn get_object_from_offset<T: SerialisedShrekSuperSlamGameObject>(
-        &self,
-        offset: u32,
-    ) -> Result<T, ()> {
+    pub fn get_object_from_offset<T>(&self, offset: u32,) -> Result<T, ()>
+        where T: SerialisedShrekSuperSlamGameObject
+    {
         // Ensure the requested type exists at the given offset by checking the
         // hash at the offset matches the expected hash of the type
         let object_begin = (offset + 0x40) as usize;

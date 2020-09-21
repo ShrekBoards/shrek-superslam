@@ -57,7 +57,7 @@ fn attacks_to_json(master_dat: &MasterDat, console: Console, json_path: &Path) {
     // Enumerate all files to find the player.db.bin files
     for filepath in master_dat.files() {
         // Get the filename of
-        let mut iter = filepath.rsplit("\\").take(2);
+        let mut iter = filepath.rsplit('\\').take(2);
         let filename = iter.next().unwrap();
 
         if filename == "player.db.bin" {

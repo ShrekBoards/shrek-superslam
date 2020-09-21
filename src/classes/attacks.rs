@@ -41,9 +41,6 @@ pub struct AttackMoveType {
     /// The attack's name
     pub name: String,
 
-    /// If true, pushes back the attacker on contact
-    pub pushes_back: bool,
-
     /// The offsets within the player.db.bin file of each hitbox, in the same
     /// order they exist within the hitboxes property
     #[serde(skip)]
@@ -103,7 +100,6 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         let knocks_down = raw[offset + 0x34] != 0;
         let disabled = raw[offset + 0x35] != 0;
         let intangible = raw[offset + 0x3A] != 0;
-        let pushes_back = raw[offset + 0x3B] != 0;
 
         // Read the list of hitbox offsets, and use those to read each hitbox
         let hitbox_offsets = AttackMoveType::hitbox_offsets(&raw, offset, c);
@@ -123,7 +119,6 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             intangible,
             knocks_down,
             name: bin.get_str_from_offset(name_offset).unwrap().to_owned(),
-            pushes_back,
             hitbox_offsets,
         }
     }
@@ -148,7 +143,6 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
         bin.raw[offset + 0x34] = self.knocks_down as u8;
         bin.raw[offset + 0x35] = self.disabled as u8;
         bin.raw[offset + 0x3A] = self.intangible as u8;
-        bin.raw[offset + 0x3B] = self.pushes_back as u8;
         bin.raw
             .splice(offset + 0x84..offset + 0x88, c.write_f32(self.damage1));
         bin.raw

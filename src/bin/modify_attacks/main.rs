@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::env;
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
@@ -51,7 +51,8 @@ use args::{Config, Mode};
 /// - `console`: The console the MASTER.DAT comes from
 /// - `json_path`: The path to write the JSON representation to
 fn attacks_to_json(master_dat: &MasterDat, console: Console, json_path: &Path) {
-    let mut attacks = HashMap::<String, Vec<AttackMoveType>>::new();
+    // A BTreeMap is used so that the output values are sorted by key
+    let mut attacks = BTreeMap::<String, Vec<AttackMoveType>>::new();
 
     // Enumerate all files to find the player.db.bin files
     for filepath in master_dat.files() {

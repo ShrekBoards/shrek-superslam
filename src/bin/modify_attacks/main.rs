@@ -117,7 +117,7 @@ fn write_new_attack_data(master_dat: &mut MasterDat, console: Console, json_path
                 (
                     o.offset,
                     bin.get_object_from_offset::<AttackMoveType>(o.offset)
-                        .unwrap(),
+                        .unwrap_or_else(|e| panic!("{}", e)),
                 )
             })
             .collect();

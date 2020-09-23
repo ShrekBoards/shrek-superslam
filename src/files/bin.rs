@@ -1,7 +1,10 @@
 use std::str;
 
 use crate::classes::{
-    hash_lookup, SerialisedShrekSuperSlamGameObject, WriteableShrekSuperSlamGameObject,
+    hash_lookup,
+    Error,
+    SerialisedShrekSuperSlamGameObject,
+    WriteableShrekSuperSlamGameObject,
 };
 use crate::console::Console;
 
@@ -188,10 +191,20 @@ impl Bin {
     ///
     /// `Ok(T)` if the object exists at the given object and can be deserialised,
     /// otherwise `Err()`.
-    pub fn get_object_from_offset<T>(&self, offset: u32) -> Result<T, ()>
+    pub fn get_object_from_offset<T>(&self, offset: u32) -> Result<T, Error>
     where
         T: SerialisedShrekSuperSlamGameObject,
     {
+        // Ensure there are enough bytes for the requested type to fit before
+        // we try and make a slice for it
+        if offset as usize + T::size() > self.raw.len() {
+            return Err(Error::NotEnoughBytes{
+                requested: T::size(),
+                file_size: self.raw.len(),
+                offset: offset as usize,
+            })
+        }
+
         // Ensure the requested type exists at the given offset by checking the
         // hash at the offset matches the expected hash of the type
         let object_begin = (offset + 0x40) as usize;
@@ -199,7 +212,7 @@ impl Bin {
             .console
             .read_u32(&self.raw[object_begin..object_begin + 4]);
         if hash != T::hash() {
-            return Err(());
+            return Err(Error::IncorrectType{ hash });
         }
 
         // Pass the offset to the game object's own constructor

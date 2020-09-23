@@ -78,6 +78,13 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         "Game::AttackMoveType"
     }
 
+    /// # Returns
+    ///
+    /// The size of a serialised Game::AttackMoveType object
+    fn size() -> usize {
+        0x260
+    }
+
     /// Constructor
     ///
     /// # Parameters
@@ -235,6 +242,13 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveRegion {
     /// The name of the in-game class - "Game::AttackMoveRegion"
     fn name() -> &'static str {
         "Game::AttackMoveRegion"
+    }
+
+    /// # Returns
+    ///
+    /// The size of a serialised Game::AttackMoveRegion object
+    fn size() -> usize {
+        0x40
     }
 
     /// Constructor

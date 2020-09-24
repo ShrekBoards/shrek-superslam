@@ -1,4 +1,5 @@
 pub mod attacks;
+pub mod strings;
 
 use std::error;
 use std::fmt;

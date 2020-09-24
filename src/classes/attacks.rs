@@ -125,7 +125,7 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             hitboxes,
             intangible,
             knocks_down,
-            name: bin.get_str_from_offset(name_offset).unwrap().to_owned(),
+            name: bin.get_str_from_offset(name_offset).unwrap(),
             hitbox_offsets,
         }
     }

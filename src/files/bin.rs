@@ -1,4 +1,7 @@
-use std::str;
+use std::borrow::Cow;
+
+use encoding::{Encoding, DecoderTrap};
+use encoding::all::ISO_8859_1;
 
 use crate::classes::{
     hash_lookup,
@@ -219,7 +222,7 @@ impl Bin {
         Ok(T::new(&self, object_begin))
     }
 
-    /// Get a string slice from an offset within the .bin file
+    /// Get a string from an offset within the .bin file
     ///
     /// # Parameters
     ///
@@ -227,19 +230,21 @@ impl Bin {
     ///
     /// # Returns
     ///
-    /// `Ok(&str)` if a string exists at the offset, or an `Err(Utf8Error)` if
-    /// the string fails to decode
-    pub fn get_str_from_offset(&self, offset: u32) -> Result<&str, str::Utf8Error> {
+    /// `Ok(String)` if a string exists at the offset, or an
+    /// `Err(Cow<'static, str>)` if the bytes fail to decode as an ISO 8859-1
+    /// string
+    pub fn get_str_from_offset(&self, offset: u32) -> Result<String, Cow<'static, str>> {
         let str_begin = (offset + 0x40) as usize;
 
         // Find the first NULL byte, which ends the string. If not found,
         // default to the end of the slice, which will more than likely give us
-        // a Utf8Error later
+        // an Error later
         let slice = &self.raw[str_begin..];
         let size = slice.iter().position(|&b| b == 0x00).unwrap_or(0);
 
-        // Try to decode from the offset to the NULL byte as a UTF-8 string
-        str::from_utf8(&self.raw[str_begin..str_begin + size])
+        // Text within the game is stored using the single-byte ISO 8859-1
+        // encoding. Specifically, $AE = ®. We therefore need to decode it
+        ISO_8859_1.decode(&self.raw[str_begin..str_begin + size], DecoderTrap::Strict)
     }
 
     /// # Returns

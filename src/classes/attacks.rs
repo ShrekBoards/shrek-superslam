@@ -6,8 +6,6 @@ use crate::Console;
 
 /// Structure representing the in-game `Game::AttackMoveType` object type,
 /// which represents an attack (from a character or an item).
-///
-/// This struct owns its own data from the .bin file that contains the data.
 #[derive(Deserialize, Serialize)]
 pub struct AttackMoveType {
     /// The first damage field, used for most damage calculations

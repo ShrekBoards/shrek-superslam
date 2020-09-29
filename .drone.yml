@@ -14,6 +14,7 @@ steps:
 - name: clippy
   image: rust:latest
   commands:
+    - rustup component add clippy
     - cargo clippy --all
 - name: rustfmt
   image: rust:latest

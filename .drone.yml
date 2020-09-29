@@ -24,4 +24,4 @@ steps:
   image: rust:latest
   commands:
     - rustup component add rustfmt
-    - cargo fmt --all -- --write-mode diff
+    - cargo fmt --all

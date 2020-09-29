@@ -1,0 +1,25 @@
+kind: pipeline
+type: docker
+name: default
+
+steps:
+- name: build
+  image: rust:latest
+  commands:
+    - cargo build
+- name: test
+  image: rust:latest
+  commands:
+    - cargo test
+- name: clippy
+  image: rust:latest
+  commands:
+    - cargo clippy --all
+- name: rustfmt
+  image: rust:latest
+  commands:
+    - cargo fmt --all -- --write-mode diff
+- name: doc
+  image: rust:latest
+  commands:
+    - cargo doc

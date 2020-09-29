@@ -11,6 +11,10 @@ steps:
   image: rust:latest
   commands:
     - cargo test
+- name: doc
+  image: rust:latest
+  commands:
+    - cargo doc
 - name: clippy
   image: rust:latest
   commands:
@@ -19,8 +23,5 @@ steps:
 - name: rustfmt
   image: rust:latest
   commands:
+    - rustup component add rustfmt
     - cargo fmt --all -- --write-mode diff
-- name: doc
-  image: rust:latest
-  commands:
-    - cargo doc

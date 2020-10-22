@@ -1,13 +1,14 @@
 use std::cmp;
 use std::env;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process;
 use std::sync::Arc;
 
 use crossbeam::thread;
 
 extern crate shrek_superslam;
+use shrek_superslam::files::Texpack;
 use shrek_superslam::{MasterDat, MasterDir};
 
 mod args;
@@ -30,6 +31,32 @@ fn create_destination_directory(path: &str) -> PathBuf {
     }
     fs::create_dir_all(filepath.parent().unwrap()).unwrap();
     filepath
+}
+
+/// Extract a texpack file to disk
+///
+/// # Parameters
+///
+/// - `path`: The path to the texpack file to extract
+/// - `config`: The program config
+fn extract_texpack(path: &Path, config: &Config) {
+    // Create a new directory for the contents of the extracted texpack
+    //
+    // The path of the directory is the same as the texpack, with the
+    // '-extracted' suffix. So "data\example.texpack" extracts to
+    // "data\example.texpack-extracted\".
+    let texpack = Texpack::from_file(&path, config.console).expect("could not read texpack");
+    let extracted_dir = path.parent().unwrap().join(format!(
+        "{}-extracted",
+        path.file_name().unwrap().to_string_lossy()
+    ));
+    fs::create_dir_all(&extracted_dir).unwrap();
+
+    // Extract each file in the texpack to the directory
+    for texpack_file in texpack.files() {
+        let output_path = extracted_dir.join(&texpack_file.filename());
+        fs::write(&output_path, &texpack_file.data).expect("Unable to write file");
+    }
 }
 
 /// Given a list of files and the MASTER.DAT file, pulls out each file from the
@@ -55,7 +82,16 @@ fn dump_entries(master_dat: &MasterDat, files: &[String], config: &Config) {
 
         // Write the data to disk
         if let Some(f) = output {
-            fs::write(output_path, f).expect("Unable to write file")
+            fs::write(&output_path, f).expect("Unable to write file")
+        }
+
+        // If the file is a texpack, and we have decompressed it and requested
+        // it be extracted, extract it to a new directory
+        if config.decompress
+            && config.extract_texpack
+            && output_path.extension().unwrap_or_default() == "texpack"
+        {
+            extract_texpack(&output_path, &config);
         }
     }
 }

@@ -35,6 +35,7 @@ impl Config {
         opts.reqopt("i", "dir", "path to MASTER.DIR", "MASTER.DIR");
         opts.optopt("c", "console", "target console", "gc|pc|ps2|xbox");
         opts.optflag("", "no-decompress", "do not decompress files");
+        opts.optflag("", "no-extract-texpack", "do not extract texpack files");
         let args: Vec<String> = args.collect();
         let matches = match opts.parse(&args[1..]) {
             Ok(m) => m,
@@ -58,7 +59,7 @@ impl Config {
             master_dat_path: dat,
             master_dir_path: dir,
             decompress: !matches.opt_present("no-decompress"),
-            extract_texpack: false,
+            extract_texpack: !matches.opt_present("no-extract-texpack"),
             console,
         })
     }

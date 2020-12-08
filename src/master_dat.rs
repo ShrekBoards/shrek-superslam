@@ -8,7 +8,7 @@ use crate::console::Console;
 use crate::master_dir::{MasterDir, MasterDirEntry};
 
 /// Structure representing the MASTER.DAT file, which contains all of the
-/// compressed files for Shrek SuperSlam
+/// compressed files for Shrek SuperSlam.
 pub struct MasterDat {
     /// Mapping of the filenames within the MASTER.DAT to the compressed file data
     files: HashMap<String, Vec<u8>>,
@@ -18,11 +18,15 @@ pub struct MasterDat {
 }
 
 impl MasterDat {
-    /// Creates a new empty MasterDat object
+    /// Returns a new empty `MasterDat` object for the given `console`.
     ///
-    /// # Parameters
+    /// # Example
     ///
-    /// - `console`: The console this MASTER.DAT is for
+    /// ```
+    /// use shrek_superslam::{Console, MasterDat};
+    ///
+    /// let master_dat = MasterDat::new(Console::PC);
+    /// ```
     pub fn new(console: Console) -> MasterDat {
         MasterDat {
             files: HashMap::new(),
@@ -30,17 +34,22 @@ impl MasterDat {
         }
     }
 
-    /// Loads an existing MASTER.DAT file
+    /// Load an existing MASTER.DAT file from the given `path`, using the given
+    /// `master_dir` file.
     ///
-    /// # Parameters
+    /// # Errors
     ///
-    /// - `path`: The path to the MASTER.DAT file to load
-    /// - `master_dir`: The associated MASTER.DIR file
+    /// Returns an `Err(std::io::Error)` if there is an error reading the file.
     ///
-    /// # Returns
+    /// # Example
     ///
-    /// An `Ok(MasterDat)` if successfully constructed, or an `Err(std::io::Error)`
-    /// if there is an error reading the file.
+    /// ```no_run
+    /// use std::path::Path;
+    /// use shrek_superslam::{Console, MasterDat, MasterDir};
+    ///
+    /// let master_dir = MasterDir::from_file(Path::new("MASTER.DIR"), Console::PC).unwrap();
+    /// let master_dat = MasterDat::from_file(Path::new("MASTER.DAT"), master_dir).unwrap();
+    /// ```
     pub fn from_file(path: &Path, master_dir: MasterDir) -> Result<MasterDat, Error> {
         let mut f = File::open(path)?;
 
@@ -57,12 +66,17 @@ impl MasterDat {
         Ok(MasterDat { files, master_dir })
     }
 
-    /// Adds a file to the MASTER.DAT
+    /// Add a new file at the given `path` with the given `data` to the
+    /// MASTER.DAT.
     ///
-    /// # Parameters
+    /// # Example
     ///
-    /// - `path`: The path to the file within the MASTER.DAT
-    /// - `data`: The uncompressed data of the file to add
+    /// ```
+    /// use shrek_superslam::{Console, MasterDat};
+    ///
+    /// let mut master_dat = MasterDat::new(Console::PC);
+    /// master_dat.add_file("data\\test.dds".to_string(), &Vec::new());
+    /// ```
     pub fn add_file(&mut self, path: String, data: &[u8]) {
         // Compress the file
         let compressed = compress(data);
@@ -85,16 +99,19 @@ impl MasterDat {
         self.files.insert(path, compress(data));
     }
 
-    /// Get a compressed file from the MASTER.DAT
+    /// Returns the compressed file at the given `path` in the MASTER.DAT if
+    /// it exists.
     ///
-    /// # Parameters
+    /// # Example
     ///
-    /// - `path`: The path of the file to retrieve
+    /// ```no_run
+    /// use std::path::Path;
+    /// use shrek_superslam::{Console, MasterDat, MasterDir};
     ///
-    /// # Returns
-    ///
-    /// A copy of the bytes of the compressed file if it exists in the
-    /// MASTER.DAT, otherwise `None`
+    /// let master_dir = MasterDir::from_file(Path::new("MASTER.DIR"), Console::PC).unwrap();
+    /// let master_dat = MasterDat::from_file(Path::new("MASTER.DAT"), master_dir).unwrap();
+    /// let compressed_file = master_dat.compressed_file("data\\players\\shrek\\player.db.bin").unwrap();
+    /// ```
     pub fn compressed_file(&self, path: &str) -> Option<Vec<u8>> {
         match self.files.get(path) {
             Some(f) => Some(f.clone()),
@@ -102,16 +119,19 @@ impl MasterDat {
         }
     }
 
-    /// Get and decompress a file from the MASTER.DAT
+    /// Returns the decompressed file at the given `path` in the MASTER.DAT if
+    /// it exists.
     ///
-    /// # Parameters
+    /// # Example
     ///
-    /// - `path`: The path of the file to retrieve
+    /// ```no_run
+    /// use std::path::Path;
+    /// use shrek_superslam::{Console, MasterDat, MasterDir};
     ///
-    /// # Returns
-    ///
-    /// The decompressed bytes of the file if it exists in the MASTER.DAT,
-    /// otherwise `None`
+    /// let master_dir = MasterDir::from_file(Path::new("MASTER.DIR"), Console::PC).unwrap();
+    /// let master_dat = MasterDat::from_file(Path::new("MASTER.DAT"), master_dir).unwrap();
+    /// let decompressed_file = master_dat.decompressed_file("data\\players\\shrek\\player.db.bin").unwrap();
+    /// ```
     pub fn decompressed_file(&self, path: &str) -> Option<Vec<u8>> {
         match self.files.get(path) {
             Some(f) => Some(decompress(&f)),
@@ -119,26 +139,72 @@ impl MasterDat {
         }
     }
 
-    /// # Returns
+    /// Returns the filenames within the MASTER.DAT file.
     ///
-    /// The filenames within the MASTER.DAT
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use std::path::Path;
+    /// # use shrek_superslam::{Console, MasterDat, MasterDir};
+    /// #
+    /// # let master_dir = MasterDir::from_file(Path::new("MASTER.DIR"), Console::PC).unwrap();
+    /// let master_dat = MasterDat::from_file(Path::new("MASTER.DAT"), master_dir).unwrap();
+    /// for filename in master_dat.files() {
+    ///     let decompressed_file = master_dat.decompressed_file(&filename).unwrap();
+    ///     println!("{} decompressed size {}", filename, decompressed_file.len());
+    /// }
+    /// ```
     pub fn files(&self) -> Vec<String> {
         self.files.keys().cloned().collect()
     }
 
-    /// Update the contents of a file contained within the MASTER.DAT.
-    /// Currently, the new contents must be the same size as the old contents.
+    /// Update a file located at `path` contained within the MASTER.DAT with
+    /// the new supplied `data`.
     ///
-    /// # Parameters
+    /// # Notes
     ///
-    /// - `path`: The path of the file to update
-    /// - `data`: The uncompressed data of the file to update
+    /// Currently, the size new `data` must be the same size as the file it is
+    /// replacing.
     ///
-    /// # Returns
+    /// # Errors
     ///
-    /// `Ok(())` if the replacement succeeded, or `Err(usize)` on failure,
-    /// containing the expected size of the file to replace that was not met
-    /// with the supplied data.
+    /// Gives an `Err(usize)` with the size of the file being replaced, if the
+    /// size of the supplied `data` does not match.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use std::path::Path;
+    /// use shrek_superslam::{Console, MasterDat, MasterDir};
+    /// use shrek_superslam::classes::attacks::AttackMoveType;
+    /// use shrek_superslam::files::Bin;
+    ///
+    /// // Read the MASTER.DAT and MASTER.DIR pair
+    /// let mut master_dir = MasterDir::from_file(Path::new("MASTER.DIR"), Console::PC).unwrap();
+    /// let mut master_dat = MasterDat::from_file(Path::new("MASTER.DAT"), master_dir).unwrap();
+    ///
+    /// // Parse the Shrek character player.db.bin file, and get the last attack
+    /// let mut bin = Bin::new(
+    ///     master_dat.decompressed_file("data\\players\\shrek\\player.db.bin").unwrap(),
+    ///     Console::PC
+    /// );
+    /// let mut attacks = bin.get_all_objects_of_type::<AttackMoveType>();
+    /// let (offset, mut attack) = attacks.pop().unwrap();
+    ///
+    /// // Modify the contents of the attack
+    /// attack.damage1 = 100.0;
+    ///
+    /// // Write the new attack back to the .bin file
+    /// bin.overwrite_object(offset, &attack);
+    ///
+    /// // Write the updated .bin file back to the MASTER.DAT
+    /// master_dat.update_file("data\\players\\shrek\\player.db.bin", bin.raw()).unwrap();
+    ///
+    /// // Write the updated MASTER.DAT and MASTER.DIR pair to disk
+    /// master_dat.write(Path::new("MASTER.DAT"), Path::new("MASTER.DIR"));
+    ///
+    /// // We have no overwritten the damage of Shrek's last attack!
+    /// ```
     pub fn update_file(&mut self, path: &str, data: &[u8]) -> Result<(), usize> {
         // Ensure the file to replace exists in the first place
         let existing_length = match self.decompressed_file(path) {
@@ -180,17 +246,23 @@ impl MasterDat {
         Ok(())
     }
 
-    /// Write the MASTER.DAT and its MASTER.DIR to new files
+    /// Write the MASTER.DAT to the `path` given, and its paired MASTER.DIR to
+    /// the given `master_dir_path`.
     ///
-    /// # Parameters
+    /// # Errors
     ///
-    /// - `path`: The path for the destination MASTER.DAT file
-    /// - `master_dir_path`: The path for the destination MASTER.DIR file
+    /// Returns an error if there is a problem writing to either file.
     ///
-    /// # Returns
+    /// # Example
     ///
-    /// `Ok(())` on success, or an `Err(std::io::Error)` if there is a failure
-    /// writing to either of the files
+    /// ```no_run
+    /// use std::path::Path;
+    /// use shrek_superslam::{Console, MasterDat};
+    ///
+    /// let mut master_dat = MasterDat::new(Console::PC);
+    /// master_dat.add_file("data\\test.dds".to_string(), &Vec::new());
+    /// master_dat.write(Path::new("MASTER.DAT"), Path::new("MASTER.DIR"));
+    /// ```
     pub fn write(&self, path: &Path, master_dir_path: &Path) -> Result<(), Error> {
         self.master_dir.write(&master_dir_path)?;
         let mut f = File::create(path)?;

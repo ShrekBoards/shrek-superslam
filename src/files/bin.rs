@@ -65,13 +65,14 @@ impl BinSection {
     }
 }
 
-/// Thin struct that represents the beginning of a serialised Shrek SuperSlam
+/// Thin structure that represents the beginning of a serialised Shrek SuperSlam
 /// class within a .bin file.
 ///
 /// # Notes
 ///
-/// Use `bin::get_object_from_offset()` using the `offset` field to retrieve
-/// the full type from the .bin
+/// Use `offset` field as a parameter to the
+/// [Bin::get_object_from_offset](struct.Bin.html#method.get_object_from_offset)
+/// function to get the full deserialised object from the .bin file.
 pub struct BinObject {
     /// The hash of the object
     pub hash: u32,
@@ -106,8 +107,19 @@ impl BinObject {
     }
 }
 
-/// Structure for reading and managing a .bin file from the extracted Shrek
-/// SuperSlam game files
+/// Structure for reading and modifying a .bin file from the extracted Shrek
+/// SuperSlam game files.
+///
+/// These files within the game are primarily a collection of serialised objects
+/// of in-game class types relating to a particular subject, such as a playable
+/// character or an item. This structure provides an abstraction around these files,
+/// and provides methods for deserialising and extracting the objects contained
+/// within them, as well as limited support for rewriting modified copies of these
+/// objects back to the file.
+///
+/// For more information about the available classes, see the [classes](../classes/index.html)
+/// module, which contains structures representing the classes found within these
+/// .bin files.
 pub struct Bin {
     objects: Vec<BinObject>,
     pub(crate) console: Console,
@@ -115,12 +127,21 @@ pub struct Bin {
 }
 
 impl Bin {
-    /// Read a .bin file from the decompressed Shrek SuperSlam files
+    /// Construct a new `Bin` object from the given `raw` bytes of a
+    /// decompressed .bin file, from the given `console` version.
     ///
-    /// # Parameters
+    /// # Example
     ///
-    /// - `raw`: The raw bytes of the file
-    /// - `console`: The console version the file is from
+    /// ```
+    /// use std::path::Path;
+    /// use shrek_superslam::{Console, MasterDat, MasterDir};
+    /// use shrek_superslam::files::Bin;
+    ///
+    /// let master_dir = MasterDir::from_file(Path::new("MASTER.DIR"), Console::PC).unwrap();
+    /// let master_dat = MasterDat::from_file(Path::new("MASTER.DAT"), master_dir).unwrap();
+    /// let my_file_bytes = master_dat.decompressed_file("data\\players\\shrek\\player.db.bin").unwrap();
+    /// let bin = Bin::new(my_file_bytes, Console::PC);
+    /// ```
     pub fn new(raw: Vec<u8>, console: Console) -> Bin {
         // Read the header
         let header = BinHeader::new(&raw[0x00..0x40], console);
@@ -174,21 +195,68 @@ impl Bin {
         }
     }
 
-    /// Get an object at an offset within the .bin file as a full deserialised
-    /// game object type
+    /// Get all objects of a requested type `T` contained within the .bin file.
     ///
-    /// # Parameters
+    /// Returns a list of tuples containing the offset of the object within the
+    /// file, and the deserialised object.
     ///
-    /// - `offset`: The offset within the .bin that the object starts at
+    /// # Example
     ///
-    /// # Type parameters
+    /// ```no_run
+    /// use shrek_superslam::Console;
+    /// use shrek_superslam::classes::attacks::AttackMoveType;
+    /// use shrek_superslam::files::Bin;
     ///
-    /// - `T`: The game object type to deserialise to
+    /// // Get all Game::AttackMoveType objects contained within the .bin file
+    /// # let my_file_bytes: Vec<u8> = vec![];
+    /// let bin = Bin::new(my_file_bytes, Console::PC);
+    /// let attacks = bin.get_all_objects_of_type::<AttackMoveType>();
+    /// for (offset, attack) in attacks {
+    ///     println!("Attack at offset {} is {}, which deals {} damage",
+    ///         offset,
+    ///         attack.name,
+    ///         attack.damage1
+    ///     );
+    /// }
+    /// ```
+    pub fn get_all_objects_of_type<T>(&self) -> Vec<(u32, T)>
+    where
+        T: SerialisedShrekSuperSlamGameObject
+    {
+        self
+            .objects()
+            .iter()
+            .filter(|o| o.hash == T::hash())
+            .map(|o| (o.offset, self.get_object_from_offset::<T>(o.offset).unwrap()))
+            .collect()
+    }
+
+    /// Returns a deserialised object of type `T` contained at given `offset`
+    /// within the .bin file.
     ///
-    /// # Returns
+    /// # Errors
     ///
-    /// `Ok(T)` if the object exists at the given object and can be deserialised,
-    /// otherwise `Err()`.
+    /// If the given `offset` does not contain the start of the requested type,
+    /// or the file does not have enough space to contain the object from the
+    /// given offset, then an error is returned.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use shrek_superslam::Console;
+    /// use shrek_superslam::classes::attacks::AttackMoveType;
+    /// use shrek_superslam::files::Bin;
+    ///
+    /// // Get a specific Game::AttackMoveType object located in the .bin file
+    /// # let my_file_bytes: Vec<u8> = vec![];
+    /// let bin = Bin::new(my_file_bytes, Console::PC);
+    /// let attack = bin.get_object_from_offset::<AttackMoveType>(0x1000).unwrap();
+    /// println!("Attack at offset {} is {}, which deals {} damage",
+    ///     0x1000,
+    ///     attack.name,
+    ///     attack.damage1
+    /// );
+    /// ```
     pub fn get_object_from_offset<T>(&self, offset: u32) -> Result<T, Error>
     where
         T: SerialisedShrekSuperSlamGameObject,
@@ -217,17 +285,25 @@ impl Bin {
         Ok(T::new(&self, object_begin))
     }
 
-    /// Get a string from an offset within the .bin file
+    /// Returns a string from the given `offset` within the .bin file.
     ///
-    /// # Parameters
+    /// # Errors
     ///
-    /// - `offset`: The offset within the .bin file that the string starts at
+    /// If the bytes at the given `offset` fail to decode as an ISO 8859-1
+    /// string, then an error is returned.
     ///
-    /// # Returns
+    /// # Example
     ///
-    /// `Ok(String)` if a string exists at the offset, or an
-    /// `Err(Cow<'static, str>)` if the bytes fail to decode as an ISO 8859-1
-    /// string
+    /// ```no_run
+    /// use shrek_superslam::Console;
+    /// use shrek_superslam::files::Bin;
+    ///
+    /// // Get a specific string located in the .bin file
+    /// # let my_file_bytes: Vec<u8> = vec![];
+    /// let bin = Bin::new(my_file_bytes, Console::PC);
+    /// let my_string = bin.get_str_from_offset(0x500).unwrap();
+    /// println!("At offset {}, there is the string '{}'", 0x500, my_string);
+    /// ```
     pub fn get_str_from_offset(&self, offset: u32) -> Result<String, Cow<'static, str>> {
         let str_begin = (offset + 0x40) as usize;
 
@@ -242,24 +318,28 @@ impl Bin {
         ISO_8859_1.decode(&self.raw[str_begin..str_begin + size], DecoderTrap::Strict)
     }
 
-    /// # Returns
+    /// Overwrite an existing object at the given `offset` with the new object
+    /// given in the `object` parameter.
     ///
-    /// A list of objects within the .bin file
-    pub fn objects(&self) -> &Vec<BinObject> {
-        &self.objects
-    }
-
-    /// Overwrite an existing object at the given offset
+    /// # Errors
     ///
-    /// # Parameters
+    /// If the given `offset` does not contain the beginning of an object of
+    /// the given type, then an error is returned.
     ///
-    /// - `offset`: The offset of the destination object to overwrite
-    /// - `object`: The source object to overwrite with
+    /// # Example
     ///
-    /// # Returns
+    /// ```no_run
+    /// use shrek_superslam::Console;
+    /// use shrek_superslam::files::Bin;
+    /// use shrek_superslam::classes::attacks::AttackMoveType;
     ///
-    /// `Ok(())` on success, `Err(())` if the given offset does not contain an
-    /// object of the type given.
+    /// // Overwrite the damage of a specific Game::AttackMoveType object
+    /// # let my_file_bytes: Vec<u8> = vec![];
+    /// let mut bin = Bin::new(my_file_bytes, Console::PC);
+    /// let mut attack = bin.get_object_from_offset::<AttackMoveType>(0x1000).unwrap();
+    /// attack.damage1 = 100.0;
+    /// bin.overwrite_object(0x1000, &attack);
+    /// ```
     pub fn overwrite_object<T>(&mut self, offset: u32, object: &T) -> Result<(), ()>
     where
         T: SerialisedShrekSuperSlamGameObject + WriteableShrekSuperSlamGameObject,
@@ -279,10 +359,13 @@ impl Bin {
         Ok(())
     }
 
-    /// # Returns
-    ///
-    /// The raw bytes of the .bin file
+    /// Returns the raw bytes of the .bin file.
     pub fn raw(&self) -> &[u8] {
         &self.raw
+    }
+
+    /// Returns a list of objects within the .bin file.
+    pub fn objects(&self) -> &Vec<BinObject> {
+        &self.objects
     }
 }

@@ -67,15 +67,7 @@ fn attacks_to_json(master_dat: &MasterDat, console: Console, json_path: &Path) {
             // Read the player.db.bin file, grab all the Game::AttackMoveType
             // objects and convert them to JSON objects
             let bin = Bin::new(master_dat.decompressed_file(&filepath).unwrap(), console);
-            let objects: Vec<AttackMoveType> = bin
-                .objects()
-                .iter()
-                .filter(|o| o.name == "Game::AttackMoveType")
-                .map(|o| {
-                    bin.get_object_from_offset::<AttackMoveType>(o.offset)
-                        .unwrap()
-                })
-                .collect();
+            let objects = bin.get_all_objects_of_type::<AttackMoveType>().into_iter().map(|(_, a)| a).collect();
 
             attacks.insert(character.to_owned(), objects);
         }
@@ -109,18 +101,7 @@ fn write_new_attack_data(master_dat: &mut MasterDat, console: Console, json_path
 
         // Collect every Game::AttackMoveType object in the player.db.bin file,
         // along with the attack's offset within the file
-        let original_attacks: Vec<(u32, AttackMoveType)> = bin
-            .objects()
-            .iter()
-            .filter(|o| o.name == "Game::AttackMoveType")
-            .map(|o| {
-                (
-                    o.offset,
-                    bin.get_object_from_offset::<AttackMoveType>(o.offset)
-                        .unwrap_or_else(|e| panic!("{}", e)),
-                )
-            })
-            .collect();
+        let original_attacks = bin.get_all_objects_of_type::<AttackMoveType>();
 
         // Iterate over each of these attacks, find the matching attack in the
         // updated JSON file, then overwrite the attack in the player.db.bin

@@ -1,3 +1,8 @@
+//! Module containing structures representing the various Shrek SuperSlam
+//! classes.
+//!
+//! See the [Bin](../files/struct.Bin.html) structure for information on how
+//! to deserialise these types from the .bin files they are contained within.
 pub mod attacks;
 pub mod strings;
 

@@ -22,15 +22,6 @@ pub(crate) struct MasterDirEntry {
     pub name: String,
 }
 
-/// Type representing the MASTER.DIR file - a collection of MasterDirEntry
-pub struct MasterDir {
-    /// The entries within the MASTER.DIR
-    pub(crate) entries: Vec<MasterDirEntry>,
-
-    /// The console this MASTER.DIR is from or for
-    console: Console,
-}
-
 impl MasterDirEntry {
     /// Create a new MasterDirEntry
     ///
@@ -91,12 +82,26 @@ impl MasterDirEntry {
     }
 }
 
+/// Structure representing the MASTER.DIR file, which details the contents of
+/// the Shrek SuperSlam MASTER.DAT file.
+pub struct MasterDir {
+    /// The entries within the MASTER.DIR
+    pub(crate) entries: Vec<MasterDirEntry>,
+
+    /// The console this MASTER.DIR is from or for
+    console: Console,
+}
+
 impl MasterDir {
-    /// Creates an empty MASTER.DIR object
+    /// Returns a new empty `MasterDir` object for the given `console`.
     ///
-    /// # Parameters
+    /// # Example
     ///
-    /// - `console`: The console this version of the file is for
+    /// ```
+    /// use shrek_superslam::{Console, MasterDir};
+    ///
+    /// let master_dir = MasterDir::new(Console::PC);
+    /// ```
     pub fn new(console: Console) -> MasterDir {
         MasterDir {
             entries: vec![],
@@ -104,13 +109,9 @@ impl MasterDir {
         }
     }
 
-    /// Creates a new MasterDir object from the passed bytes
-    ///
-    /// # Parameters
-    ///
-    /// - `master_dir`: The bytes of the entire MASTER.DIR file
-    /// - `console`: The console this version of the file is from
-    pub fn from_bytes(master_dir: &[u8], console: Console) -> MasterDir {
+    /// Returns a new `MasterDir` object for the given `console` from the
+    /// passed `master_dir` bytes.
+    pub(crate) fn from_bytes(master_dir: &[u8], console: Console) -> MasterDir {
         // The MASTER.DIR is split into two sections:
         // * The first is a list of 4-byte integers that serve as offsets in the
         //   file to each entry in the second section. It is terminated by an entry
@@ -149,17 +150,21 @@ impl MasterDir {
         MasterDir { entries, console }
     }
 
-    /// Creates a new MasterDir object from the passed file
+    /// Returns a new `MasterDir` object for the given `console` from the file
+    /// at the given `path`.
     ///
-    /// # Parameters
+    /// # Errors
     ///
-    /// - `path`: The path to the MASTER.DIR file to read
-    /// - `console`: The console this version of the file is from
+    /// Returns an `Err(std::io::Error)` if there is an error reading the file.
     ///
-    /// # Returns
+    /// # Example
     ///
-    /// An `Ok(MasterDir)` on success, or an `Err(std:io::Error)` if there is
-    /// an error while reading the file
+    /// ```no_run
+    /// use std::path::Path;
+    /// use shrek_superslam::{Console, MasterDir};
+    ///
+    /// let master_dir = MasterDir::from_file(Path::new("MASTER.DIR"), Console::PC);
+    /// ```
     pub fn from_file(path: &Path, console: Console) -> Result<MasterDir, Error> {
         // Read all of the file to a byte array
         let file_contents = fs::read(&path)?;
@@ -168,16 +173,11 @@ impl MasterDir {
         Ok(MasterDir::from_bytes(&file_contents, console))
     }
 
-    /// Writes the MASTER.DIR to a new file
+    /// Writes the object to a new MASTER.DIR file at the given `path`.
     ///
-    /// # Parameters
+    /// # Errors
     ///
-    /// - `path`: The path to write the new file to
-    ///
-    /// # Returns
-    ///
-    /// `Ok(())` on success, otherwise a `Err(std::io::Error)` if the file
-    /// cannot be written to
+    /// Returns an `Err(std::io::Error)` if the file cannot be written to.
     pub(crate) fn write(&self, path: &Path) -> Result<(), Error> {
         let mut f = File::create(&path)?;
 

@@ -14,46 +14,31 @@ use crate::files::Bin;
 /// Trait for structures representing serialised Shrek SuperSlam game objects
 /// that appear in the game's .bin files
 pub trait SerialisedShrekSuperSlamGameObject {
-    /// # Returns
-    ///
-    /// The hash value of of the class
+    /// Returns the hash value identifying the class.
     fn hash() -> u32;
 
-    /// # Returns
-    ///
-    /// The in-game name of the class
+    /// Returns the name of the class.
     fn name() -> &'static str;
 
-    /// # Returns
-    ///
-    /// The size in bytes the serialised object takes up in a .bin file
+    /// Returns the size in bytes the serialised object takes up in a .bin file.
     fn size() -> usize;
 
-    /// Constructor
+    /// Returns an instance of the object from the given `offset` in the given
+    /// `Bin` structure.
     ///
-    /// Do not call directly, instead use bin::get_object_from_offset<T>() to
-    /// get objects from a .bin file.
+    /// # Remarks
     ///
-    /// # Parameters
-    ///
-    /// - `bin`: The .bin file the object is coming from
-    /// - `offset`: The offset the object begins at in the .bin file
-    ///
-    /// # Returns
-    ///
-    /// The constructed object
+    /// Do not call directly, instead use
+    /// [Bin::get_object_from_offset<T>()](../files/struct.Bin.html#method.get_object_from_offset)
+    /// to get objects from a .bin file.
     fn new(bin: &Bin, offset: usize) -> Self;
 }
 
-/// Trait allowing value types representing Shrek SuperSlam game objects to be
-/// re-serialised and written back to the game's .bin file
+/// Trait for structures representing Shrek SuperSlam game objects that can be
+/// written back to a .bin file to overwrite the original.
 pub trait WriteableShrekSuperSlamGameObject {
-    /// Writes the game object to the given .bin file at the given offset
-    ///
-    /// # Parameters
-    ///
-    /// - `bin`: The .bin file to write the object to
-    /// - `offset`: The offset in the .bin file to write the object to
+    /// Overwrites the game object at the given `offset` within the given `Bin`
+    /// file.
     fn write(&self, bin: &mut Bin, offset: usize);
 }
 

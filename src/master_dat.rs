@@ -173,7 +173,7 @@ impl MasterDat {
     ///
     /// # Example
     ///
-    /// ```
+    /// ```no_run
     /// use std::path::Path;
     /// use shrek_superslam::{Console, MasterDat, MasterDir};
     /// use shrek_superslam::classes::attacks::AttackMoveType;

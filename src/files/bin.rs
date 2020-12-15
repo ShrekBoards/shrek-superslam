@@ -221,13 +221,17 @@ impl Bin {
     /// ```
     pub fn get_all_objects_of_type<T>(&self) -> Vec<(u32, T)>
     where
-        T: SerialisedShrekSuperSlamGameObject
+        T: SerialisedShrekSuperSlamGameObject,
     {
-        self
-            .objects()
+        self.objects()
             .iter()
             .filter(|o| o.hash == T::hash())
-            .map(|o| (o.offset, self.get_object_from_offset::<T>(o.offset).unwrap()))
+            .map(|o| {
+                (
+                    o.offset,
+                    self.get_object_from_offset::<T>(o.offset).unwrap(),
+                )
+            })
             .collect()
     }
 

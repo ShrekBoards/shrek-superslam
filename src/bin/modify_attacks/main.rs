@@ -67,7 +67,11 @@ fn attacks_to_json(master_dat: &MasterDat, console: Console, json_path: &Path) {
             // Read the player.db.bin file, grab all the Game::AttackMoveType
             // objects and convert them to JSON objects
             let bin = Bin::new(master_dat.decompressed_file(&filepath).unwrap(), console);
-            let objects = bin.get_all_objects_of_type::<AttackMoveType>().into_iter().map(|(_, a)| a).collect();
+            let objects = bin
+                .get_all_objects_of_type::<AttackMoveType>()
+                .into_iter()
+                .map(|(_, a)| a)
+                .collect();
 
             attacks.insert(character.to_owned(), objects);
         }

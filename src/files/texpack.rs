@@ -7,11 +7,11 @@ use crate::console::Console;
 /// The different types of entry within a texpack
 pub enum TexpackEntryType {
     /// An actual texture file - DDS on PC, GCT on Gamecube
-    TEXTURE,
+    Texture,
 
     /// Plain text file that contain lists of texture filenames, used to
     /// describe looping animations
-    TGA,
+    Tga,
 }
 
 /// Structure representing an entry in a texpack file, which describes one of
@@ -53,8 +53,8 @@ impl TexpackEntry {
         let offset = console.read_u32(&raw[0x20..0x24]);
         let size = console.read_u32(&raw[0x24..0x28]);
         let filetype = match console.read_u32(&raw[0x28..0x2C]) {
-            0x00 => TexpackEntryType::TEXTURE,
-            0x02 => TexpackEntryType::TGA,
+            0x00 => TexpackEntryType::Texture,
+            0x02 => TexpackEntryType::Tga,
             _ => panic!("uh oh!"),
         };
 
@@ -142,13 +142,13 @@ impl TexpackFile {
     /// The full filename of the file, including extension
     pub fn filename(&self) -> String {
         match self.filetype {
-            TexpackEntryType::TEXTURE => match self.console {
+            TexpackEntryType::Texture => match self.console {
                 Console::Gamecube => format!("{}.gct", self.filename),
                 Console::PC => format!("{}.dds", self.filename),
                 Console::PS2 => format!("{}.tm2", self.filename),
                 Console::Xbox => format!("{}.dds", self.filename),
             },
-            TexpackEntryType::TGA => format!("{}.tga", self.filename),
+            TexpackEntryType::Tga => format!("{}.tga", self.filename),
         }
     }
 }

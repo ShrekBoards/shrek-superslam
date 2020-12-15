@@ -30,6 +30,9 @@ pub struct AttackMoveType {
     /// The attack's hitboxes, if any
     pub hitboxes: Vec<AttackMoveRegion>,
 
+    /// The attack hits characters that are knocked down
+    pub hits_otg: bool,
+
     /// If true, the attack passes through and does no damage or knockback
     pub intangible: bool,
 
@@ -121,6 +124,7 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             damage3,
             disabled,
             hitboxes,
+            hits_otg,
             intangible,
             knocks_down,
             name: bin.get_str_from_offset(name_offset).unwrap(),

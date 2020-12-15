@@ -105,6 +105,7 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         let name_offset = c.read_u32(&raw[offset + 0x28..offset + 0x2C]);
 
         // Read boolean flag fields
+        let hits_otg = raw[offset + 0x33] != 0;
         let knocks_down = raw[offset + 0x34] != 0;
         let disabled = raw[offset + 0x35] != 0;
         let intangible = raw[offset + 0x3A] != 0;

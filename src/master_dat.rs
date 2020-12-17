@@ -203,7 +203,7 @@ impl MasterDat {
     /// // Write the updated MASTER.DAT and MASTER.DIR pair to disk
     /// master_dat.write(Path::new("MASTER.DAT"), Path::new("MASTER.DIR"));
     ///
-    /// // We have no overwritten the damage of Shrek's last attack!
+    /// // We have now overwritten the damage of Shrek's last attack!
     /// ```
     pub fn update_file(&mut self, path: &str, data: &[u8]) -> Result<(), usize> {
         // Ensure the file to replace exists in the first place

@@ -3,6 +3,7 @@ use std::path::Path;
 use std::process;
 
 extern crate shrek_superslam;
+use shrek_superslam::classes::strings::{EffectStringReference, LocalizedString};
 use shrek_superslam::files::Bin;
 use shrek_superslam::{MasterDat, MasterDir};
 
@@ -37,7 +38,29 @@ fn main() {
                 if !bin.objects().is_empty() {
                     println!("{} ({} objects)", filepath, bin.objects().len());
                     for object in bin.objects() {
-                        println!("\t+{:04x}: {}", object.offset + 0x40, object.name);
+                        if object.name == "gf::LocalizedString" {
+                            let localized_string = bin
+                                .get_object_from_offset::<LocalizedString>(object.offset)
+                                .unwrap();
+                            println!(
+                                "\t+{:04x}: {} ({})",
+                                object.offset + 0x40,
+                                object.name,
+                                localized_string.string
+                            );
+                        } else if object.name == "Game::EffectStringReference" {
+                            let localized_string = bin
+                                .get_object_from_offset::<EffectStringReference>(object.offset)
+                                .unwrap();
+                            println!(
+                                "\t+{:04x}: {} ({})",
+                                object.offset + 0x40,
+                                object.name,
+                                localized_string.string
+                            );
+                        } else {
+                            println!("\t+{:04x}: {}", object.offset + 0x40, object.name);
+                        }
                     }
                 }
             }

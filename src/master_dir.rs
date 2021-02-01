@@ -111,7 +111,7 @@ impl MasterDir {
 
     /// Returns a new `MasterDir` object for the given `console` from the
     /// passed `master_dir` bytes.
-    pub(crate) fn from_bytes(master_dir: &[u8], console: Console) -> MasterDir {
+    pub fn from_bytes(master_dir: &[u8], console: Console) -> MasterDir {
         // The MASTER.DIR is split into two sections:
         // * The first is a list of 4-byte integers that serve as offsets in the
         //   file to each entry in the second section. It is terminated by an entry

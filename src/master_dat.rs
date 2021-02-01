@@ -1,6 +1,7 @@
 use std::collections::HashMap;
+use std::fs;
 use std::fs::File;
-use std::io::{Error, Read, Seek, SeekFrom, Write};
+use std::io::{Error, Write};
 use std::path::Path;
 
 use crate::compression::{compress, decompress};
@@ -34,6 +35,21 @@ impl MasterDat {
         }
     }
 
+    /// Load an existing MASTER.DAT from the bytes that make up the file, using
+    /// the given `master_dir` file for the mapping.
+    pub fn from_bytes(master_dat: &[u8], master_dir: MasterDir) -> MasterDat {
+        // Iterate over the entries within the associated MASTER.DIR, and use it
+        // to read out each compressed file from the MASTER.DAT
+        let mut files: HashMap<String, Vec<u8>> = HashMap::new();
+        for entry in &master_dir.entries {
+            let o = entry.offset as usize;
+            let file = master_dat[o .. o + entry.comp_size as usize].to_owned();
+            files.insert(entry.name.trim_end_matches(char::from(0)).to_owned(), file);
+        }
+
+        MasterDat { files, master_dir }
+    }
+
     /// Load an existing MASTER.DAT file from the given `path`, using the given
     /// `master_dir` file.
     ///
@@ -51,19 +67,11 @@ impl MasterDat {
     /// let master_dat = MasterDat::from_file(Path::new("MASTER.DAT"), master_dir).unwrap();
     /// ```
     pub fn from_file(path: &Path, master_dir: MasterDir) -> Result<MasterDat, Error> {
-        let mut f = File::open(path)?;
+        // Read all of the file to a byte array
+        let file_contents = fs::read(&path)?;
 
-        // Iterate over the entries within the associated MASTER.DIR, and use it to
-        // read out each compressed file from the MASTER.DAT
-        let mut files: HashMap<String, Vec<u8>> = HashMap::new();
-        for entry in &master_dir.entries {
-            let mut file: Vec<u8> = vec![0; entry.comp_size as usize];
-            f.seek(SeekFrom::Start(entry.offset as u64))?;
-            f.read_exact(&mut file)?;
-            files.insert(entry.name.trim_end_matches(char::from(0)).to_owned(), file);
-        }
-
-        Ok(MasterDat { files, master_dir })
+        // Parse the bytes to a MasterDir object
+        Ok(MasterDat::from_bytes(&file_contents, master_dir))
     }
 
     /// Add a new file at the given `path` with the given `data` to the

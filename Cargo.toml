@@ -1,5 +1,5 @@
 [package]
-name = "shrek_superslam"
+name = "shrek-superslam"
 version = "0.1.0"
 authors = ["alex <kirby@cpan.org>"]
 edition = "2018"

@@ -1,6 +1,5 @@
 use std::fs;
-use std::fs::File;
-use std::io::{Error, Write};
+use std::io::Error;
 use std::iter::repeat;
 use std::path::Path;
 
@@ -173,13 +172,9 @@ impl MasterDir {
         Ok(MasterDir::from_bytes(&file_contents, console))
     }
 
-    /// Writes the object to a new MASTER.DIR file at the given `path`.
-    ///
-    /// # Errors
-    ///
-    /// Returns an `Err(std::io::Error)` if the file cannot be written to.
-    pub(crate) fn write(&self, path: &Path) -> Result<(), Error> {
-        let mut f = File::create(&path)?;
+    /// Get the raw bytes of the MASTER.DIR file.
+    pub(crate) fn to_bytes(&self) -> Vec<u8> {
+        let mut master_dir_bytes = vec!();
 
         // The total size of the first section - which is a list of offsets to
         // each entry in the second section - is determined from the total
@@ -187,25 +182,25 @@ impl MasterDir {
         // second section starts immediately after, the first offset is also
         // this value
         let mut offset = ((self.entries.len() + 1) * 4) as u32;
-        f.write_all(&self.console.write_u32(offset))?;
+        master_dir_bytes.extend(&self.console.write_u32(offset));
         offset += &self.entries[0].padded_size();
 
         // Each subsequent offset is determined by adding the padded size of
         // the previous entry
         for entry in self.entries.iter().skip(1) {
-            f.write_all(&self.console.write_u32(offset))?;
+            master_dir_bytes.extend(&self.console.write_u32(offset));
             offset += entry.padded_size();
         }
 
         // Write the terminating offset
-        f.write_all(&[0x00, 0x00, 0x00, 0x00])?;
+        master_dir_bytes.extend(&[0x00, 0x00, 0x00, 0x00]);
 
         // Now the actual entries need to be written
         for entry in &self.entries {
-            f.write_all(&entry.padded(self.console))?;
+            master_dir_bytes.extend(&entry.padded(self.console));
         }
 
-        Ok(())
+        master_dir_bytes
     }
 }
 

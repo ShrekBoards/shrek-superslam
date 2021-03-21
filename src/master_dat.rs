@@ -188,7 +188,7 @@ impl MasterDat {
             master_dat_bytes.extend(&pad(self.files.get(trimmed).unwrap()));
         }
 
-        (self.master_dir.to_bytes(), master_dat_bytes)
+        (master_dat_bytes, self.master_dir.to_bytes())
     }
 
     /// Update a file located at `path` contained within the MASTER.DAT with

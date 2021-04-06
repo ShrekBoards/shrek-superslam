@@ -162,6 +162,7 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
             .splice(offset + 0x04..offset + 0x08, c.write_f32(self.endlag));
         bin.raw
             .splice(offset + 0x14..offset + 0x18, c.write_f32(self.fall_speed));
+        bin.raw[offset + 0x33] = self.hits_otg as u8;
         bin.raw[offset + 0x34] = self.knocks_down as u8;
         bin.raw[offset + 0x35] = self.disabled as u8;
         bin.raw[offset + 0x3A] = self.intangible as u8;

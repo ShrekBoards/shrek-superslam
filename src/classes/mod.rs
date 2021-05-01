@@ -9,11 +9,12 @@ pub mod strings;
 use std::error;
 use std::fmt;
 
+use crate::errors;
 use crate::files::Bin;
 
 /// Trait for structures representing serialised Shrek SuperSlam game objects
 /// that appear in the game's .bin files
-pub trait SerialisedShrekSuperSlamGameObject {
+pub trait SerialisedShrekSuperSlamGameObject: Sized {
     /// Returns the hash value identifying the class.
     fn hash() -> u32;
 
@@ -31,7 +32,7 @@ pub trait SerialisedShrekSuperSlamGameObject {
     /// Do not call directly, instead use
     /// [Bin::get_object_from_offset<T>()](../files/struct.Bin.html#method.get_object_from_offset)
     /// to get objects from a .bin file.
-    fn new(bin: &Bin, offset: usize) -> Self;
+    fn new(bin: &Bin, offset: usize) -> Result<Self, errors::Error>;
 }
 
 /// Trait for structures representing Shrek SuperSlam game objects that can be

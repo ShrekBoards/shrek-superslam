@@ -1,12 +1,14 @@
-use std::borrow::Cow;
+
 
 use encoding::all::ISO_8859_1;
 use encoding::{DecoderTrap, Encoding};
 
+use crate::classes;
 use crate::classes::{
-    hash_lookup, Error, SerialisedShrekSuperSlamGameObject, WriteableShrekSuperSlamGameObject,
+    hash_lookup, SerialisedShrekSuperSlamGameObject, WriteableShrekSuperSlamGameObject,
 };
 use crate::console::Console;
+use crate::errors::Error;
 
 /// Structure representing the header (the first 40 bytes) of a .bin file
 struct BinHeader {
@@ -24,14 +26,14 @@ impl BinHeader {
     ///
     /// - `raw`: The first 64 bytes of a .bin file
     /// - `console`: The console the .bin file comes from
-    fn new(raw: &[u8], console: Console) -> BinHeader {
-        BinHeader {
-            offset1: console.read_u32(&raw[0x10..0x14]),
-            sections: console.read_u32(&raw[0x18..0x1C]),
-            offset2: console.read_u32(&raw[0x1C..0x20]),
-            dependencies: console.read_u32(&raw[0x24..0x28]),
-            offset4: console.read_u32(&raw[0x2C..0x30]),
-        }
+    fn new(raw: &[u8], console: Console) -> Result<BinHeader, Error> {
+        Ok(BinHeader {
+            offset1: console.read_u32(&raw[0x10..0x14])?,
+            sections: console.read_u32(&raw[0x18..0x1C])?,
+            offset2: console.read_u32(&raw[0x1C..0x20])?,
+            dependencies: console.read_u32(&raw[0x24..0x28])?,
+            offset4: console.read_u32(&raw[0x2C..0x30])?,
+        })
     }
 }
 
@@ -43,7 +45,7 @@ struct BinSection {
     pub number: u32,
 
     /// The number of pointers in the section
-    pub size: u32,
+    pub size: u32, 
 
     /// What offset the section begins within the file
     pub offset: u32,
@@ -56,12 +58,12 @@ impl BinSection {
     ///
     /// - `raw`: The 16 bytes corresponding to the 'section' in the .bin file
     /// - `console`: The console the .bin comes from
-    fn new(raw: &[u8], offset: u32, console: Console) -> BinSection {
-        BinSection {
-            number: console.read_u32(&raw[0x00..0x04]),
-            size: console.read_u32(&raw[0x04..0x08]),
+    fn new(raw: &[u8], offset: u32, console: Console) -> Result<BinSection, Error> {
+        Ok(BinSection {
+            number: console.read_u32(&raw[0x00..0x04])?,
+            size: console.read_u32(&raw[0x04..0x08])?,
             offset,
-        }
+        })
     }
 }
 
@@ -98,10 +100,11 @@ impl BinObject {
     /// Some(BinObject) detailing the object that begins at the offset, or None
     /// if there is no object starting at the given offset
     fn new(raw: &[u8], offset: u32, console: Console) -> Option<BinObject> {
-        let hash =
-            console.read_u32(&raw[(0x40 + offset) as usize..(0x40 + offset + 0x04) as usize]);
-        match hash_lookup(hash) {
-            Some(name) => Some(BinObject { hash, name, offset }),
+        match console.read_u32(&raw[(0x40 + offset) as usize..(0x40 + offset + 0x04) as usize]) {
+            Ok(hash) => match hash_lookup(hash) {
+                Some(name) => Some(BinObject { hash, name, offset }),
+                _ => None,
+            },
             _ => None,
         }
     }
@@ -142,9 +145,9 @@ impl Bin {
     /// let my_file_bytes = master_dat.decompressed_file("data\\players\\shrek\\player.db.bin").unwrap();
     /// let bin = Bin::new(my_file_bytes, Console::PC);
     /// ```
-    pub fn new(raw: Vec<u8>, console: Console) -> Bin {
+    pub fn new(raw: Vec<u8>, console: Console) -> Result<Bin, Error> {
         // Read the header
-        let header = BinHeader::new(&raw[0x00..0x40], console);
+        let header = BinHeader::new(&raw[0x00..0x40], console)?;
 
         // The offsets and counts within the header are used to calculate
         // various offsets to the different sections within the .bin file
@@ -164,7 +167,7 @@ impl Bin {
                 &raw[section_offset..next_section_offset],
                 section_dst_offset,
                 console,
-            );
+            )?;
             let section_size = section.size;
             sections.push(section);
 
@@ -182,17 +185,20 @@ impl Bin {
                 for j in 0..section.size {
                     let object_ptr_offset = (section.offset + (j * 0x04)) as usize;
                     let object_offset =
-                        console.read_u32(&raw[object_ptr_offset..(object_ptr_offset + 0x04)]);
-                    objects.push(BinObject::new(&raw, object_offset, console).unwrap());
+                        console.read_u32(&raw[object_ptr_offset..(object_ptr_offset + 0x04)])?;
+                    match BinObject::new(&raw, object_offset, console) {
+                        Some(obj) => objects.push(obj),
+                        _ => (),
+                    };
                 }
             }
         }
 
-        Bin {
+        Ok(Bin {
             console,
             objects,
             raw,
-        }
+        })
     }
 
     /// Get all objects of a requested type `T` contained within the .bin file.
@@ -268,11 +274,15 @@ impl Bin {
         // Ensure there are enough bytes for the requested type to fit before
         // we try and make a slice for it
         if offset as usize + T::size() > self.raw.len() {
-            return Err(Error::NotEnoughBytes {
-                requested: T::size(),
-                file_size: self.raw.len(),
-                offset: offset as usize,
-            });
+            return Err(
+                Error::ClassDeserialiseError(
+                    classes::Error::NotEnoughBytes {
+                        requested: T::size(),
+                        file_size: self.raw.len(),
+                        offset: offset as usize,
+                    }
+                )
+            );
         }
 
         // Ensure the requested type exists at the given offset by checking the
@@ -280,13 +290,17 @@ impl Bin {
         let object_begin = (offset + 0x40) as usize;
         let hash = self
             .console
-            .read_u32(&self.raw[object_begin..object_begin + 4]);
+            .read_u32(&self.raw[object_begin..object_begin + 4])?;
         if hash != T::hash() {
-            return Err(Error::IncorrectType { hash });
+            return Err(
+                Error::ClassDeserialiseError(
+                    classes::Error::IncorrectType { hash }
+                )
+            );
         }
 
         // Pass the offset to the game object's own constructor
-        Ok(T::new(&self, object_begin))
+        T::new(&self, object_begin)
     }
 
     /// Returns a string from the given `offset` within the .bin file.
@@ -308,7 +322,7 @@ impl Bin {
     /// let my_string = bin.get_str_from_offset(0x500).unwrap();
     /// println!("At offset {}, there is the string '{}'", 0x500, my_string);
     /// ```
-    pub fn get_str_from_offset(&self, offset: u32) -> Result<String, Cow<'static, str>> {
+    pub fn get_str_from_offset(&self, offset: u32) -> Result<String, Error> {
         let str_begin = (offset + 0x40) as usize;
 
         // Find the first NULL byte, which ends the string. If not found,
@@ -319,7 +333,10 @@ impl Bin {
 
         // Text within the game is stored using the single-byte ISO 8859-1
         // encoding. Specifically, $AE = ®. We therefore need to decode it
-        ISO_8859_1.decode(&self.raw[str_begin..str_begin + size], DecoderTrap::Strict)
+        match ISO_8859_1.decode(&self.raw[str_begin..str_begin + size], DecoderTrap::Strict) {
+            Err(x) => Err(Error::StringDeserialiseError(x)),
+            Ok(x) => Ok(x),
+        }
     }
 
     /// Overwrite an existing object at the given `offset` with the new object
@@ -344,7 +361,7 @@ impl Bin {
     /// attack.damage1 = 100.0;
     /// bin.overwrite_object(0x1000, &attack);
     /// ```
-    pub fn overwrite_object<T>(&mut self, offset: u32, object: &T) -> Result<(), ()>
+    pub fn overwrite_object<T>(&mut self, offset: u32, object: &T) -> Result<(), Error>
     where
         T: SerialisedShrekSuperSlamGameObject + WriteableShrekSuperSlamGameObject,
     {
@@ -353,9 +370,13 @@ impl Bin {
         let object_begin = (offset + 0x40) as usize;
         let hash = self
             .console
-            .read_u32(&self.raw[object_begin..object_begin + 4]);
+            .read_u32(&self.raw[object_begin..object_begin + 4])?;
         if hash != T::hash() {
-            return Err(());
+            return Err(
+                Error::ClassDeserialiseError(
+                    classes::Error::IncorrectType { hash }
+                )
+            );
         }
 
         object.write(self, object_begin);

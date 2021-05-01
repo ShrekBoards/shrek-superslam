@@ -2,6 +2,9 @@
 mod console;
 pub use console::Console;
 
+mod errors;
+pub use errors::Error;
+
 mod master_dat;
 pub use master_dat::MasterDat;
 

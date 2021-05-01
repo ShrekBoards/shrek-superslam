@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
-use std::io::{Error, Write};
+use std::io::Write;
 use std::path::Path;
 
 use crate::compression::{compress, decompress};
 use crate::console::Console;
+use crate::errors::Error;
 use crate::master_dir::{MasterDir, MasterDirEntry};
 
 /// Structure representing the MASTER.DAT file, which contains all of the
@@ -68,10 +69,11 @@ impl MasterDat {
     /// ```
     pub fn from_file(path: &Path, master_dir: MasterDir) -> Result<MasterDat, Error> {
         // Read all of the file to a byte array
-        let file_contents = fs::read(&path)?;
-
-        // Parse the bytes to a MasterDir object
-        Ok(MasterDat::from_bytes(&file_contents, master_dir))
+        match fs::read(&path) {
+            // Parse the bytes to a MasterDir object
+            Ok(file_contents) => Ok(MasterDat::from_bytes(&file_contents, master_dir)),
+            Err(io_err) => Err(Error::FileError(io_err)),
+        }
     }
 
     /// Add a new file at the given `path` with the given `data` to the

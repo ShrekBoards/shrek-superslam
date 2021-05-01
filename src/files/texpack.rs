@@ -160,7 +160,7 @@ pub struct Texpack {
     files: Vec<TexpackFile>,
 
     /// The console version of the game this file comes from
-    _console: Console,
+    console: Console,
 }
 
 impl Texpack {
@@ -176,7 +176,7 @@ impl Texpack {
     pub fn new(console: Console) -> Texpack {
         Texpack {
             files: vec![],
-            _console: console,
+            console,
         }
     }
 
@@ -216,10 +216,7 @@ impl Texpack {
             })
             .collect();
 
-        Texpack {
-            files,
-            _console: console,
-        }
+        Texpack { files, console }
     }
 
     /// Creates a new Texpack structure from the passed file
@@ -239,6 +236,30 @@ impl Texpack {
 
         // Parse the bytes to a Texpack object
         Ok(Texpack::from_bytes(&file_contents, console))
+    }
+
+    /// Add a file to the Texpack
+    ///
+    /// # Parameters
+    ///
+    /// - `name`: The name of the file (no extension)
+    /// - `data`: The file data
+    pub fn add_file(&mut self, name: String, data: &[u8]) {
+        // Determine the filetype based on the console version and the header
+        let header = &data[0x00..0x04];
+        let filetype = if (self.console == Console::Gamecube && header == [0x47, 0x43, 0x4E, 0x54])
+            || ((self.console == Console::PC || self.console == Console::Xbox)
+                && header == [0x44, 0x44, 0x53, 0x20])
+            || (self.console == Console::PS2 && header == [0x54, 0x49, 0x4D, 0x32])
+        {
+            TexpackEntryType::Texture
+        } else {
+            TexpackEntryType::Tga
+        };
+
+        // Add the new file to the list of files
+        self.files
+            .push(TexpackFile::new(name, filetype, data, self.console));
     }
 
     /// # Returns

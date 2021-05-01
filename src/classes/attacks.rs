@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::classes::{SerialisedShrekSuperSlamGameObject, WriteableShrekSuperSlamGameObject};
+use crate::errors::Error;
 use crate::files::Bin;
 use crate::Console;
 
@@ -80,17 +81,17 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
     /// Prefer calling
     /// [Bin::get_object_from_offset<T>()](../../files/struct.Bin.html#method.get_object_from_offset)
     /// rather than calling this method.
-    fn new(bin: &Bin, offset: usize) -> AttackMoveType {
+    fn new(bin: &Bin, offset: usize) -> Result<AttackMoveType, Error> {
         let raw = &bin.raw;
         let c = bin.console;
 
         // Read numeric fields
-        let endlag = c.read_f32(&raw[offset + 0x04..offset + 0x08]);
-        let fall_speed = c.read_f32(&raw[offset + 0x14..offset + 0x18]);
-        let damage1 = c.read_f32(&raw[offset + 0x84..offset + 0x88]);
-        let damage2 = c.read_f32(&raw[offset + 0x88..offset + 0x8C]);
-        let damage3 = c.read_f32(&raw[offset + 0x8C..offset + 0x90]);
-        let name_offset = c.read_u32(&raw[offset + 0x28..offset + 0x2C]);
+        let endlag = c.read_f32(&raw[offset + 0x04..offset + 0x08])?;
+        let fall_speed = c.read_f32(&raw[offset + 0x14..offset + 0x18])?;
+        let damage1 = c.read_f32(&raw[offset + 0x84..offset + 0x88])?;
+        let damage2 = c.read_f32(&raw[offset + 0x88..offset + 0x8C])?;
+        let damage3 = c.read_f32(&raw[offset + 0x8C..offset + 0x90])?;
+        let name_offset = c.read_u32(&raw[offset + 0x28..offset + 0x2C])?;
 
         // Read boolean flag fields
         let hits_otg = raw[offset + 0x33] != 0;
@@ -99,13 +100,13 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         let intangible = raw[offset + 0x3A] != 0;
 
         // Read the projectile type the attack spawns, if any
-        let projectile_offset_num = c.read_u32(&raw[offset + 0x9C..offset + 0xA0]);
+        let projectile_offset_num = c.read_u32(&raw[offset + 0x9C..offset + 0xA0])?;
         let projectile_offset = match projectile_offset_num {
             0 => None,
             _ => Some(projectile_offset_num),
         };
         let projectile = match projectile_offset {
-            Some(x) => Some(bin.get_object_from_offset::<ProjectileType>(x).unwrap()),
+            Some(x) => Some(bin.get_object_from_offset::<ProjectileType>(x)?),
             _ => None,
         };
 
@@ -116,7 +117,7 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             .map(|o| bin.get_object_from_offset::<AttackMoveRegion>(*o).unwrap())
             .collect();
 
-        AttackMoveType {
+        Ok(AttackMoveType {
             endlag,
             fall_speed,
             damage1,
@@ -127,11 +128,11 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             hits_otg,
             intangible,
             knocks_down,
-            name: bin.get_str_from_offset(name_offset).unwrap(),
+            name: bin.get_str_from_offset(name_offset)?,
             projectile,
             hitbox_offsets,
             projectile_offset,
-        }
+        })
     }
 }
 
@@ -201,6 +202,55 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
                 .unwrap()
                 .write(bin, self.projectile_offset.unwrap() as usize);
         }
+    }
+}
+
+impl AttackMoveType {
+    /// Retrieve a list of offsets for an attack's hitboxes within the .bin file
+    ///
+    /// # Parameters
+    ///
+    /// - `raw`: The full bytes of the .bin file
+    /// - `offset`: The offset the attack starts at within the file
+    /// - `console`: The console version the file comes from
+    ///
+    /// # Returns
+    ///
+    /// A list of offsets within the .bin file where each hitbox for the attack
+    /// at the offset is located. Empty if the attack has no hitboxes.
+    fn hitbox_offsets(raw: &[u8], offset: usize, console: Console) -> Vec<u32> {
+        // Offset 0x20 of the AttackMoveType contains an offset within the .bin
+        // file to a list of further offsets, each of which points to an
+        // AttackMoveRegion object. These are the hitboxes for the attack.
+        //
+        // The number of items in the list pointed by the offset is located at
+        // offset 0x24 within the AttackMoveType object.
+        //
+        // We later use this information to construct a list of AttackMoveRegion
+        // objects for the attack.
+        let num_hitboxes = AttackMoveType::number_of_hitboxes(&raw, offset, console);
+        let regions_offset = console.read_u32(&raw[offset + 0x20..offset + 0x24]);
+        (0..num_hitboxes)
+            .map(|i| {
+                let region_offset_offset = (regions_offset + 0x40 + (i * 4)) as usize;
+                console.read_u32(&raw[region_offset_offset..region_offset_offset + 4])
+            })
+            .collect()
+    }
+
+    /// Retrieve the number of hitboxes an attack has
+    ///
+    /// # Parameters
+    ///
+    /// - `raw`: The full bytes of the .bin file
+    /// - `offset`: The offset the attack starts at within the file
+    /// - `console`: The console version the file comes from
+    ///
+    /// # Returns
+    ///
+    /// The number of hitboxes for the attack starting at the given offset
+    fn number_of_hitboxes(raw: &[u8], offset: usize, console: Console) -> u32 {
+        console.read_u32(&raw[offset + 0x24..offset + 0x28])
     }
 }
 
@@ -315,55 +365,6 @@ pub struct AttackMoveRegion {
 
     /// The height of the hitbox - larger extends out wider.
     pub radius: f32,
-}
-
-impl AttackMoveType {
-    /// Retrieve a list of offsets for an attack's hitboxes within the .bin file
-    ///
-    /// # Parameters
-    ///
-    /// - `raw`: The full bytes of the .bin file
-    /// - `offset`: The offset the attack starts at within the file
-    /// - `console`: The console version the file comes from
-    ///
-    /// # Returns
-    ///
-    /// A list of offsets within the .bin file where each hitbox for the attack
-    /// at the offset is located. Empty if the attack has no hitboxes.
-    fn hitbox_offsets(raw: &[u8], offset: usize, console: Console) -> Vec<u32> {
-        // Offset 0x20 of the AttackMoveType contains an offset within the .bin
-        // file to a list of further offsets, each of which points to an
-        // AttackMoveRegion object. These are the hitboxes for the attack.
-        //
-        // The number of items in the list pointed by the offset is located at
-        // offset 0x24 within the AttackMoveType object.
-        //
-        // We later use this information to construct a list of AttackMoveRegion
-        // objects for the attack.
-        let num_hitboxes = AttackMoveType::number_of_hitboxes(&raw, offset, console);
-        let regions_offset = console.read_u32(&raw[offset + 0x20..offset + 0x24]);
-        (0..num_hitboxes)
-            .map(|i| {
-                let region_offset_offset = (regions_offset + 0x40 + (i * 4)) as usize;
-                console.read_u32(&raw[region_offset_offset..region_offset_offset + 4])
-            })
-            .collect()
-    }
-
-    /// Retrieve the number of hitboxes an attack has
-    ///
-    /// # Parameters
-    ///
-    /// - `raw`: The full bytes of the .bin file
-    /// - `offset`: The offset the attack starts at within the file
-    /// - `console`: The console version the file comes from
-    ///
-    /// # Returns
-    ///
-    /// The number of hitboxes for the attack starting at the given offset
-    fn number_of_hitboxes(raw: &[u8], offset: usize, console: Console) -> u32 {
-        console.read_u32(&raw[offset + 0x24..offset + 0x28])
-    }
 }
 
 impl SerialisedShrekSuperSlamGameObject for AttackMoveRegion {

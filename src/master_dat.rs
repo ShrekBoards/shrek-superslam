@@ -43,7 +43,7 @@ impl MasterDat {
         let mut files: HashMap<String, Vec<u8>> = HashMap::new();
         for entry in &master_dir.entries {
             let o = entry.offset as usize;
-            let file = master_dat[o .. o + entry.comp_size as usize].to_owned();
+            let file = master_dat[o..o + entry.comp_size as usize].to_owned();
             files.insert(entry.name.trim_end_matches(char::from(0)).to_owned(), file);
         }
 
@@ -182,7 +182,7 @@ impl MasterDat {
     /// let (master_dat_bytes, master_dir_bytes) = master_dat.to_bytes();
     /// ```
     pub fn to_bytes(&self) -> (Vec<u8>, Vec<u8>) {
-        let mut master_dat_bytes = vec!();
+        let mut master_dat_bytes = vec![];
         for master_dir_entry in &self.master_dir.entries {
             let trimmed = master_dir_entry.name.trim_end_matches(char::from(0));
             master_dat_bytes.extend(&pad(self.files.get(trimmed).unwrap()));

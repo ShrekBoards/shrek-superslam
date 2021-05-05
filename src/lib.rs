@@ -13,3 +13,4 @@ pub mod files;
 
 // Internal interface
 mod compression;
+mod hash;

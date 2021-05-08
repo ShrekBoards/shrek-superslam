@@ -1,6 +1,9 @@
 use std::fs;
 use std::path::Path;
 
+use encoding::all::ISO_8859_1;
+use encoding::{DecoderTrap, Encoding};
+
 use crate::console::Console;
 use crate::errors::Error;
 
@@ -46,8 +49,8 @@ impl TexpackEntry {
     /// The constructed texpack entry
     fn new(raw: &[u8], console: Console) -> Result<TexpackEntry, Error> {
         let hash = console.read_u32(&raw[0x00..0x04])?;
-        let filename = String::from_utf8(raw[0x04..0x20].to_vec())
-            .unwrap()
+
+        let filename = ISO_8859_1.decode(&raw[0x04..0x20].to_vec(), DecoderTrap::Strict)?
             .trim_end_matches(char::from(0))
             .to_owned();
         let offset = console.read_u32(&raw[0x20..0x24])?;

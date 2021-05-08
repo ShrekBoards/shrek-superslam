@@ -1,5 +1,3 @@
-
-
 use encoding::all::ISO_8859_1;
 use encoding::{DecoderTrap, Encoding};
 
@@ -325,10 +323,7 @@ impl Bin {
 
         // Text within the game is stored using the single-byte ISO 8859-1
         // encoding. Specifically, $AE = ®. We therefore need to decode it
-        match ISO_8859_1.decode(&self.raw[str_begin..str_begin + size], DecoderTrap::Strict) {
-            Err(x) => Err(Error::StringDeserialiseError(x)),
-            Ok(x) => Ok(x),
-        }
+        Ok(ISO_8859_1.decode(&self.raw[str_begin..str_begin + size], DecoderTrap::Strict)?)
     }
 
     /// Overwrite an existing object at the given `offset` with the new object

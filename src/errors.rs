@@ -36,6 +36,12 @@ impl From<std::io::Error> for Error {
     }
 }
 
+impl From<Cow<'static, str>> for Error {
+    fn from(error: Cow<'static, str>) -> Self {
+        Error::StringDeserialiseError(error)
+    }
+}
+
 impl error::Error for Error {}
 
 impl fmt::Display for Error {

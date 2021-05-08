@@ -2,6 +2,9 @@ use std::fs;
 use std::iter::repeat;
 use std::path::Path;
 
+use encoding::all::ISO_8859_1;
+use encoding::{DecoderTrap, Encoding};
+
 use crate::console::Console;
 use crate::errors::Error;
 
@@ -41,7 +44,7 @@ impl MasterDirEntry {
             offset,
             decomp_size,
             comp_size,
-            name: String::from_utf8(entry[12..].to_vec()).unwrap(),
+            name: ISO_8859_1.decode(&entry[12..].to_vec(), DecoderTrap::Strict)?,
         })
     }
 

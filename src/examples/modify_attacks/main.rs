@@ -66,7 +66,7 @@ fn attacks_to_json(master_dat: &MasterDat, console: Console, json_path: &Path) {
 
             // Read the player.db.bin file, grab all the Game::AttackMoveType
             // objects and convert them to JSON objects
-            let bin = Bin::new(master_dat.decompressed_file(&filepath).unwrap(), console);
+            let bin = Bin::new(master_dat.decompressed_file(&filepath).unwrap(), console).unwrap_or_else(|e| panic!("Error reading '{}': {:?}", &filepath, e));
             let objects = bin
                 .get_all_objects_of_type::<AttackMoveType>()
                 .into_iter()
@@ -101,7 +101,7 @@ fn write_new_attack_data(master_dat: &mut MasterDat, console: Console, json_path
     for (character, attacks) in &attacks {
         // Read the player.db.bin file for this character
         let filename = format!("data\\players\\{}\\player.db.bin", character);
-        let mut bin = Bin::new(master_dat.decompressed_file(&filename).unwrap(), console);
+        let mut bin = Bin::new(master_dat.decompressed_file(&filename).unwrap(), console).unwrap_or_else(|e| panic!("Error reading '{}': {:?}", &filename, e));
 
         // Collect every Game::AttackMoveType object in the player.db.bin file,
         // along with the attack's offset within the file

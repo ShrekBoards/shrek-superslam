@@ -130,7 +130,7 @@ mod test {
 
     #[test]
     fn write_u32_pc() {
-        assert_eq!(Console::PC.write_u32(0), vec![0x00, 0x00, 0x00, 0x00]);
+        assert_eq!(Console::PC.write_u32(0).unwrap(), vec![0x00, 0x00, 0x00, 0x00]);
         assert_eq!(
             Console::PC.write_u32(u32::MAX).unwrap(),
             vec![0xFF, 0xFF, 0xFF, 0xFF]
@@ -143,7 +143,7 @@ mod test {
 
     #[test]
     fn write_u32_gcn() {
-        assert_eq!(Console::Gamecube.write_u32(0), vec![0x00, 0x00, 0x00, 0x00]);
+        assert_eq!(Console::Gamecube.write_u32(0).unwrap(), vec![0x00, 0x00, 0x00, 0x00]);
         assert_eq!(
             Console::Gamecube.write_u32(u32::MAX).unwrap(),
             vec![0xFF, 0xFF, 0xFF, 0xFF]

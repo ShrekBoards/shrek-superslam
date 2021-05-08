@@ -50,7 +50,8 @@ impl TexpackEntry {
     fn new(raw: &[u8], console: Console) -> Result<TexpackEntry, Error> {
         let hash = console.read_u32(&raw[0x00..0x04])?;
 
-        let filename = ISO_8859_1.decode(&raw[0x04..0x20].to_vec(), DecoderTrap::Strict)?
+        let filename = ISO_8859_1
+            .decode(&raw[0x04..0x20].to_vec(), DecoderTrap::Strict)?
             .trim_end_matches(char::from(0))
             .to_owned();
         let offset = console.read_u32(&raw[0x20..0x24])?;

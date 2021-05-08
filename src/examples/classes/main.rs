@@ -34,7 +34,8 @@ fn main() {
                 let bin = Bin::new(
                     master_dat.decompressed_file(&filepath).unwrap(),
                     config.console,
-                ).unwrap_or_else(|e| { panic!("Error reading '{}': {:?}", &filepath, e)});
+                )
+                .unwrap_or_else(|e| panic!("Error reading '{}': {:?}", &filepath, e));
                 if !bin.objects().is_empty() {
                     println!("{} ({} objects)", filepath, bin.objects().len());
                     for object in bin.objects() {

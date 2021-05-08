@@ -48,8 +48,12 @@ impl SerialisedShrekSuperSlamGameObject for LocalizedString {
     /// - `bin`: The .bin containing the object
     /// - `offset`: The offset the object begins at within the .bin file
     fn new(bin: &Bin, offset: usize) -> Result<LocalizedString, Error> {
-        let x = bin.console.read_u32(&bin.raw[offset + 0x04..offset + 0x08])?;
-        let str_offset = bin.console.read_u32(&bin.raw[offset + 0x08..offset + 0x0C])?;
+        let x = bin
+            .console
+            .read_u32(&bin.raw[offset + 0x04..offset + 0x08])?;
+        let str_offset = bin
+            .console
+            .read_u32(&bin.raw[offset + 0x08..offset + 0x0C])?;
         Ok(LocalizedString {
             string: bin.get_str_from_offset(str_offset)?,
             unknown: x,
@@ -97,7 +101,9 @@ impl SerialisedShrekSuperSlamGameObject for EffectStringReference {
     /// - `bin`: The .bin containing the object
     /// - `offset`: The offset the object begins at within the .bin file
     fn new(bin: &Bin, offset: usize) -> Result<EffectStringReference, Error> {
-        let str_offset = bin.console.read_u32(&bin.raw[offset + 0x04..offset + 0x08])?;
+        let str_offset = bin
+            .console
+            .read_u32(&bin.raw[offset + 0x04..offset + 0x08])?;
         Ok(EffectStringReference {
             string: bin.get_str_from_offset(str_offset)?,
         })

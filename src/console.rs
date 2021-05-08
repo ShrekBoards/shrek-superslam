@@ -26,7 +26,10 @@ impl Console {
     /// The 32-bit unsigned integer from the bytes
     pub fn read_u32(&self, bytes: &[u8]) -> Result<u32, Error> {
         if bytes.len() < 4 {
-            return Err(Error::ConsoleNumberError(io::Error::new(io::ErrorKind::UnexpectedEof, "Too few bytes to read")));
+            return Err(Error::ConsoleNumberError(io::Error::new(
+                io::ErrorKind::UnexpectedEof,
+                "Too few bytes to read",
+            )));
         }
 
         match self {
@@ -67,7 +70,10 @@ impl Console {
     /// The 32-bit floating point from the bytes
     pub fn read_f32(&self, bytes: &[u8]) -> Result<f32, Error> {
         if bytes.len() < 4 {
-            return Err(Error::ConsoleNumberError(io::Error::new(io::ErrorKind::UnexpectedEof, "Too few bytes to read")));
+            return Err(Error::ConsoleNumberError(io::Error::new(
+                io::ErrorKind::UnexpectedEof,
+                "Too few bytes to read",
+            )));
         }
 
         match self {
@@ -133,12 +139,18 @@ mod test {
 
         assert_eq!(Console::Gamecube.read_u32(&data1[0..4]).unwrap(), 0);
         assert_eq!(Console::Gamecube.read_u32(&data2[0..4]).unwrap(), u32::MAX);
-        assert_eq!(Console::Gamecube.read_u32(&data3[0..4]).unwrap(), 0x01020304);
+        assert_eq!(
+            Console::Gamecube.read_u32(&data3[0..4]).unwrap(),
+            0x01020304
+        );
     }
 
     #[test]
     fn write_u32_pc() {
-        assert_eq!(Console::PC.write_u32(0).unwrap(), vec![0x00, 0x00, 0x00, 0x00]);
+        assert_eq!(
+            Console::PC.write_u32(0).unwrap(),
+            vec![0x00, 0x00, 0x00, 0x00]
+        );
         assert_eq!(
             Console::PC.write_u32(u32::MAX).unwrap(),
             vec![0xFF, 0xFF, 0xFF, 0xFF]
@@ -151,7 +163,10 @@ mod test {
 
     #[test]
     fn write_u32_gcn() {
-        assert_eq!(Console::Gamecube.write_u32(0).unwrap(), vec![0x00, 0x00, 0x00, 0x00]);
+        assert_eq!(
+            Console::Gamecube.write_u32(0).unwrap(),
+            vec![0x00, 0x00, 0x00, 0x00]
+        );
         assert_eq!(
             Console::Gamecube.write_u32(u32::MAX).unwrap(),
             vec![0xFF, 0xFF, 0xFF, 0xFF]
@@ -186,9 +201,18 @@ mod test {
 
     #[test]
     fn write_f32_pc() {
-        assert_eq!(Console::PC.write_f32(0.0).unwrap(), vec![0x00, 0x00, 0x00, 0x00]);
-        assert_eq!(Console::PC.write_f32(1.0).unwrap(), vec![0x00, 0x00, 0x80, 0x3F]);
-        assert_eq!(Console::PC.write_f32(-1.0).unwrap(), vec![0x00, 0x00, 0x80, 0xBF]);
+        assert_eq!(
+            Console::PC.write_f32(0.0).unwrap(),
+            vec![0x00, 0x00, 0x00, 0x00]
+        );
+        assert_eq!(
+            Console::PC.write_f32(1.0).unwrap(),
+            vec![0x00, 0x00, 0x80, 0x3F]
+        );
+        assert_eq!(
+            Console::PC.write_f32(-1.0).unwrap(),
+            vec![0x00, 0x00, 0x80, 0xBF]
+        );
     }
 
     #[test]

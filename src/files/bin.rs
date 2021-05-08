@@ -43,7 +43,7 @@ struct BinSection {
     pub number: u32,
 
     /// The number of pointers in the section
-    pub size: u32, 
+    pub size: u32,
 
     /// What offset the section begins within the file
     pub offset: u32,
@@ -268,13 +268,11 @@ impl Bin {
         // Ensure there are enough bytes for the requested type to fit before
         // we try and make a slice for it
         if offset as usize + T::size() > self.raw.len() {
-            return Err(
-                classes::Error::NotEnoughBytes {
-                    requested: T::size(),
-                    file_size: self.raw.len(),
-                    offset: offset as usize,
-                }
-            )?;
+            return Err(classes::Error::NotEnoughBytes {
+                requested: T::size(),
+                file_size: self.raw.len(),
+                offset: offset as usize,
+            })?;
         }
 
         // Ensure the requested type exists at the given offset by checking the
@@ -284,9 +282,7 @@ impl Bin {
             .console
             .read_u32(&self.raw[object_begin..object_begin + 4])?;
         if hash != T::hash() {
-            return Err(
-                classes::Error::IncorrectType { hash }
-            )?;
+            return Err(classes::Error::IncorrectType { hash })?;
         }
 
         // Pass the offset to the game object's own constructor

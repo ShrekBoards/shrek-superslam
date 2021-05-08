@@ -275,14 +275,12 @@ impl Bin {
         // we try and make a slice for it
         if offset as usize + T::size() > self.raw.len() {
             return Err(
-                Error::ClassDeserialiseError(
-                    classes::Error::NotEnoughBytes {
-                        requested: T::size(),
-                        file_size: self.raw.len(),
-                        offset: offset as usize,
-                    }
-                )
-            );
+                classes::Error::NotEnoughBytes {
+                    requested: T::size(),
+                    file_size: self.raw.len(),
+                    offset: offset as usize,
+                }
+            )?;
         }
 
         // Ensure the requested type exists at the given offset by checking the
@@ -293,10 +291,8 @@ impl Bin {
             .read_u32(&self.raw[object_begin..object_begin + 4])?;
         if hash != T::hash() {
             return Err(
-                Error::ClassDeserialiseError(
-                    classes::Error::IncorrectType { hash }
-                )
-            );
+                classes::Error::IncorrectType { hash }
+            )?;
         }
 
         // Pass the offset to the game object's own constructor
@@ -372,11 +368,7 @@ impl Bin {
             .console
             .read_u32(&self.raw[object_begin..object_begin + 4])?;
         if hash != T::hash() {
-            return Err(
-                Error::ClassDeserialiseError(
-                    classes::Error::IncorrectType { hash }
-                )
-            );
+            return Err(classes::Error::IncorrectType { hash })?;
         }
 
         object.write(self, object_begin);

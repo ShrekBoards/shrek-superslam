@@ -111,7 +111,7 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         };
 
         // Read the list of hitbox offsets, and use those to read each hitbox
-        let hitbox_offsets = AttackMoveType::hitbox_offsets(&raw, offset, c);
+        let hitbox_offsets = AttackMoveType::hitbox_offsets(&raw, offset, c)?;
         let hitboxes = hitbox_offsets
             .iter()
             .map(|o| bin.get_object_from_offset::<AttackMoveRegion>(*o).unwrap())
@@ -154,25 +154,25 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
     /// attack.damage1 = 100.0;
     /// attack.write(&mut bin, 0x1000);
     /// ```
-    fn write(&self, bin: &mut Bin, offset: usize) {
+    fn write(&self, bin: &mut Bin, offset: usize) -> Result<(), Error> {
         // Write back only fixed-length numeric fields to the new object - other
         // fields such as strings would modify the size of the file and
         // invalidate all offsets
         let c = bin.console;
         bin.raw
-            .splice(offset + 0x04..offset + 0x08, c.write_f32(self.endlag));
+            .splice(offset + 0x04..offset + 0x08, c.write_f32(self.endlag)?);
         bin.raw
-            .splice(offset + 0x14..offset + 0x18, c.write_f32(self.fall_speed));
+            .splice(offset + 0x14..offset + 0x18, c.write_f32(self.fall_speed)?);
         bin.raw[offset + 0x33] = self.hits_otg as u8;
         bin.raw[offset + 0x34] = self.knocks_down as u8;
         bin.raw[offset + 0x35] = self.disabled as u8;
         bin.raw[offset + 0x3A] = self.intangible as u8;
         bin.raw
-            .splice(offset + 0x84..offset + 0x88, c.write_f32(self.damage1));
+            .splice(offset + 0x84..offset + 0x88, c.write_f32(self.damage1)?);
         bin.raw
-            .splice(offset + 0x88..offset + 0x8C, c.write_f32(self.damage2));
+            .splice(offset + 0x88..offset + 0x8C, c.write_f32(self.damage2)?);
         bin.raw
-            .splice(offset + 0x8C..offset + 0x90, c.write_f32(self.damage3));
+            .splice(offset + 0x8C..offset + 0x90, c.write_f32(self.damage3)?);
 
         // Write the attack's hitboxes back to the .bin file too
         //
@@ -180,10 +180,10 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
         // we will not know where the hitboxes are supposed to go in the .bin
         // file, so read out the offsets from the object that we are about to
         // replace
-        let hitbox_offsets = if AttackMoveType::number_of_hitboxes(&bin.raw, offset, c)
+        let hitbox_offsets = if AttackMoveType::number_of_hitboxes(&bin.raw, offset, c)?
             > self.hitbox_offsets.len() as u32
         {
-            AttackMoveType::hitbox_offsets(&bin.raw, offset, c)
+            AttackMoveType::hitbox_offsets(&bin.raw, offset, c)?
                 .iter()
                 .map(|o| o + 0x40)
                 .collect()
@@ -202,6 +202,8 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
                 .unwrap()
                 .write(bin, self.projectile_offset.unwrap() as usize);
         }
+
+        Ok(())
     }
 }
 
@@ -218,7 +220,7 @@ impl AttackMoveType {
     ///
     /// A list of offsets within the .bin file where each hitbox for the attack
     /// at the offset is located. Empty if the attack has no hitboxes.
-    fn hitbox_offsets(raw: &[u8], offset: usize, console: Console) -> Vec<u32> {
+    fn hitbox_offsets(raw: &[u8], offset: usize, console: Console) -> Result<Vec<u32>, Error> {
         // Offset 0x20 of the AttackMoveType contains an offset within the .bin
         // file to a list of further offsets, each of which points to an
         // AttackMoveRegion object. These are the hitboxes for the attack.
@@ -229,7 +231,7 @@ impl AttackMoveType {
         // We later use this information to construct a list of AttackMoveRegion
         // objects for the attack.
         let num_hitboxes = AttackMoveType::number_of_hitboxes(&raw, offset, console);
-        let regions_offset = console.read_u32(&raw[offset + 0x20..offset + 0x24]);
+        let regions_offset = console.read_u32(&raw[offset + 0x20..offset + 0x24])?;
         (0..num_hitboxes)
             .map(|i| {
                 let region_offset_offset = (regions_offset + 0x40 + (i * 4)) as usize;
@@ -249,8 +251,8 @@ impl AttackMoveType {
     /// # Returns
     ///
     /// The number of hitboxes for the attack starting at the given offset
-    fn number_of_hitboxes(raw: &[u8], offset: usize, console: Console) -> u32 {
-        console.read_u32(&raw[offset + 0x24..offset + 0x28])
+    fn number_of_hitboxes(raw: &[u8], offset: usize, console: Console) -> Result<u32, Error> {
+        Ok(console.read_u32(&raw[offset + 0x24..offset + 0x28])?)
     }
 }
 

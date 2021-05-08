@@ -40,7 +40,7 @@ pub trait SerialisedShrekSuperSlamGameObject: Sized {
 pub trait WriteableShrekSuperSlamGameObject {
     /// Overwrites the game object at the given `offset` within the given `Bin`
     /// file.
-    fn write(&self, bin: &mut Bin, offset: usize);
+    fn write(&self, bin: &mut Bin, offset: usize) -> Result<(), errors::Error>;
 }
 
 /// Error type for errors caused by trying to read or write serialised game

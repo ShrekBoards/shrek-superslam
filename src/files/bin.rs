@@ -180,10 +180,9 @@ impl Bin {
                     let object_ptr_offset = (section.offset + (j * 0x04)) as usize;
                     let object_offset =
                         console.read_u32(&raw[object_ptr_offset..(object_ptr_offset + 0x04)])?;
-                    match BinObject::new(&raw, object_offset, console)? {
-                        Some(obj) => objects.push(obj),
-                        _ => (),
-                    };
+                    if let Some(obj) = BinObject::new(&raw, object_offset, console)? {
+                        objects.push(obj);
+                    }
                 }
             }
         }
@@ -272,7 +271,8 @@ impl Bin {
                 requested: T::size(),
                 file_size: self.raw.len(),
                 offset: offset as usize,
-            })?;
+            }
+            .into());
         }
 
         // Ensure the requested type exists at the given offset by checking the
@@ -282,7 +282,7 @@ impl Bin {
             .console
             .read_u32(&self.raw[object_begin..object_begin + 4])?;
         if hash != T::hash() {
-            return Err(classes::Error::IncorrectType { hash })?;
+            return Err(classes::Error::IncorrectType { hash }.into());
         }
 
         // Pass the offset to the game object's own constructor
@@ -355,7 +355,7 @@ impl Bin {
             .console
             .read_u32(&self.raw[object_begin..object_begin + 4])?;
         if hash != T::hash() {
-            return Err(classes::Error::IncorrectType { hash })?;
+            return Err(classes::Error::IncorrectType { hash }.into());
         }
 
         object.write(self, object_begin)?;

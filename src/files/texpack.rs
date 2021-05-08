@@ -203,7 +203,7 @@ impl Texpack {
             .map(|i| {
                 let begin = (i * TexpackEntry::size()) + 0x10;
                 let end = begin + TexpackEntry::size();
-                Ok(TexpackEntry::new(&raw[begin..end], console)?)
+                TexpackEntry::new(&raw[begin..end], console)
             })
             .collect();
 
@@ -239,7 +239,7 @@ impl Texpack {
         let file_contents = fs::read(&path)?;
 
         // Parse the bytes to a Texpack object
-        Ok(Texpack::from_bytes(&file_contents, console)?)
+        Texpack::from_bytes(&file_contents, console)
     }
 
     /// Add a file to the Texpack

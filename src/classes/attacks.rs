@@ -252,7 +252,7 @@ impl AttackMoveType {
     ///
     /// The number of hitboxes for the attack starting at the given offset
     fn number_of_hitboxes(raw: &[u8], offset: usize, console: Console) -> Result<u32, Error> {
-        Ok(console.read_u32(&raw[offset + 0x24..offset + 0x28])?)
+        console.read_u32(&raw[offset + 0x24..offset + 0x28])
     }
 }
 

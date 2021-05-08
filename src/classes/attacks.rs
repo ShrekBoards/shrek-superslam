@@ -192,7 +192,7 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
         };
 
         for (offset, hitbox) in hitbox_offsets.iter().zip(self.hitboxes.iter()) {
-            hitbox.write(bin, *offset as usize);
+            hitbox.write(bin, *offset as usize)?;
         }
 
         // Write the attack's projectile, if any, back to the .bin file too
@@ -200,7 +200,7 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
             self.projectile
                 .as_ref()
                 .unwrap()
-                .write(bin, self.projectile_offset.unwrap() as usize);
+                .write(bin, self.projectile_offset.unwrap() as usize)?;
         }
 
         Ok(())
@@ -230,7 +230,7 @@ impl AttackMoveType {
         //
         // We later use this information to construct a list of AttackMoveRegion
         // objects for the attack.
-        let num_hitboxes = AttackMoveType::number_of_hitboxes(&raw, offset, console);
+        let num_hitboxes = AttackMoveType::number_of_hitboxes(&raw, offset, console)?;
         let regions_offset = console.read_u32(&raw[offset + 0x20..offset + 0x24])?;
         (0..num_hitboxes)
             .map(|i| {
@@ -303,17 +303,17 @@ impl SerialisedShrekSuperSlamGameObject for ProjectileType {
     /// Prefer calling
     /// [Bin::get_object_from_offset<T>()](../../files/struct.Bin.html#method.get_object_from_offset)
     /// rather than calling this method.
-    fn new(bin: &Bin, offset: usize) -> ProjectileType {
+    fn new(bin: &Bin, offset: usize) -> Result<ProjectileType, Error> {
         let c = bin.console;
 
-        ProjectileType {
-            x_vector: c.read_f32(&bin.raw[offset + 0x08..offset + 0x0C]),
-            angle: c.read_f32(&bin.raw[offset + 0x14..offset + 0x18]),
-            arc: c.read_f32(&bin.raw[offset + 0x18..offset + 0x1C]),
-            homing1: c.read_f32(&bin.raw[offset + 0x44..offset + 0x48]),
-            homing2: c.read_f32(&bin.raw[offset + 0x48..offset + 0x4C]),
-            homing3: c.read_f32(&bin.raw[offset + 0x4C..offset + 0x50]),
-        }
+        Ok(ProjectileType {
+            x_vector: c.read_f32(&bin.raw[offset + 0x08..offset + 0x0C])?,
+            angle: c.read_f32(&bin.raw[offset + 0x14..offset + 0x18])?,
+            arc: c.read_f32(&bin.raw[offset + 0x18..offset + 0x1C])?,
+            homing1: c.read_f32(&bin.raw[offset + 0x44..offset + 0x48])?,
+            homing2: c.read_f32(&bin.raw[offset + 0x48..offset + 0x4C])?,
+            homing3: c.read_f32(&bin.raw[offset + 0x4C..offset + 0x50])?,
+        })
     }
 }
 
@@ -335,23 +335,25 @@ impl WriteableShrekSuperSlamGameObject for ProjectileType {
     /// projectile.x_vector = -1.0;
     /// projectile.write(&mut bin, 0x2000);
     /// ```
-    fn write(&self, bin: &mut Bin, offset: usize) {
+    fn write(&self, bin: &mut Bin, offset: usize) -> Result<(), Error> {
         // Write back only fixed-length numeric fields to the new object - other
         // fields such as strings would modify the size of the file and
         // invalidate all offsets
         let c = bin.console;
         bin.raw
-            .splice(offset + 0x08..offset + 0x0C, c.write_f32(self.x_vector));
+            .splice(offset + 0x08..offset + 0x0C, c.write_f32(self.x_vector)?);
         bin.raw
-            .splice(offset + 0x14..offset + 0x18, c.write_f32(self.angle));
+            .splice(offset + 0x14..offset + 0x18, c.write_f32(self.angle)?);
         bin.raw
-            .splice(offset + 0x18..offset + 0x1C, c.write_f32(self.arc));
+            .splice(offset + 0x18..offset + 0x1C, c.write_f32(self.arc)?);
         bin.raw
-            .splice(offset + 0x44..offset + 0x48, c.write_f32(self.homing1));
+            .splice(offset + 0x44..offset + 0x48, c.write_f32(self.homing1)?);
         bin.raw
-            .splice(offset + 0x48..offset + 0x4C, c.write_f32(self.homing2));
+            .splice(offset + 0x48..offset + 0x4C, c.write_f32(self.homing2)?);
         bin.raw
-            .splice(offset + 0x4C..offset + 0x50, c.write_f32(self.homing3));
+            .splice(offset + 0x4C..offset + 0x50, c.write_f32(self.homing3)?);
+
+        Ok(())
     }
 }
 
@@ -393,14 +395,14 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveRegion {
     /// Prefer calling
     /// [Bin::get_object_from_offset<T>()](../../files/struct.Bin.html#method.get_object_from_offset)
     /// rather than calling this method.
-    fn new(bin: &Bin, offset: usize) -> AttackMoveRegion {
+    fn new(bin: &Bin, offset: usize) -> Result<AttackMoveRegion, Error> {
         let c = bin.console;
 
-        AttackMoveRegion {
-            delay: c.read_f32(&bin.raw[offset + 0x04..offset + 0x08]),
-            width: c.read_f32(&bin.raw[offset + 0x30..offset + 0x34]),
-            radius: c.read_f32(&bin.raw[offset + 0x38..offset + 0x3C]),
-        }
+        Ok(AttackMoveRegion {
+            delay: c.read_f32(&bin.raw[offset + 0x04..offset + 0x08])?,
+            width: c.read_f32(&bin.raw[offset + 0x30..offset + 0x34])?,
+            radius: c.read_f32(&bin.raw[offset + 0x38..offset + 0x3C])?,
+        })
     }
 }
 
@@ -422,16 +424,18 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveRegion {
     /// hitbox.width = 5.0;
     /// hitbox.write(&mut bin, 0x1500);
     /// ```
-    fn write(&self, bin: &mut Bin, offset: usize) {
+    fn write(&self, bin: &mut Bin, offset: usize) -> Result<(), Error> {
         // Write back only fixed-length numeric fields to the new object - other
         // fields such as strings would modify the size of the file and
         // invalidate all offsets
         let c = bin.console;
         bin.raw
-            .splice(offset + 0x04..offset + 0x08, c.write_f32(self.delay));
+            .splice(offset + 0x04..offset + 0x08, c.write_f32(self.delay)?);
         bin.raw
-            .splice(offset + 0x30..offset + 0x34, c.write_f32(self.width));
+            .splice(offset + 0x30..offset + 0x34, c.write_f32(self.width)?);
         bin.raw
-            .splice(offset + 0x38..offset + 0x3C, c.write_f32(self.radius));
+            .splice(offset + 0x38..offset + 0x3C, c.write_f32(self.radius)?);
+
+        Ok(())
     }
 }

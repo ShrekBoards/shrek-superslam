@@ -195,16 +195,16 @@ impl Texpack {
         let header = TexpackHeader::new(&raw[0x00..0x10], console)?;
 
         // Parse each entry from the header
-        let entries: Vec<TexpackEntry> = (0..header.entries as usize)
+        let entries: Result<Vec<TexpackEntry>, Error> = (0..header.entries as usize)
             .map(|i| {
                 let begin = (i * TexpackEntry::size()) + 0x10;
                 let end = begin + TexpackEntry::size();
-                TexpackEntry::new(&raw[begin..end], console)
+                Ok(TexpackEntry::new(&raw[begin..end], console)?)
             })
             .collect();
 
         // Use the entries to pull out each file from the texpack
-        let files = entries
+        let files = entries?
             .into_iter()
             .map(|e| {
                 TexpackFile::new(

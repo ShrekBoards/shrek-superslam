@@ -367,7 +367,7 @@ impl Bin {
             return Err(classes::Error::IncorrectType { hash })?;
         }
 
-        object.write(self, object_begin);
+        object.write(self, object_begin)?;
 
         Ok(())
     }

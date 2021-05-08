@@ -100,10 +100,7 @@ impl BinObject {
     fn new(raw: &[u8], offset: u32, console: Console) -> Option<BinObject> {
         let hash =
             console.read_u32(&raw[(0x40 + offset) as usize..(0x40 + offset + 0x04) as usize]);
-        match hash_lookup(hash) {
-            Some(name) => Some(BinObject { hash, name, offset }),
-            _ => None,
-        }
+        hash_lookup(hash).map(|name| BinObject { hash, name, offset })
     }
 }
 
@@ -189,8 +186,8 @@ impl Bin {
         }
 
         Bin {
-            console,
             objects,
+            console,
             raw,
         }
     }
@@ -344,7 +341,7 @@ impl Bin {
     /// attack.damage1 = 100.0;
     /// bin.overwrite_object(0x1000, &attack);
     /// ```
-    pub fn overwrite_object<T>(&mut self, offset: u32, object: &T) -> Result<(), ()>
+    pub fn overwrite_object<T>(&mut self, offset: u32, object: &T) -> Result<(), Error>
     where
         T: SerialisedShrekSuperSlamGameObject + WriteableShrekSuperSlamGameObject,
     {
@@ -355,7 +352,7 @@ impl Bin {
             .console
             .read_u32(&self.raw[object_begin..object_begin + 4]);
         if hash != T::hash() {
-            return Err(());
+            return Err(Error::IncorrectType { hash });
         }
 
         object.write(self, object_begin);

@@ -43,7 +43,7 @@ impl MasterDat {
         let mut files: HashMap<String, Vec<u8>> = HashMap::new();
         for entry in &master_dir.entries {
             let o = entry.offset as usize;
-            let file = master_dat[o .. o + entry.comp_size as usize].to_owned();
+            let file = master_dat[o..o + entry.comp_size as usize].to_owned();
             files.insert(entry.name.trim_end_matches(char::from(0)).to_owned(), file);
         }
 
@@ -121,10 +121,7 @@ impl MasterDat {
     /// let compressed_file = master_dat.compressed_file("data\\players\\shrek\\player.db.bin").unwrap();
     /// ```
     pub fn compressed_file(&self, path: &str) -> Option<Vec<u8>> {
-        match self.files.get(path) {
-            Some(f) => Some(f.clone()),
-            _ => None,
-        }
+        self.files.get(path).cloned()
     }
 
     /// Returns the decompressed file at the given `path` in the MASTER.DAT if
@@ -141,10 +138,7 @@ impl MasterDat {
     /// let decompressed_file = master_dat.decompressed_file("data\\players\\shrek\\player.db.bin").unwrap();
     /// ```
     pub fn decompressed_file(&self, path: &str) -> Option<Vec<u8>> {
-        match self.files.get(path) {
-            Some(f) => Some(decompress(&f)),
-            _ => None,
-        }
+        self.files.get(path).map(|bytes| decompress(&bytes))
     }
 
     /// Returns the filenames within the MASTER.DAT file.
@@ -182,7 +176,7 @@ impl MasterDat {
     /// let (master_dat_bytes, master_dir_bytes) = master_dat.to_bytes();
     /// ```
     pub fn to_bytes(&self) -> (Vec<u8>, Vec<u8>) {
-        let mut master_dat_bytes = vec!();
+        let mut master_dat_bytes = vec![];
         for master_dir_entry in &self.master_dir.entries {
             let trimmed = master_dir_entry.name.trim_end_matches(char::from(0));
             master_dat_bytes.extend(&pad(self.files.get(trimmed).unwrap()));

@@ -177,7 +177,7 @@ impl MasterDir {
 
     /// Get the raw bytes of the MASTER.DIR file.
     pub(crate) fn to_bytes(&self) -> Result<Vec<u8>, Error> {
-        let mut master_dir_bytes = vec!();
+        let mut master_dir_bytes = vec![];
 
         // The total size of the first section - which is a list of offsets to
         // each entry in the second section - is determined from the total

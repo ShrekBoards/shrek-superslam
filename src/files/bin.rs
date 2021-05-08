@@ -99,14 +99,10 @@ impl BinObject {
     ///
     /// Some(BinObject) detailing the object that begins at the offset, or None
     /// if there is no object starting at the given offset
-    fn new(raw: &[u8], offset: u32, console: Console) -> Option<BinObject> {
-        match console.read_u32(&raw[(0x40 + offset) as usize..(0x40 + offset + 0x04) as usize]) {
-            Ok(hash) => match hash_lookup(hash) {
-                Some(name) => Some(BinObject { hash, name, offset }),
-                _ => None,
-            },
-            _ => None,
-        }
+    fn new(raw: &[u8], offset: u32, console: Console) -> Result<Option<BinObject>, Error> {
+        let hash =
+            console.read_u32(&raw[(0x40 + offset) as usize..(0x40 + offset + 0x04) as usize])?;
+        Ok(hash_lookup(hash).map(|name| BinObject { hash, name, offset }))
     }
 }
 
@@ -186,7 +182,7 @@ impl Bin {
                     let object_ptr_offset = (section.offset + (j * 0x04)) as usize;
                     let object_offset =
                         console.read_u32(&raw[object_ptr_offset..(object_ptr_offset + 0x04)])?;
-                    match BinObject::new(&raw, object_offset, console) {
+                    match BinObject::new(&raw, object_offset, console)? {
                         Some(obj) => objects.push(obj),
                         _ => (),
                     };
@@ -195,8 +191,8 @@ impl Bin {
         }
 
         Ok(Bin {
-            console,
             objects,
+            console,
             raw,
         })
     }

@@ -105,10 +105,10 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             0 => None,
             _ => Some(projectile_offset_num),
         };
-        let projectile = match projectile_offset {
-            Some(x) => Some(bin.get_object_from_offset::<ProjectileType>(x)?),
-            _ => None,
-        };
+        let projectile = projectile_offset.map(|offset| {
+            bin.get_object_from_offset::<ProjectileType>(offset)
+                .unwrap()
+        });
 
         // Read the list of hitbox offsets, and use those to read each hitbox
         let hitbox_offsets = AttackMoveType::hitbox_offsets(&raw, offset, c)?;

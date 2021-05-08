@@ -91,7 +91,15 @@ fn main() {
         .into_iter()
         .filter_map(|e| e.ok())
         .filter(|d| d.file_type().is_file())
-        .filter(|d| !d.path().parent().unwrap_or(Path::new("")).as_os_str().to_str().unwrap().ends_with("-extracted"))
+        .filter(|d| {
+            !d.path()
+                .parent()
+                .unwrap_or(Path::new(""))
+                .as_os_str()
+                .to_str()
+                .unwrap()
+                .ends_with("-extracted")
+        })
     {
         // Some files may require additional operations, such as repackaging
         // extracted files, before they are read and compressed into the

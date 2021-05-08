@@ -214,10 +214,7 @@ impl TexpackFile {
     /// Return the padded form of the file, for writing back to a texpack file.
     fn padded(&self) -> Vec<u8> {
         let mut padded = self.data.clone();
-        padded.extend(&vec![
-            0xEE;
-            self.padded_size() - self.data.len()
-        ]);
+        padded.extend(&vec![0xEE; self.padded_size() - self.data.len()]);
         padded
     }
 

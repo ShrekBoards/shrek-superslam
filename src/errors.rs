@@ -3,6 +3,7 @@ use std::convert::From;
 use std::error;
 use std::fmt;
 use std::io;
+use std::ops::Deref;
 
 use crate::classes;
 
@@ -46,6 +47,11 @@ impl error::Error for Error {}
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "yo")
+        match self {
+            Error::ClassDeserialiseError(e) => e.fmt(f),
+            Error::ConsoleNumberError(e) => e.fmt(f),
+            Error::FileError(e) => e.fmt(f),
+            Error::StringDeserialiseError(s) => write!(f, "{}", s.deref()),
+        }
     }
 }

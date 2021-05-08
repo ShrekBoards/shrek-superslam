@@ -1,3 +1,7 @@
+use std::fs;
+use std::io::Error;
+use std::path::Path;
+
 use crate::console::Console;
 
 /// Structure representing the header of an .ltimesh file
@@ -20,13 +24,27 @@ impl LtimeshHeader {
     }
 }
 
+/// Enumeration of the different types of object within an .ltimesh.
+#[derive(Copy, Clone)]
+pub enum LtimeshEntryType {
+    A,
+    B,
+    C,
+}
+
 /// Structure representing an entry in the .ltimesh file, which immediately
 /// follows the header and describes a later section of the file.
 struct LtimeshEntry {
-    a: u32,
-    b: u32,
+    //a: u16,
+    //b: u8,
 
-    /// The offset of the section within the file
+    // The type of data the entry refers to.
+    entry_type: LtimeshEntryType,
+
+    // Entry to the data of the entry, after the name at the beginning.
+    data_offset: u32,
+
+    /// The offset of the section within the file, which starts with the name.
     offset: u32,
 }
 
@@ -35,8 +53,15 @@ impl LtimeshEntry {
     /// the given `console` version.
     fn new(raw: &[u8], console: Console) -> LtimeshEntry {
         LtimeshEntry {
-            a: console.read_u32(&raw[0x00..0x04]),
-            b: console.read_u32(&raw[0x04..0x08]),
+            //a: console.read_u32(&raw[0x00..0x04]),
+            //b: raw[0x02],
+            entry_type: match raw[0x03] {
+                0x01 => LtimeshEntryType::A,
+                0x02 => LtimeshEntryType::B,
+                0x03 => LtimeshEntryType::C,
+                _ => panic!("unknown type"),
+            },
+            data_offset: console.read_u32(&raw[0x04..0x08]),
             offset: console.read_u32(&raw[0x08..0x0C]),
         }
     }
@@ -47,14 +72,48 @@ impl LtimeshEntry {
     }
 }
 
+/// Structure representing a single 'file' (data?) contained within an .ltimesh
+/// file, referenced by an individual LtimeshEntry.
+pub struct LtimeshFile {
+    /// The hash of the name of the file.
+    pub hash: u32,
+
+    /// The name of the file.
+    pub name: String,
+
+    /// The remaining data of the file.
+    pub data: Vec<u8>,
+
+    /// The type of the file.
+    pub file_type: LtimeshEntryType,
+}
+
+impl LtimeshFile {
+    /// Create a new LtimeshFile structure of the given `file_type` from the passed
+    /// `raw` bytes from the given `console` version. The `data_offset` is the offset
+    /// from the start of the raw bytes passed that the name section ends and the rest
+    /// of the data begins.
+    fn new(raw: &[u8], file_type: LtimeshEntryType, data_offset: usize, console: Console) -> LtimeshFile {
+        LtimeshFile {
+            hash: console.read_u32(&raw[0x00..0x04]),
+            name: String::from_utf8(raw[0x04..data_offset].to_vec()).unwrap().trim_end_matches(char::from(0)).to_owned(),
+            data: raw[data_offset..].to_vec(),
+            file_type,
+        }
+    }
+}
+
 /// Structure representing an .ltimesh file, and the entries contained within
 /// it.
 pub struct Ltimesh {
     /// The header of the .ltimesh file.
-    header: LtimeshHeader,
+    _header: LtimeshHeader,
 
     /// Each of the entries immediately following the header.
-    entries: Vec<LtimeshEntry>,
+    _entries: Vec<LtimeshEntry>,
+
+    /// Each of the files within the .ltimesh file.
+    pub files: Vec<LtimeshFile>,
 }
 
 impl Ltimesh {
@@ -73,9 +132,39 @@ impl Ltimesh {
             })
             .collect();
 
-        Ltimesh {
-            header,
-            entries,
+        // Use the entries to create a structure for each file
+        let mut files: Vec<LtimeshFile> = vec!();
+        for (i, entry) in entries.iter().enumerate() {
+            // We need to know the offset of the next entry to determine where
+            // this entry ends. If this is the last entry, then it ends at the
+            // end of the file.
+            let file_raw_bytes = if i < (entries.len() - 1) {
+                &raw[entry.offset as usize..entries[i + 1].offset as usize]
+            } else {
+                &raw[entry.offset as usize..]
+            };
+
+            //println!("offset: {:08X}, 2nd offset: {:08X}", entry.offset, entry.data_offset);
+
+            files.push(
+                LtimeshFile::new(
+                    file_raw_bytes,
+                    entry.entry_type,
+                    (entry.data_offset - entry.offset) as usize,
+                    console
+                )
+            );
         }
+
+        Ltimesh {
+            _header: header,
+            _entries: entries,
+            files,
+        }
+    }
+
+    pub fn from_file(path: &Path, console: Console) -> Result<Ltimesh, Error> {
+        let file_contents = fs::read(&path)?;
+        Ok(Ltimesh::from_bytes(&file_contents, console))
     }
 }

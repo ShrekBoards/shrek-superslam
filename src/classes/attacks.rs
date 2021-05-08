@@ -149,7 +149,7 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
     ///
     /// // Load an attack from the .bin file, modify the damage, and write it back
     /// # let my_bin_bytes = vec![0x00, 0x01, 0x02];
-    /// let mut bin = Bin::new(my_bin_bytes, Console::PC);
+    /// let mut bin = Bin::new(my_bin_bytes, Console::PC).unwrap();
     /// let mut attack = bin.get_object_from_offset::<AttackMoveType>(0x1000).unwrap();
     /// attack.damage1 = 100.0;
     /// attack.write(&mut bin, 0x1000);
@@ -330,7 +330,7 @@ impl WriteableShrekSuperSlamGameObject for ProjectileType {
     ///
     /// // Load a projectile from the .bin file, modify the x vector, and write it back
     /// # let my_bin_bytes = vec![0x00, 0x01, 0x02];
-    /// let mut bin = Bin::new(my_bin_bytes, Console::PC);
+    /// let mut bin = Bin::new(my_bin_bytes, Console::PC).unwrap();
     /// let mut projectile = bin.get_object_from_offset::<ProjectileType>(0x2000).unwrap();
     /// projectile.x_vector = -1.0;
     /// projectile.write(&mut bin, 0x2000);
@@ -419,10 +419,11 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveRegion {
     ///
     /// // Load a hitbox from the .bin file, modify the width, and write it back
     /// # let my_bin_bytes = vec![0x00, 0x01, 0x02];
-    /// let mut bin = Bin::new(my_bin_bytes, Console::PC);
+    /// let mut bin = Bin::new(my_bin_bytes, Console::PC)
+    ///                    .unwrap_or_else(|e| panic!("Failed to read bin bytes: {:?}", e));
     /// let mut hitbox = bin.get_object_from_offset::<AttackMoveRegion>(0x1500).unwrap();
     /// hitbox.width = 5.0;
-    /// hitbox.write(&mut bin, 0x1500);
+    /// hitbox.write(&mut bin, 0x1500).unwrap();
     /// ```
     fn write(&self, bin: &mut Bin, offset: usize) -> Result<(), Error> {
         // Write back only fixed-length numeric fields to the new object - other

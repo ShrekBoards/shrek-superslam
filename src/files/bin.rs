@@ -18,12 +18,8 @@ struct BinHeader {
 }
 
 impl BinHeader {
-    /// Create a new BinHeader struct from the given header bytes
-    ///
-    /// # Parameters
-    ///
-    /// - `raw`: The first 64 bytes of a .bin file
-    /// - `console`: The console the .bin file comes from
+    /// Create a new BinHeader struct from the given `raw` header bytes from
+    /// the given `console` platform.
     fn new(raw: &[u8], console: Console) -> Result<BinHeader, Error> {
         Ok(BinHeader {
             offset1: console.read_u32(&raw[0x10..0x14])?,
@@ -50,12 +46,8 @@ struct BinSection {
 }
 
 impl BinSection {
-    /// Create a new BinSection struct from the given section bytes
-    ///
-    /// # Parameters
-    ///
-    /// - `raw`: The 16 bytes corresponding to the 'section' in the .bin file
-    /// - `console`: The console the .bin comes from
+    /// Create a new BinSection struct from the given `raw` section bytes for
+    /// the given `console` platform.
     fn new(raw: &[u8], offset: u32, console: Console) -> Result<BinSection, Error> {
         Ok(BinSection {
             number: console.read_u32(&raw[0x00..0x04])?,
@@ -85,18 +77,13 @@ pub struct BinObject {
 }
 
 impl BinObject {
-    /// Create a new BinObject structure
+    /// Create a new BinObject structure from the given `offset` in the `raw`
+    /// bytes of the entire .bin file from the given `console` version.
     ///
-    /// # Parameters
+    /// # Remarks
     ///
-    /// - `raw`: The raw bytes of the .bin file
-    /// - `offset`: The offset the beginning of the object is at
-    /// - `console`: The console the .bin file is from
-    ///
-    /// # Returns
-    ///
-    /// Some(BinObject) detailing the object that begins at the offset, or None
-    /// if there is no object starting at the given offset
+    /// If the given `offset` does not match the beginning of a serialised game
+    /// object, then `Ok(None)` is returned.
     fn new(raw: &[u8], offset: u32, console: Console) -> Result<Option<BinObject>, Error> {
         let hash =
             console.read_u32(&raw[(0x40 + offset) as usize..(0x40 + offset + 0x04) as usize])?;
@@ -137,7 +124,7 @@ impl Bin {
     /// let master_dir = MasterDir::from_file(Path::new("MASTER.DIR"), Console::PC).unwrap();
     /// let master_dat = MasterDat::from_file(Path::new("MASTER.DAT"), master_dir).unwrap();
     /// let my_file_bytes = master_dat.decompressed_file("data\\players\\shrek\\player.db.bin").unwrap();
-    /// let bin = Bin::new(my_file_bytes, Console::PC);
+    /// let bin = Bin::new(my_file_bytes, Console::PC).unwrap();
     /// ```
     pub fn new(raw: Vec<u8>, console: Console) -> Result<Bin, Error> {
         // Read the header
@@ -208,7 +195,7 @@ impl Bin {
     ///
     /// // Get all Game::AttackMoveType objects contained within the .bin file
     /// # let my_file_bytes: Vec<u8> = vec![];
-    /// let bin = Bin::new(my_file_bytes, Console::PC);
+    /// let bin = Bin::new(my_file_bytes, Console::PC).unwrap();
     /// let attacks = bin.get_all_objects_of_type::<AttackMoveType>();
     /// for (offset, attack) in attacks {
     ///     println!("Attack at offset {} is {}, which deals {} damage",
@@ -252,7 +239,7 @@ impl Bin {
     ///
     /// // Get a specific Game::AttackMoveType object located in the .bin file
     /// # let my_file_bytes: Vec<u8> = vec![];
-    /// let bin = Bin::new(my_file_bytes, Console::PC);
+    /// let bin = Bin::new(my_file_bytes, Console::PC).unwrap();
     /// let attack = bin.get_object_from_offset::<AttackMoveType>(0x1000).unwrap();
     /// println!("Attack at offset {} is {}, which deals {} damage",
     ///     0x1000,
@@ -304,7 +291,7 @@ impl Bin {
     ///
     /// // Get a specific string located in the .bin file
     /// # let my_file_bytes: Vec<u8> = vec![];
-    /// let bin = Bin::new(my_file_bytes, Console::PC);
+    /// let bin = Bin::new(my_file_bytes, Console::PC).unwrap();
     /// let my_string = bin.get_str_from_offset(0x500).unwrap();
     /// println!("At offset {}, there is the string '{}'", 0x500, my_string);
     /// ```
@@ -339,7 +326,7 @@ impl Bin {
     ///
     /// // Overwrite the damage of a specific Game::AttackMoveType object
     /// # let my_file_bytes: Vec<u8> = vec![];
-    /// let mut bin = Bin::new(my_file_bytes, Console::PC);
+    /// let mut bin = Bin::new(my_file_bytes, Console::PC).unwrap();
     /// let mut attack = bin.get_object_from_offset::<AttackMoveType>(0x1000).unwrap();
     /// attack.damage1 = 100.0;
     /// bin.overwrite_object(0x1000, &attack);

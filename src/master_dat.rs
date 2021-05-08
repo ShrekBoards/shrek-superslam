@@ -175,7 +175,7 @@ impl MasterDat {
     ///
     /// let mut master_dat = MasterDat::new(Console::PC);
     /// master_dat.add_file("data\\test.dds".to_string(), &Vec::new());
-    /// let (master_dat_bytes, master_dir_bytes) = master_dat.to_bytes();
+    /// let (master_dat_bytes, master_dir_bytes) = master_dat.to_bytes().unwrap();
     /// ```
     pub fn to_bytes(&self) -> Result<(Vec<u8>, Vec<u8>), Error> {
         let mut master_dat_bytes = vec![];
@@ -216,7 +216,7 @@ impl MasterDat {
     /// let mut bin = Bin::new(
     ///     master_dat.decompressed_file("data\\players\\shrek\\player.db.bin").unwrap(),
     ///     Console::PC
-    /// );
+    /// ).unwrap_or_else(|e| panic!("Failed to read bin file: {:?}", e));
     /// let mut attacks = bin.get_all_objects_of_type::<AttackMoveType>();
     /// let (offset, mut attack) = attacks.pop().unwrap();
     ///
@@ -224,7 +224,7 @@ impl MasterDat {
     /// attack.damage1 = 100.0;
     ///
     /// // Write the new attack back to the .bin file
-    /// bin.overwrite_object(offset, &attack);
+    /// bin.overwrite_object(offset, &attack).unwrap();
     ///
     /// // Write the updated .bin file back to the MASTER.DAT
     /// master_dat.update_file("data\\players\\shrek\\player.db.bin", bin.raw()).unwrap();

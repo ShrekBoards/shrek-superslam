@@ -49,8 +49,12 @@ impl TexpackHeader {
 
     // Construct the bytes for the texpack header
     fn to_bytes(&self) -> Vec<u8> {
-        // Start with the constant 'KPXT' magic bytes
-        let mut header_bytes = vec![b'K', b'P', b'X', b'T'];
+        // Start with the constant 'KPXT' magic bytes. This constant is backwards
+        // for Gamecube texpacks.
+        let mut header_bytes = match self.console {
+            Console::Gamecube => vec![b'T', b'X', b'P', b'K'],
+            _ => vec![b'K', b'P', b'X', b'T'],
+        };
 
         // Add the fields
         header_bytes.extend(self.console.write_u32(1));
@@ -212,7 +216,7 @@ impl TexpackFile {
         let mut padded = self.data.clone();
         padded.extend(&vec![
             0xEE;
-            self.data.len() + (2048 - (self.data.len() % 2048))
+            self.padded_size() - self.data.len()
         ]);
         padded
     }
@@ -382,7 +386,7 @@ impl Texpack {
         }
 
         // Add 32 bytes of padding
-        texpack_bytes.extend(&vec![0xEE, 0x20]);
+        texpack_bytes.extend(&vec![0xEE; 0x20]);
 
         // Add the contents of each file
         for file in &self.files {

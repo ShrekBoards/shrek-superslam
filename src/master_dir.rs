@@ -1,5 +1,4 @@
 use std::fs;
-use std::io;
 use std::iter::repeat;
 use std::path::Path;
 
@@ -192,7 +191,7 @@ impl MasterDir {
         // Each subsequent offset is determined by adding the padded size of
         // the previous entry
         for entry in self.entries.iter().skip(1) {
-            master_dir_bytes.extend(&self.console.write_u32(offset));
+            master_dir_bytes.extend(&self.console.write_u32(offset)?);
             offset += entry.padded_size();
         }
 
@@ -201,7 +200,7 @@ impl MasterDir {
 
         // Now the actual entries need to be written
         for entry in &self.entries {
-            master_dir_bytes.extend(&entry.padded(self.console));
+            master_dir_bytes.extend(&entry.padded(self.console)?);
         }
 
         Ok(master_dir_bytes)

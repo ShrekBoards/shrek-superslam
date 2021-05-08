@@ -183,14 +183,14 @@ impl MasterDat {
     /// master_dat.add_file("data\\test.dds".to_string(), &Vec::new());
     /// let (master_dat_bytes, master_dir_bytes) = master_dat.to_bytes();
     /// ```
-    pub fn to_bytes(&self) -> (Vec<u8>, Vec<u8>) {
+    pub fn to_bytes(&self) -> Result<(Vec<u8>, Vec<u8>), Error> {
         let mut master_dat_bytes = vec!();
         for master_dir_entry in &self.master_dir.entries {
             let trimmed = master_dir_entry.name.trim_end_matches(char::from(0));
             master_dat_bytes.extend(&pad(self.files.get(trimmed).unwrap()));
         }
 
-        (master_dat_bytes, self.master_dir.to_bytes())
+        Ok((master_dat_bytes, self.master_dir.to_bytes()?))
     }
 
     /// Update a file located at `path` contained within the MASTER.DAT with
@@ -299,7 +299,7 @@ impl MasterDat {
     /// master_dat.write(Path::new("MASTER.DAT"), Path::new("MASTER.DIR"));
     /// ```
     pub fn write(&self, path: &Path, master_dir_path: &Path) -> Result<(), Error> {
-        let (master_dat_bytes, master_dir_bytes) = self.to_bytes();
+        let (master_dat_bytes, master_dir_bytes) = self.to_bytes()?;
 
         // Write the MASTER.DAT
         let mut master_dat_outfile = File::create(path)?;

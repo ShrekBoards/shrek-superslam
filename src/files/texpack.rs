@@ -3,6 +3,7 @@ use std::io;
 use std::path::Path;
 
 use crate::console::Console;
+use crate::errors::Error;
 
 /// The different types of entry within a texpack
 pub enum TexpackEntryType {
@@ -44,27 +45,27 @@ impl TexpackEntry {
     /// # Returns
     ///
     /// The constructed texpack entry
-    fn new(raw: &[u8], console: Console) -> TexpackEntry {
-        let hash = console.read_u32(&raw[0x00..0x04]);
+    fn new(raw: &[u8], console: Console) -> Result<TexpackEntry, Error> {
+        let hash = console.read_u32(&raw[0x00..0x04])?;
         let filename = String::from_utf8(raw[0x04..0x20].to_vec())
             .unwrap()
             .trim_end_matches(char::from(0))
             .to_owned();
-        let offset = console.read_u32(&raw[0x20..0x24]);
-        let size = console.read_u32(&raw[0x24..0x28]);
-        let filetype = match console.read_u32(&raw[0x28..0x2C]) {
+        let offset = console.read_u32(&raw[0x20..0x24])?;
+        let size = console.read_u32(&raw[0x24..0x28])?;
+        let filetype = match console.read_u32(&raw[0x28..0x2C])? {
             0x00 => TexpackEntryType::Texture,
             0x02 => TexpackEntryType::Tga,
             _ => panic!("uh oh!"),
         };
 
-        TexpackEntry {
+        Ok(TexpackEntry {
             hash,
             filename,
             offset,
             size,
             filetype,
-        }
+        })
     }
 
     /// # Returns
@@ -88,10 +89,10 @@ impl TexpackHeader {
     ///
     /// - `raw`: The raw bytes of the .texpack file header
     /// - `console`: The console version the .texpack came from
-    fn new(raw: &[u8], console: Console) -> TexpackHeader {
-        TexpackHeader {
-            entries: console.read_u32(&raw[0x08..0x0C]),
-        }
+    fn new(raw: &[u8], console: Console) -> Result<TexpackHeader, Error> {
+        Ok(TexpackHeader {
+            entries: console.read_u32(&raw[0x08..0x0C])?,
+        })
     }
 }
 
@@ -190,9 +191,9 @@ impl Texpack {
     /// # Returns
     ///
     /// The constructed texpack from the passed bytes
-    pub fn from_bytes(raw: &[u8], console: Console) -> Texpack {
+    pub fn from_bytes(raw: &[u8], console: Console) -> Result<Texpack, Error> {
         // Read the header
-        let header = TexpackHeader::new(&raw[0x00..0x10], console);
+        let header = TexpackHeader::new(&raw[0x00..0x10], console)?;
 
         // Parse each entry from the header
         let entries: Vec<TexpackEntry> = (0..header.entries as usize)
@@ -216,7 +217,7 @@ impl Texpack {
             })
             .collect();
 
-        Texpack { files, console }
+        Ok(Texpack { files, console })
     }
 
     /// Creates a new Texpack structure from the passed file
@@ -230,12 +231,12 @@ impl Texpack {
     ///
     /// An `Ok(Texpack)` on success, or an `Err(std::io::Error)` if there is an
     /// error while reading the file
-    pub fn from_file(path: &Path, console: Console) -> Result<Texpack, io::Error> {
+    pub fn from_file(path: &Path, console: Console) -> Result<Texpack, Error> {
         // Read all of the file to a byte array
         let file_contents = fs::read(&path)?;
 
         // Parse the bytes to a Texpack object
-        Ok(Texpack::from_bytes(&file_contents, console))
+        Ok(Texpack::from_bytes(&file_contents, console)?)
     }
 
     /// Add a file to the Texpack

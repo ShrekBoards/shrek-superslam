@@ -121,10 +121,7 @@ impl MasterDat {
     /// let compressed_file = master_dat.compressed_file("data\\players\\shrek\\player.db.bin").unwrap();
     /// ```
     pub fn compressed_file(&self, path: &str) -> Option<Vec<u8>> {
-        match self.files.get(path) {
-            Some(f) => Some(f.clone()),
-            _ => None,
-        }
+        self.files.get(path).cloned()
     }
 
     /// Returns the decompressed file at the given `path` in the MASTER.DAT if
@@ -141,10 +138,7 @@ impl MasterDat {
     /// let decompressed_file = master_dat.decompressed_file("data\\players\\shrek\\player.db.bin").unwrap();
     /// ```
     pub fn decompressed_file(&self, path: &str) -> Option<Vec<u8>> {
-        match self.files.get(path) {
-            Some(f) => Some(decompress(&f)),
-            _ => None,
-        }
+        self.files.get(path).map(|bytes| decompress(&bytes))
     }
 
     /// Returns the filenames within the MASTER.DAT file.

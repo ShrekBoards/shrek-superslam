@@ -261,6 +261,7 @@ impl Texpack {
     /// # Example
     ///
     /// ```no_run
+    /// use std::path::Path;
     /// use shrek_superslam::{Console, MasterDat, MasterDir};
     /// use shrek_superslam::files::Texpack;
     ///
@@ -311,10 +312,11 @@ impl Texpack {
     /// # Example
     ///
     /// ```no_run
+    /// use std::path::Path;
     /// use shrek_superslam::Console;
     /// use shrek_superslam::files::Texpack;
     ///
-    /// let texpack = Texpack::from_file("data\\spawns\\players\\shrek\\object.texpack", Console::PC);
+    /// let texpack = Texpack::from_file(Path::new("data\\spawns\\players\\shrek\\object.texpack"), Console::PC);
     /// ```
     pub fn from_file(path: &Path, console: Console) -> Result<Texpack, io::Error> {
         // Read all of the file to a byte array
@@ -342,6 +344,19 @@ impl Texpack {
     }
 
     /// Returns the list of files within the texpack
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use std::path::Path;
+    /// use shrek_superslam::Console;
+    /// use shrek_superslam::files::Texpack;
+    ///
+    /// let texpack = Texpack::from_file(Path::new("data\\spawns\\players\\shrek\\object.texpack"), Console::PC).unwrap();
+    /// for file in texpack.files() {
+    ///     println!("{}: {} bytes", file.filename(), file.data.len());
+    /// }
+    /// ```
     pub fn files(&self) -> &Vec<TexpackFile> {
         &self.files
     }

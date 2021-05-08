@@ -18,18 +18,21 @@ pub fn hash(name: &str) -> u32 {
 mod test {
     use super::*;
 
+    // An assortment of strings found in the game files and their corresponding
+    // hashes, which the hash function should be able to recreate.
+
     #[test]
-    fn hash_game_attackmovetype() {
-        assert_eq!(hash(&"Game::AttackMoveType"), 0xEBF07BB5);
+    fn hash_1() {
+        assert_eq!(hash(&"1"), 0x00000031);
     }
 
     #[test]
-    fn hash_game_attackmoveregion() {
-        assert_eq!(hash(&"Game::AttackMoveRegion"), 0x8811292E);
+    fn hash_bkcape() {
+        assert_eq!(hash(&"bk_cape"), 0x53C00A7D);
     }
 
     #[test]
-    fn hash_game_attackmoveprojectile() {
-        assert_eq!(hash(&"Game::AttackMoveProjectile"), 0xF2CFE08D);
+    fn hash_shrekpuppet_shirtfrontr() {
+        assert_eq!(hash(&"shrekpuppet_shirtfrontr"), 0x873DD7A1);
     }
 }

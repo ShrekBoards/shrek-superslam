@@ -25,6 +25,10 @@ impl Console {
     ///
     /// The 32-bit unsigned integer from the bytes
     pub fn read_u32(&self, bytes: &[u8]) -> Result<u32, Error> {
+        if bytes.len() < 4 {
+            return Err(Error::ConsoleNumberError(io::Error::new(io::ErrorKind::UnexpectedEof, "Too few bytes to read")));
+        }
+
         match self {
             Console::Gamecube => e((&bytes[0..4]).read_u32::<BigEndian>()),
             _ => e((&bytes[0..4]).read_u32::<LittleEndian>()),
@@ -62,6 +66,10 @@ impl Console {
     ///
     /// The 32-bit floating point from the bytes
     pub fn read_f32(&self, bytes: &[u8]) -> Result<f32, Error> {
+        if bytes.len() < 4 {
+            return Err(Error::ConsoleNumberError(io::Error::new(io::ErrorKind::UnexpectedEof, "Too few bytes to read")));
+        }
+
         match self {
             Console::Gamecube => e((&bytes[0..4]).read_f32::<BigEndian>()),
             _ => e((&bytes[0..4]).read_f32::<LittleEndian>()),
@@ -107,14 +115,14 @@ mod test {
         let data1 = vec![0x00, 0x00, 0x00, 0x00];
         let data2 = vec![0xFF, 0xFF, 0xFF, 0xFF];
         let data3 = vec![0x01, 0x02, 0x03, 0x04];
-        let invalid1 = vec![0x00];
-        let invalid2 = vec![0x01, 0x02, 0x03, 0x04, 0x05];
+        let too_short = vec![0x00];
+        let too_long = vec![0x01, 0x02, 0x03, 0x04, 0x05];
 
         assert_eq!(Console::PC.read_u32(&data1[0..4]).unwrap(), 0);
         assert_eq!(Console::PC.read_u32(&data2[0..4]).unwrap(), u32::MAX);
         assert_eq!(Console::PC.read_u32(&data3[0..4]).unwrap(), 0x04030201);
-        assert!(Console::PC.read_u32(&invalid1).is_err());
-        assert!(Console::PC.read_u32(&invalid2).is_err());
+        assert!(Console::PC.read_u32(&too_short).is_err());
+        assert_eq!(Console::PC.read_u32(&too_long).unwrap(), 0x04030201);
     }
 
     #[test]

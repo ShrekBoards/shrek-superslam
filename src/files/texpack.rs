@@ -374,6 +374,7 @@ impl Texpack {
     /// let texpack_bytes = texpack.to_bytes();
     /// ```
     pub fn to_bytes(&self) -> Vec<u8> {
+        const FIXED_PADDING: usize = 0x20;
         let mut texpack_bytes = vec![];
 
         // Write the header
@@ -384,7 +385,7 @@ impl Texpack {
         // will begin within the texpack, needed for each metadata entry.
         let entries_start = TexpackHeader::size();
         let entries_end = entries_start + (self.files.len() * TexpackEntry::size());
-        let files_start = entries_end + 0x20;
+        let files_start = entries_end + FIXED_PADDING;
         let mut cumulative_offset = files_start;
 
         // Create each entry to point to the actual files
@@ -401,7 +402,7 @@ impl Texpack {
         }
 
         // Add 32 bytes of padding
-        texpack_bytes.extend(&vec![0xEE; 0x20]);
+        texpack_bytes.extend(&vec![0xEE; FIXED_PADDING]);
 
         // Add the contents of each file
         for file in &self.files {

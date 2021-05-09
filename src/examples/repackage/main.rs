@@ -40,7 +40,9 @@ fn repackage_texpack(extracted_dir_path: &Path, texpack_path: &Path, console: Co
 
     // Write the texpack to a file, overwriting the original
     let mut texpack_outfile = File::create(texpack_path).unwrap();
-    texpack_outfile.write_all(&texpack.to_bytes().unwrap()).unwrap();
+    texpack_outfile
+        .write_all(&texpack.to_bytes().unwrap())
+        .unwrap();
 }
 
 /// Perform additional operations on a file if required.

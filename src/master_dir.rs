@@ -1,9 +1,12 @@
 use std::fs;
-use std::io::Error;
 use std::iter::repeat;
 use std::path::Path;
 
+use encoding::all::ISO_8859_1;
+use encoding::{DecoderTrap, Encoding};
+
 use crate::console::Console;
+use crate::errors::Error;
 
 /// Type representing a single entry in the game's MASTER.DIR file, which in
 /// turn describes a single compressed file in the MASTER.DAT file.
@@ -32,17 +35,17 @@ impl MasterDirEntry {
     /// # Returns
     ///
     /// A new MASTER.DIR entry from the provided bytes
-    pub fn new(entry: &[u8], console: Console) -> MasterDirEntry {
-        let offset = console.read_u32(&entry[0..4]);
-        let decomp_size = console.read_u32(&entry[4..8]);
-        let comp_size = console.read_u32(&entry[8..12]);
+    pub fn new(entry: &[u8], console: Console) -> Result<MasterDirEntry, Error> {
+        let offset = console.read_u32(&entry[0..4])?;
+        let decomp_size = console.read_u32(&entry[4..8])?;
+        let comp_size = console.read_u32(&entry[8..12])?;
 
-        MasterDirEntry {
+        Ok(MasterDirEntry {
             offset,
             decomp_size,
             comp_size,
-            name: String::from_utf8(entry[12..].to_vec()).unwrap(),
-        }
+            name: ISO_8859_1.decode(&entry[12..].to_vec(), DecoderTrap::Strict)?,
+        })
     }
 
     /// Get the raw, padded bytes of the MASTER.DIR entry
@@ -54,16 +57,16 @@ impl MasterDirEntry {
     /// # Returns
     ///
     /// The bytes that make up this entry, padded and for the given console
-    pub fn padded(&self, console: Console) -> Vec<u8> {
+    pub fn padded(&self, console: Console) -> Result<Vec<u8>, Error> {
         let mut padded: Vec<u8> = vec![];
-        padded.extend(&console.write_u32(self.offset));
-        padded.extend(&console.write_u32(self.decomp_size));
-        padded.extend(&console.write_u32(self.comp_size));
+        padded.extend(&console.write_u32(self.offset)?);
+        padded.extend(&console.write_u32(self.decomp_size)?);
+        padded.extend(&console.write_u32(self.comp_size)?);
         padded.extend(self.name.as_bytes());
         padded.push(0);
         padded.extend(repeat(0).take((self.padded_size() - self.size()) as usize));
 
-        padded
+        Ok(padded)
     }
 
     /// # Returns
@@ -110,7 +113,7 @@ impl MasterDir {
 
     /// Returns a new `MasterDir` object for the given `console` from the
     /// passed `master_dir` bytes.
-    pub fn from_bytes(master_dir: &[u8], console: Console) -> MasterDir {
+    pub fn from_bytes(master_dir: &[u8], console: Console) -> Result<MasterDir, Error> {
         // The MASTER.DIR is split into two sections:
         // * The first is a list of 4-byte integers that serve as offsets in the
         //   file to each entry in the second section. It is terminated by an entry
@@ -122,7 +125,7 @@ impl MasterDir {
         // section. We can then read every 4-byte integer between the start of the
         // file and that offset, and use the int as an offset within the file to
         // read each section.
-        let first_section_length = console.read_u32(&master_dir[0..4]);
+        let first_section_length = console.read_u32(&master_dir[0..4])?;
 
         let mut entries: Vec<MasterDirEntry> = vec![];
         for index in (0..first_section_length).step_by(4) {
@@ -131,11 +134,11 @@ impl MasterDir {
             // Using the offset to this section and the next section, determine the
             // size of this section to read. If the next section offset is 0, then
             // we are on the last entry, which runs until the end of the file
-            let entry_offset = console.read_u32(&master_dir[i..i + 4]) as usize;
+            let entry_offset = console.read_u32(&master_dir[i..i + 4])? as usize;
             if entry_offset == 0 {
                 continue;
             }
-            let next_entry_offset = console.read_u32(&master_dir[i + 4..i + 8]) as usize;
+            let next_entry_offset = console.read_u32(&master_dir[i + 4..i + 8])? as usize;
             let entry_length = match next_entry_offset {
                 0 => master_dir.len() - entry_offset,
                 _ => next_entry_offset - entry_offset,
@@ -143,10 +146,10 @@ impl MasterDir {
 
             // Get the bytes of the entry using the offset and the size
             let entry_bytes = &master_dir[entry_offset..entry_offset + entry_length];
-            entries.push(MasterDirEntry::new(entry_bytes, console));
+            entries.push(MasterDirEntry::new(entry_bytes, console)?);
         }
 
-        MasterDir { entries, console }
+        Ok(MasterDir { entries, console })
     }
 
     /// Returns a new `MasterDir` object for the given `console` from the file
@@ -166,14 +169,17 @@ impl MasterDir {
     /// ```
     pub fn from_file(path: &Path, console: Console) -> Result<MasterDir, Error> {
         // Read all of the file to a byte array
-        let file_contents = fs::read(&path)?;
+        match fs::read(&path) {
+            // Parse the bytes to a MasterDir object
+            Ok(file_contents) => Ok(MasterDir::from_bytes(&file_contents, console)?),
 
-        // Parse the bytes to a MasterDir object
-        Ok(MasterDir::from_bytes(&file_contents, console))
+            // Wrap the error if there was a problem reading the file
+            Err(io_err) => Err(Error::FileError(io_err)),
+        }
     }
 
     /// Get the raw bytes of the MASTER.DIR file.
-    pub(crate) fn to_bytes(&self) -> Vec<u8> {
+    pub(crate) fn to_bytes(&self) -> Result<Vec<u8>, Error> {
         let mut master_dir_bytes = vec![];
 
         // The total size of the first section - which is a list of offsets to
@@ -182,13 +188,13 @@ impl MasterDir {
         // second section starts immediately after, the first offset is also
         // this value
         let mut offset = ((self.entries.len() + 1) * 4) as u32;
-        master_dir_bytes.extend(&self.console.write_u32(offset));
+        master_dir_bytes.extend(&self.console.write_u32(offset)?);
         offset += &self.entries[0].padded_size();
 
         // Each subsequent offset is determined by adding the padded size of
         // the previous entry
         for entry in self.entries.iter().skip(1) {
-            master_dir_bytes.extend(&self.console.write_u32(offset));
+            master_dir_bytes.extend(&self.console.write_u32(offset)?);
             offset += entry.padded_size();
         }
 
@@ -197,10 +203,10 @@ impl MasterDir {
 
         // Now the actual entries need to be written
         for entry in &self.entries {
-            master_dir_bytes.extend(&entry.padded(self.console));
+            master_dir_bytes.extend(&entry.padded(self.console)?);
         }
 
-        master_dir_bytes
+        Ok(master_dir_bytes)
     }
 }
 
@@ -217,7 +223,7 @@ mod test {
             0x67, 0x68,
         ];
 
-        let master_dir = MasterDir::from_bytes(&data, Console::PC);
+        let master_dir = MasterDir::from_bytes(&data, Console::PC).unwrap();
 
         assert_eq!(master_dir.entries.len(), 2);
 
@@ -241,7 +247,7 @@ mod test {
             0x67, 0x68,
         ];
 
-        let master_dir = MasterDir::from_bytes(&data, Console::Gamecube);
+        let master_dir = MasterDir::from_bytes(&data, Console::Gamecube).unwrap();
 
         assert_eq!(master_dir.entries.len(), 2);
 

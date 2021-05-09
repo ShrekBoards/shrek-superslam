@@ -9,7 +9,7 @@ use std::process;
 use walkdir::WalkDir;
 
 extern crate shrek_superslam;
-use shrek_superslam::files::{Texpack, TexpackEntryType};
+use shrek_superslam::files::Texpack;
 use shrek_superslam::{Console, MasterDat};
 
 mod args;
@@ -35,22 +35,12 @@ fn repackage_texpack(extracted_dir_path: &Path, texpack_path: &Path, console: Co
             .unwrap()
             .to_owned();
         let file_contents = fs::read(&file.path()).unwrap();
-        let filetype = match file
-            .path()
-            .extension()
-            .unwrap_or(OsStr::new(""))
-            .to_str()
-            .unwrap()
-        {
-            "tga" => TexpackEntryType::Tga,
-            _ => TexpackEntryType::Texture,
-        };
-        texpack.add_file(name, &file_contents, filetype);
+        texpack.add_file(name, &file_contents);
     }
 
     // Write the texpack to a file, overwriting the original
     let mut texpack_outfile = File::create(texpack_path).unwrap();
-    texpack_outfile.write_all(&texpack.to_bytes()).unwrap();
+    texpack_outfile.write_all(&texpack.to_bytes().unwrap()).unwrap();
 }
 
 /// Perform additional operations on a file if required.

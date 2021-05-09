@@ -3,6 +3,9 @@ name = "shrek-superslam"
 version = "0.1.0"
 authors = ["alex <kirby@cpan.org>"]
 edition = "2018"
+description = "Crate for interacting with the Shrek SuperSlam game files"
+repository = "https://github.com/ShrekBoards/shrek-superslam"
+license = "ISC"
 
 [dependencies]
 byteorder = "1.3.2"

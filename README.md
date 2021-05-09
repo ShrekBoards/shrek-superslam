@@ -18,7 +18,7 @@ let mut master_dat = MasterDat::from_file(Path::new("MASTER.DAT"), master_dir).u
 let mut bin = Bin::new(
     master_dat.decompressed_file("data\\players\\shrek\\player.db.bin").unwrap(),
     Console::PC
-);
+).unwrap_or_else(|e| panic!("Failed to read bin file: {:?}", e));
 let mut attacks = bin.get_all_objects_of_type::<AttackMoveType>();
 let (offset, mut attack) = attacks.pop().unwrap();
 
@@ -26,7 +26,7 @@ let (offset, mut attack) = attacks.pop().unwrap();
 attack.damage1 = 100.0;
 
 // Write the new attack back to the .bin file
-bin.overwrite_object(offset, &attack);
+bin.overwrite_object(offset, &attack).unwrap();
 
 // Write the updated .bin file back to the MASTER.DAT
 master_dat.update_file("data\\players\\shrek\\player.db.bin", bin.raw()).unwrap();

@@ -3,11 +3,13 @@ use std::fs;
 use std::io;
 use std::path::Path;
 
+use itertools::Itertools;
+
 use crate::console::Console;
 use crate::hash::hash;
 
 /// The different types of entry within a texpack
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, PartialOrd)]
 pub enum TexpackEntryType {
     /// An actual texture file - DDS on PC, GCT on Gamecube
     Texture,
@@ -97,7 +99,16 @@ impl TexpackEntry {
         console: Console,
     ) -> TexpackEntry {
         TexpackEntry {
-            hash: hash(&filename),
+            // Due to long filenames being truncated, we cannot accurately recreate
+            // the hashes of names that have been truncated.. We therefore have to
+            // special case these names, thankfully there are not too many.
+            hash: match filename.as_str() {
+                "levelrender_fairytalevillag" => hash(&"levelrender_fairytalevillage"),
+                "levelrender_gepettosworksho" => hash(&"levelrender_gepettosworkshop"),
+                "levelrender_gingerbreadhous" => hash(&"levelrender_gingerbreadhouse"),
+                "loadingscreen_gingerbreadho" => hash(&"loadingscreen_gingerbreadhouse"),
+                _ => hash(&filename),
+            },
             filename,
             offset,
             size,
@@ -148,11 +159,12 @@ impl TexpackEntry {
         // names are padded with zeroes, longer names are truncated.
         let mut name_bytes = self.filename.as_bytes().to_owned();
         match self.filename.len().cmp(&0x1C) {
-            Ordering::Less => name_bytes.extend(vec![0x00; 0x1C - self.filename.len()]),
-            Ordering::Greater => name_bytes.truncate(0x1C),
+            Ordering::Less => name_bytes.extend(vec![0x00; 0x1B - self.filename.len()]),
+            Ordering::Greater => name_bytes.truncate(0x1B),
             _ => {}
         };
         entry_bytes.extend(&name_bytes);
+        entry_bytes.push(0x00);
 
         // Write the remaining fields
         entry_bytes.extend(self.console.write_u32(self.offset));
@@ -385,8 +397,16 @@ impl Texpack {
         let files_start = entries_end + FIXED_PADDING;
         let mut cumulative_offset = files_start;
 
-        // Create each entry to point to the actual files
-        for file in &self.files {
+        // Create each entry to point to the actual files.
+        //
+        // The text file entries need to be after the files they reference,
+        // so we sort the files by their type so that the text files all come
+        // last.
+        for file in self.files.iter().sorted_by(|a, b| {
+            a.filetype
+                .partial_cmp(&b.filetype)
+                .unwrap_or(Ordering::Equal)
+        }) {
             let entry = TexpackEntry::new(
                 file.filename.clone(),
                 cumulative_offset as u32,
@@ -402,7 +422,11 @@ impl Texpack {
         texpack_bytes.extend(&vec![0xEE; FIXED_PADDING]);
 
         // Add the contents of each file
-        for file in &self.files {
+        for file in self.files.iter().sorted_by(|a, b| {
+            a.filetype
+                .partial_cmp(&b.filetype)
+                .unwrap_or(Ordering::Equal)
+        }) {
             texpack_bytes.extend(&file.padded());
         }
 

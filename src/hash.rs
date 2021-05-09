@@ -32,6 +32,11 @@ mod test {
     }
 
     #[test]
+    fn hash_levelrender_gepettosworkshop() {
+        assert_eq!(hash(&"levelrender_gepettosworkshop"), 0x7535E7DC);
+    }
+
+    #[test]
     fn hash_shrekpuppet_shirtfrontr() {
         assert_eq!(hash(&"shrekpuppet_shirtfrontr"), 0x873DD7A1);
     }

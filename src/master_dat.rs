@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 use std::fs;
 use std::fs::File;
-use std::io::{Error, Write};
+use std::io::Write;
 use std::path::Path;
 
 use crate::compression::{compress, decompress};
 use crate::console::Console;
+use crate::errors::Error;
 use crate::master_dir::{MasterDir, MasterDirEntry};
 
 /// Structure representing the MASTER.DAT file, which contains all of the
@@ -43,7 +44,7 @@ impl MasterDat {
         let mut files: HashMap<String, Vec<u8>> = HashMap::new();
         for entry in &master_dir.entries {
             let o = entry.offset as usize;
-            let file = master_dat[o .. o + entry.comp_size as usize].to_owned();
+            let file = master_dat[o..o + entry.comp_size as usize].to_owned();
             files.insert(entry.name.trim_end_matches(char::from(0)).to_owned(), file);
         }
 
@@ -68,10 +69,11 @@ impl MasterDat {
     /// ```
     pub fn from_file(path: &Path, master_dir: MasterDir) -> Result<MasterDat, Error> {
         // Read all of the file to a byte array
-        let file_contents = fs::read(&path)?;
-
-        // Parse the bytes to a MasterDir object
-        Ok(MasterDat::from_bytes(&file_contents, master_dir))
+        match fs::read(&path) {
+            // Parse the bytes to a MasterDir object
+            Ok(file_contents) => Ok(MasterDat::from_bytes(&file_contents, master_dir)),
+            Err(io_err) => Err(Error::FileError(io_err)),
+        }
     }
 
     /// Add a new file at the given `path` with the given `data` to the
@@ -121,10 +123,7 @@ impl MasterDat {
     /// let compressed_file = master_dat.compressed_file("data\\players\\shrek\\player.db.bin").unwrap();
     /// ```
     pub fn compressed_file(&self, path: &str) -> Option<Vec<u8>> {
-        match self.files.get(path) {
-            Some(f) => Some(f.clone()),
-            _ => None,
-        }
+        self.files.get(path).cloned()
     }
 
     /// Returns the decompressed file at the given `path` in the MASTER.DAT if
@@ -141,10 +140,7 @@ impl MasterDat {
     /// let decompressed_file = master_dat.decompressed_file("data\\players\\shrek\\player.db.bin").unwrap();
     /// ```
     pub fn decompressed_file(&self, path: &str) -> Option<Vec<u8>> {
-        match self.files.get(path) {
-            Some(f) => Some(decompress(&f)),
-            _ => None,
-        }
+        self.files.get(path).map(|bytes| decompress(&bytes))
     }
 
     /// Returns the filenames within the MASTER.DAT file.
@@ -179,16 +175,16 @@ impl MasterDat {
     ///
     /// let mut master_dat = MasterDat::new(Console::PC);
     /// master_dat.add_file("data\\test.dds".to_string(), &Vec::new());
-    /// let (master_dat_bytes, master_dir_bytes) = master_dat.to_bytes();
+    /// let (master_dat_bytes, master_dir_bytes) = master_dat.to_bytes().unwrap();
     /// ```
-    pub fn to_bytes(&self) -> (Vec<u8>, Vec<u8>) {
-        let mut master_dat_bytes = vec!();
+    pub fn to_bytes(&self) -> Result<(Vec<u8>, Vec<u8>), Error> {
+        let mut master_dat_bytes = vec![];
         for master_dir_entry in &self.master_dir.entries {
             let trimmed = master_dir_entry.name.trim_end_matches(char::from(0));
             master_dat_bytes.extend(&pad(self.files.get(trimmed).unwrap()));
         }
 
-        (master_dat_bytes, self.master_dir.to_bytes())
+        Ok((master_dat_bytes, self.master_dir.to_bytes()?))
     }
 
     /// Update a file located at `path` contained within the MASTER.DAT with
@@ -220,7 +216,7 @@ impl MasterDat {
     /// let mut bin = Bin::new(
     ///     master_dat.decompressed_file("data\\players\\shrek\\player.db.bin").unwrap(),
     ///     Console::PC
-    /// );
+    /// ).unwrap_or_else(|e| panic!("Failed to read bin file: {:?}", e));
     /// let mut attacks = bin.get_all_objects_of_type::<AttackMoveType>();
     /// let (offset, mut attack) = attacks.pop().unwrap();
     ///
@@ -228,7 +224,7 @@ impl MasterDat {
     /// attack.damage1 = 100.0;
     ///
     /// // Write the new attack back to the .bin file
-    /// bin.overwrite_object(offset, &attack);
+    /// bin.overwrite_object(offset, &attack).unwrap();
     ///
     /// // Write the updated .bin file back to the MASTER.DAT
     /// master_dat.update_file("data\\players\\shrek\\player.db.bin", bin.raw()).unwrap();
@@ -297,7 +293,7 @@ impl MasterDat {
     /// master_dat.write(Path::new("MASTER.DAT"), Path::new("MASTER.DIR"));
     /// ```
     pub fn write(&self, path: &Path, master_dir_path: &Path) -> Result<(), Error> {
-        let (master_dat_bytes, master_dir_bytes) = self.to_bytes();
+        let (master_dat_bytes, master_dir_bytes) = self.to_bytes()?;
 
         // Write the MASTER.DAT
         let mut master_dat_outfile = File::create(path)?;

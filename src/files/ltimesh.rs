@@ -1,6 +1,9 @@
 use std::fs;
 use std::path::Path;
 
+use encoding::all::ISO_8859_1;
+use encoding::{DecoderTrap, Encoding};
+
 use crate::console::Console;
 use crate::errors::Error;
 
@@ -25,7 +28,7 @@ impl LtimeshHeader {
 }
 
 /// Enumeration of the different types of object within an .ltimesh.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum LtimeshEntryType {
     A,
     B,
@@ -99,14 +102,25 @@ impl LtimeshFile {
         data_offset: usize,
         console: Console,
     ) -> Result<LtimeshFile, Error> {
+        // These fields are constant no matter the type
+        let hash = console.read_u32(&raw[0x00..0x04])?;
+        let name = ISO_8859_1.decode(&raw[0x04..0x20].to_vec(), DecoderTrap::Strict)?.trim_end_matches(char::from(0)).to_owned();
+
+        // From there, it depends on the file type
+        if file_type == LtimeshEntryType::A {
+            // The first entry in the data is a backreference to the top,
+            // where the hash is.
+            let backreference = console.read_u32(&raw[data_offset..data_offset+0x04])?;
+
+            // The next entry is a pointer to later in the file
+            let later_reference = console.read_u32(&raw[data_offset+0x04..data_offset+0x08])?;
+        };
+
         Ok(LtimeshFile {
-            hash: console.read_u32(&raw[0x00..0x04])?,
-            name: String::from_utf8(raw[0x04..data_offset].to_vec())
-                .unwrap()
-                .trim_end_matches(char::from(0))
-                .to_owned(),
-            data: raw[data_offset..].to_vec(),
-            file_type,
+            hash,
+            name,
+            data: vec![],
+            file_type
         })
     }
 }

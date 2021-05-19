@@ -66,6 +66,23 @@ fn additonal_file_operations(path: &Path, console: Console) {
     };
 }
 
+/// Determine if the given `path` should be excluded from being repackaged or not.
+///
+/// This method is used to exclude files that were extracted by the extractor, such
+/// as the contents of extracted texpack files, that are not present in the original
+/// MASTER.DAT and MASTER.DIR.
+fn excluded(path: &Path) -> bool {
+    // Check the extension the parent directory. The current extractor ends
+    // extracted file directories with the "-extracted" suffix, and the old
+    // one made directories that ended with ".d". Both of these are excluded.
+    let parent = path.parent()
+        .unwrap_or(Path::new(""))
+        .as_os_str()
+        .to_str()
+        .unwrap();
+    parent.ends_with("-extracted") || parent.ends_with(".d")
+}
+
 fn main() {
     let config = Config::new(env::args()).unwrap_or_else(|err| {
         println!("Unable to parse args: {}", err);
@@ -80,15 +97,7 @@ fn main() {
         .into_iter()
         .filter_map(|e| e.ok())
         .filter(|d| d.file_type().is_file())
-        .filter(|d| {
-            !d.path()
-                .parent()
-                .unwrap_or(Path::new(""))
-                .as_os_str()
-                .to_str()
-                .unwrap()
-                .ends_with("-extracted")
-        })
+        .filter(|d| !excluded(&d.path()))
     {
         // Some files may require additional operations, such as repackaging
         // extracted files, before they are read and compressed into the
@@ -113,7 +122,7 @@ fn main() {
             .unwrap()
             .to_str()
             .unwrap()
-            .replace('\\', "/");
+            .replace('/', "\\");
 
         // Add the file to the MASTER.DAT
         master_dat.add_file(relative_path, &contents);

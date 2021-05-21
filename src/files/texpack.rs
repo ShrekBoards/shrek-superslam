@@ -433,7 +433,7 @@ impl Texpack {
             cumulative_offset += file.padded_size();
         }
 
-        // Add 32 bytes of padding
+        // Add the padding between the header and the files
         texpack_bytes.extend(&vec![0xEE; header_padding_size]);
 
         // Add the contents of each file

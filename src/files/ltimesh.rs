@@ -104,7 +104,7 @@ impl LtimeshFile {
     ) -> Result<LtimeshFile, Error> {
         // These fields are constant no matter the type
         let hash = console.read_u32(&raw[0x00..0x04])?;
-        let name = ISO_8859_1.decode(&raw[0x04..0x20].to_vec(), DecoderTrap::Strict)?.trim_end_matches(char::from(0)).to_owned();
+        let name = ISO_8859_1.decode(&raw[0x04..data_offset].to_vec(), DecoderTrap::Strict)?.trim_end_matches(char::from(0)).to_owned();
 
         // From there, it depends on the file type
         if file_type == LtimeshEntryType::A {
@@ -114,12 +114,23 @@ impl LtimeshFile {
 
             // The next entry is a pointer to later in the file
             let later_reference = console.read_u32(&raw[data_offset+0x04..data_offset+0x08])?;
-        };
+        } else if file_type == LtimeshEntryType::B {
+            // The first entry in the data is an backreference offset from the
+            // base of the file to the start of this file, which we already knew
+            // from the header entry offset value. The game adds this offset
+            // to the base address of the .ltimesh file, so this becomes a pointer
+            // to itself.
+            let backreference = console.read_u32(&raw[data_offset..data_offset+0x04])?;
+
+            // Next, using a vtable the game works out to call sub_5C5A60, passing
+            // the address of the beginning of the data (which was just written to
+            // with the address of the start of the entry, 32 bytes back).
+        }
 
         Ok(LtimeshFile {
             hash,
             name,
-            data: vec![],
+            data: raw[data_offset..].to_vec(),
             file_type
         })
     }
@@ -167,7 +178,7 @@ impl Ltimesh {
                 &raw[entry.offset as usize..]
             };
 
-            //println!("offset: {:08X}, 2nd offset: {:08X}", entry.offset, entry.data_offset);
+            println!("offset: {:08X}, 2nd offset: {:08X}", entry.offset, entry.data_offset);
 
             files.push(LtimeshFile::new(
                 file_raw_bytes,

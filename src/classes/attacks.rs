@@ -47,7 +47,7 @@ pub struct AttackMoveType {
     pub projectile: Option<ProjectileType>,
 
     /// The amount of time the attack stuns for, in seconds.
-    pub stun_duration: f32,
+    pub stun: f32,
 
     /// The offsets within the player.db.bin file of each hitbox, in the same
     /// order they exist within the hitboxes property.
@@ -94,7 +94,7 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         let damage1 = c.read_f32(&raw[offset + 0x84..offset + 0x88])?;
         let damage2 = c.read_f32(&raw[offset + 0x88..offset + 0x8C])?;
         let damage3 = c.read_f32(&raw[offset + 0x8C..offset + 0x90])?;
-        let stun_duration = c.read_f32(&raw[offset + 0xA4..offset + 0xA8])?;
+        let stun = c.read_f32(&raw[offset + 0xA4..offset + 0xA8])?;
         let name_offset = c.read_u32(&raw[offset + 0x28..offset + 0x2C])?;
 
         // Read boolean flag fields
@@ -134,7 +134,7 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             knocks_down,
             name: bin.get_str_from_offset(name_offset)?,
             projectile,
-            stun_duration,
+            stun,
             hitbox_offsets,
             projectile_offset,
         })
@@ -179,7 +179,7 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
         bin.raw
             .splice(offset + 0x8C..offset + 0x90, c.write_f32(self.damage3)?);
         bin.raw
-            .splice(offset + 0xA4..offset + 0xA8, c.write_f32(self.stun_duration)?);
+            .splice(offset + 0xA4..offset + 0xA8, c.write_f32(self.stun)?);
 
         // Write the attack's hitboxes back to the .bin file too
         //

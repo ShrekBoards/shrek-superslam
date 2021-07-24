@@ -49,6 +49,54 @@ pub struct AttackMoveType {
     /// The amount of time the attack stuns for, in seconds.
     pub stun: f32,
 
+    /// Unknown property at offset +008
+    pub unknown_008: f32,
+
+    /// Unknown property at offset +00C
+    pub unknown_00c: f32,
+
+    /// Unknown property at offset +010
+    pub unknown_010: f32,
+
+    /// Unknown property at offset +018
+    pub unknown_018: f32,
+
+    /// Unknown property at offset +074
+    pub unknown_074: f32,
+
+    /// Unknown property at offset +094
+    pub unknown_094: f32,
+
+    /// Unknown property at offset +098
+    pub unknown_098: f32,
+
+    /// Unknown property at offset +0AC
+    pub unknown_0ac: f32,
+
+    /// Unknown property at offset +0B0
+    pub unknown_0b0: f32,
+
+    /// Unknown property at offset +0B4
+    pub unknown_0b4: f32,
+
+    /// Unknown property at offset +0D8
+    pub unknown_0d8: f32,
+
+    /// Unknown property at offset +0DC
+    pub unknown_0dc: f32,
+
+    /// Unknown property at offset +0E0
+    pub unknown_0e0: f32,
+
+    /// Unknown property at offset +0E4
+    pub unknown_0e4: f32,
+
+    /// Unknown property at offset +0E8
+    pub unknown_0e8: f32,
+
+    /// Unknown property at offset +0EC
+    pub unknown_0ec: f32,
+
     /// The offsets within the player.db.bin file of each hitbox, in the same
     /// order they exist within the hitboxes property.
     #[serde(skip)]
@@ -97,6 +145,23 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         let stun = c.read_f32(&raw[offset + 0xA4..offset + 0xA8])?;
         let name_offset = c.read_u32(&raw[offset + 0x28..offset + 0x2C])?;
 
+        let unknown_008 = c.read_f32(&raw[offset + 0x08..offset + 0x0C])?;
+        let unknown_00c = c.read_f32(&raw[offset + 0x0C..offset + 0x10])?;
+        let unknown_010 = c.read_f32(&raw[offset + 0x10..offset + 0x14])?;
+        let unknown_018 = c.read_f32(&raw[offset + 0x18..offset + 0x1C])?;
+        let unknown_074 = c.read_f32(&raw[offset + 0x74..offset + 0x78])?;
+        let unknown_094 = c.read_f32(&raw[offset + 0x94..offset + 0x98])?;
+        let unknown_098 = c.read_f32(&raw[offset + 0x98..offset + 0x9C])?;
+        let unknown_0ac = c.read_f32(&raw[offset + 0xAC..offset + 0xB0])?;
+        let unknown_0b0 = c.read_f32(&raw[offset + 0xB0..offset + 0xB4])?;
+        let unknown_0b4 = c.read_f32(&raw[offset + 0xB4..offset + 0xB8])?;
+        let unknown_0d8 = c.read_f32(&raw[offset + 0xD8..offset + 0xDC])?;
+        let unknown_0dc = c.read_f32(&raw[offset + 0xDC..offset + 0xE0])?;
+        let unknown_0e0 = c.read_f32(&raw[offset + 0xE0..offset + 0xE4])?;
+        let unknown_0e4 = c.read_f32(&raw[offset + 0xE4..offset + 0xE8])?;
+        let unknown_0e8 = c.read_f32(&raw[offset + 0xE8..offset + 0xEC])?;
+        let unknown_0ec = c.read_f32(&raw[offset + 0xEC..offset + 0xF0])?;
+
         // Read boolean flag fields
         let hits_otg = raw[offset + 0x33] != 0;
         let knocks_down = raw[offset + 0x34] != 0;
@@ -137,6 +202,22 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             stun,
             hitbox_offsets,
             projectile_offset,
+            unknown_008,
+            unknown_00c,
+            unknown_010,
+            unknown_018,
+            unknown_074,
+            unknown_094,
+            unknown_098,
+            unknown_0ac,
+            unknown_0b0,
+            unknown_0b4,
+            unknown_0d8,
+            unknown_0dc,
+            unknown_0e0,
+            unknown_0e4,
+            unknown_0e8,
+            unknown_0ec,
         })
     }
 }
@@ -180,6 +261,40 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
             .splice(offset + 0x8C..offset + 0x90, c.write_f32(self.damage3)?);
         bin.raw
             .splice(offset + 0xA4..offset + 0xA8, c.write_f32(self.stun)?);
+
+        // Unknown fields
+        bin.raw
+            .splice(offset + 0x08..offset + 0x0C, c.write_f32(self.unknown_008)?);
+        bin.raw
+            .splice(offset + 0x0C..offset + 0x10, c.write_f32(self.unknown_00c)?);
+        bin.raw
+            .splice(offset + 0x10..offset + 0x14, c.write_f32(self.unknown_010)?);
+        bin.raw
+            .splice(offset + 0x18..offset + 0x1C, c.write_f32(self.unknown_018)?);
+        bin.raw
+            .splice(offset + 0x74..offset + 0x78, c.write_f32(self.unknown_074)?);
+        bin.raw
+            .splice(offset + 0x94..offset + 0x98, c.write_f32(self.unknown_094)?);
+        bin.raw
+            .splice(offset + 0x94..offset + 0x9C, c.write_f32(self.unknown_098)?);
+        bin.raw
+            .splice(offset + 0xAC..offset + 0xB0, c.write_f32(self.unknown_0ac)?);
+        bin.raw
+            .splice(offset + 0xB0..offset + 0xB4, c.write_f32(self.unknown_0b0)?);
+        bin.raw
+            .splice(offset + 0xB4..offset + 0xB8, c.write_f32(self.unknown_0b4)?);
+        bin.raw
+            .splice(offset + 0xD8..offset + 0xDC, c.write_f32(self.unknown_074)?);
+        bin.raw
+            .splice(offset + 0xDC..offset + 0xE0, c.write_f32(self.unknown_094)?);
+        bin.raw
+            .splice(offset + 0xE0..offset + 0xE4, c.write_f32(self.unknown_098)?);
+        bin.raw
+            .splice(offset + 0xE4..offset + 0xE8, c.write_f32(self.unknown_0ac)?);
+        bin.raw
+            .splice(offset + 0xE8..offset + 0xEC, c.write_f32(self.unknown_0b0)?);
+        bin.raw
+            .splice(offset + 0xEC..offset + 0xF0, c.write_f32(self.unknown_0b4)?);
 
         // Write the attack's hitboxes back to the .bin file too
         //

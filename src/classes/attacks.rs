@@ -276,7 +276,7 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
         bin.raw
             .splice(offset + 0x94..offset + 0x98, c.write_f32(self.unknown_094)?);
         bin.raw
-            .splice(offset + 0x94..offset + 0x9C, c.write_f32(self.unknown_098)?);
+            .splice(offset + 0x98..offset + 0x9C, c.write_f32(self.unknown_098)?);
         bin.raw
             .splice(offset + 0xAC..offset + 0xB0, c.write_f32(self.unknown_0ac)?);
         bin.raw
@@ -284,17 +284,17 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
         bin.raw
             .splice(offset + 0xB4..offset + 0xB8, c.write_f32(self.unknown_0b4)?);
         bin.raw
-            .splice(offset + 0xD8..offset + 0xDC, c.write_f32(self.unknown_074)?);
+            .splice(offset + 0xD8..offset + 0xDC, c.write_f32(self.unknown_0d8)?);
         bin.raw
-            .splice(offset + 0xDC..offset + 0xE0, c.write_f32(self.unknown_094)?);
+            .splice(offset + 0xDC..offset + 0xE0, c.write_f32(self.unknown_0dc)?);
         bin.raw
-            .splice(offset + 0xE0..offset + 0xE4, c.write_f32(self.unknown_098)?);
+            .splice(offset + 0xE0..offset + 0xE4, c.write_f32(self.unknown_0e0)?);
         bin.raw
-            .splice(offset + 0xE4..offset + 0xE8, c.write_f32(self.unknown_0ac)?);
+            .splice(offset + 0xE4..offset + 0xE8, c.write_f32(self.unknown_0e4)?);
         bin.raw
-            .splice(offset + 0xE8..offset + 0xEC, c.write_f32(self.unknown_0b0)?);
+            .splice(offset + 0xE8..offset + 0xEC, c.write_f32(self.unknown_0e8)?);
         bin.raw
-            .splice(offset + 0xEC..offset + 0xF0, c.write_f32(self.unknown_0b4)?);
+            .splice(offset + 0xEC..offset + 0xF0, c.write_f32(self.unknown_0ec)?);
 
         // Write the attack's hitboxes back to the .bin file too
         //

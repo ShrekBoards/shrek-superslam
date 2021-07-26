@@ -37,6 +37,9 @@ pub struct AttackMoveType {
     /// If true, the attack passes through and does no damage or knockback.
     pub intangible: bool,
 
+    /// The amount the attack knocks the opponent back. Positive pushes away, negative pulls toward.
+    pub knockback: f32,
+
     /// True if the attack knocks the opponent down, false if not.
     pub knocks_down: bool,
 
@@ -69,9 +72,6 @@ pub struct AttackMoveType {
 
     /// Unknown property at offset +098
     pub unknown_098: f32,
-
-    /// Unknown property at offset +0AC
-    pub unknown_0ac: f32,
 
     /// Unknown property at offset +0B0
     pub unknown_0b0: f32,
@@ -139,11 +139,12 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         // Read numeric fields
         let endlag = c.read_f32(&raw[offset + 0x04..offset + 0x08])?;
         let fall_speed = c.read_f32(&raw[offset + 0x14..offset + 0x18])?;
+        let name_offset = c.read_u32(&raw[offset + 0x28..offset + 0x2C])?;
         let damage1 = c.read_f32(&raw[offset + 0x84..offset + 0x88])?;
         let damage2 = c.read_f32(&raw[offset + 0x88..offset + 0x8C])?;
         let damage3 = c.read_f32(&raw[offset + 0x8C..offset + 0x90])?;
         let stun = c.read_f32(&raw[offset + 0xA4..offset + 0xA8])?;
-        let name_offset = c.read_u32(&raw[offset + 0x28..offset + 0x2C])?;
+        let knockback = c.read_f32(&raw[offset + 0xAC..offset + 0xB0])?;
 
         let unknown_008 = c.read_f32(&raw[offset + 0x08..offset + 0x0C])?;
         let unknown_00c = c.read_f32(&raw[offset + 0x0C..offset + 0x10])?;
@@ -152,7 +153,6 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         let unknown_074 = c.read_f32(&raw[offset + 0x74..offset + 0x78])?;
         let unknown_094 = c.read_f32(&raw[offset + 0x94..offset + 0x98])?;
         let unknown_098 = c.read_f32(&raw[offset + 0x98..offset + 0x9C])?;
-        let unknown_0ac = c.read_f32(&raw[offset + 0xAC..offset + 0xB0])?;
         let unknown_0b0 = c.read_f32(&raw[offset + 0xB0..offset + 0xB4])?;
         let unknown_0b4 = c.read_f32(&raw[offset + 0xB4..offset + 0xB8])?;
         let unknown_0d8 = c.read_f32(&raw[offset + 0xD8..offset + 0xDC])?;
@@ -197,6 +197,7 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             hits_otg,
             intangible,
             knocks_down,
+            knockback,
             name: bin.get_str_from_offset(name_offset)?,
             projectile,
             stun,
@@ -209,7 +210,6 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             unknown_074,
             unknown_094,
             unknown_098,
-            unknown_0ac,
             unknown_0b0,
             unknown_0b4,
             unknown_0d8,
@@ -261,6 +261,8 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
             .splice(offset + 0x8C..offset + 0x90, c.write_f32(self.damage3)?);
         bin.raw
             .splice(offset + 0xA4..offset + 0xA8, c.write_f32(self.stun)?);
+        bin.raw
+            .splice(offset + 0xAC..offset + 0xB0, c.write_f32(self.knockback)?);
 
         // Unknown fields
         bin.raw
@@ -277,8 +279,6 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
             .splice(offset + 0x94..offset + 0x98, c.write_f32(self.unknown_094)?);
         bin.raw
             .splice(offset + 0x98..offset + 0x9C, c.write_f32(self.unknown_098)?);
-        bin.raw
-            .splice(offset + 0xAC..offset + 0xB0, c.write_f32(self.unknown_0ac)?);
         bin.raw
             .splice(offset + 0xB0..offset + 0xB4, c.write_f32(self.unknown_0b0)?);
         bin.raw

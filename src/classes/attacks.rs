@@ -12,6 +12,13 @@ pub struct AttackMoveType {
     /// The distance at which the attack homes in on the opponent.
     pub aim_range: f32,
 
+    /// The time (in seconds) for a strong move or throw to fully charge.
+    pub charge: f32,
+
+    /// The time (in seconds) for the flash effect to appear when charging a
+    /// strong move or throw.
+    pub charge_effect: f32,
+
     /// The first damage field, used for most damage calculations.
     pub damage1: f32,
 
@@ -66,12 +73,6 @@ pub struct AttackMoveType {
 
     /// Unknown property at offset +018
     pub unknown_018: f32,
-
-    /// Unknown property at offset +094
-    pub unknown_094: f32,
-
-    /// Unknown property at offset +098
-    pub unknown_098: f32,
 
     /// Unknown property at offset +0B0
     pub unknown_0b0: f32,
@@ -144,6 +145,8 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         let damage1 = c.read_f32(&raw[offset + 0x84..offset + 0x88])?;
         let damage2 = c.read_f32(&raw[offset + 0x88..offset + 0x8C])?;
         let damage3 = c.read_f32(&raw[offset + 0x8C..offset + 0x90])?;
+        let charge_effect = c.read_f32(&raw[offset + 0x94..offset + 0x98])?;
+        let charge = c.read_f32(&raw[offset + 0x98..offset + 0x9C])?;
         let stun = c.read_f32(&raw[offset + 0xA4..offset + 0xA8])?;
         let knockback = c.read_f32(&raw[offset + 0xAC..offset + 0xB0])?;
 
@@ -151,8 +154,6 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         let unknown_00c = c.read_f32(&raw[offset + 0x0C..offset + 0x10])?;
         let unknown_010 = c.read_f32(&raw[offset + 0x10..offset + 0x14])?;
         let unknown_018 = c.read_f32(&raw[offset + 0x18..offset + 0x1C])?;
-        let unknown_094 = c.read_f32(&raw[offset + 0x94..offset + 0x98])?;
-        let unknown_098 = c.read_f32(&raw[offset + 0x98..offset + 0x9C])?;
         let unknown_0b0 = c.read_f32(&raw[offset + 0xB0..offset + 0xB4])?;
         let unknown_0b4 = c.read_f32(&raw[offset + 0xB4..offset + 0xB8])?;
         let unknown_0d8 = c.read_f32(&raw[offset + 0xD8..offset + 0xDC])?;
@@ -188,6 +189,8 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
 
         Ok(AttackMoveType {
             aim_range,
+            charge,
+            charge_effect,
             endlag,
             fall_speed,
             damage1,
@@ -208,8 +211,6 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             unknown_00c,
             unknown_010,
             unknown_018,
-            unknown_094,
-            unknown_098,
             unknown_0b0,
             unknown_0b4,
             unknown_0d8,
@@ -262,6 +263,10 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
         bin.raw
             .splice(offset + 0x8C..offset + 0x90, c.write_f32(self.damage3)?);
         bin.raw
+            .splice(offset + 0x94..offset + 0x98, c.write_f32(self.charge_effect)?);
+        bin.raw
+            .splice(offset + 0x98..offset + 0x9C, c.write_f32(self.charge)?);
+        bin.raw
             .splice(offset + 0xA4..offset + 0xA8, c.write_f32(self.stun)?);
         bin.raw
             .splice(offset + 0xAC..offset + 0xB0, c.write_f32(self.knockback)?);
@@ -275,10 +280,6 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
             .splice(offset + 0x10..offset + 0x14, c.write_f32(self.unknown_010)?);
         bin.raw
             .splice(offset + 0x18..offset + 0x1C, c.write_f32(self.unknown_018)?);
-        bin.raw
-            .splice(offset + 0x94..offset + 0x98, c.write_f32(self.unknown_094)?);
-        bin.raw
-            .splice(offset + 0x98..offset + 0x9C, c.write_f32(self.unknown_098)?);
         bin.raw
             .splice(offset + 0xB0..offset + 0xB4, c.write_f32(self.unknown_0b0)?);
         bin.raw

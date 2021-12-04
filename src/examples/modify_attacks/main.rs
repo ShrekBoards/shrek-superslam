@@ -6,7 +6,7 @@ use std::path::Path;
 use std::process;
 
 extern crate shrek_superslam;
-use shrek_superslam::classes::attacks::AttackMoveType;
+use shrek_superslam::classes::AttackMoveType;
 use shrek_superslam::files::Bin;
 use shrek_superslam::Console;
 use shrek_superslam::{MasterDat, MasterDir};
@@ -117,7 +117,10 @@ fn write_new_attack_data(master_dat: &mut MasterDat, console: Console, json_path
         for (replacement_attack, (offset, attack)) in attacks.iter().zip(original_attacks) {
             // Sanity check the names match
             if replacement_attack.name != attack.name {
-                panic!("names '{}' and '{}' do not match!", replacement_attack.name, attack.name);
+                panic!(
+                    "names '{}' and '{}' do not match!",
+                    replacement_attack.name, attack.name
+                );
             }
 
             // Overwrite the attack in the .bin file with the one from the JSON.

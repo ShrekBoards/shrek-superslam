@@ -3,8 +3,7 @@ use std::path::Path;
 use std::process;
 
 extern crate shrek_superslam;
-use shrek_superslam::classes::attacks::AttackMoveType;
-use shrek_superslam::classes::strings::{EffectStringReference, LocalizedString};
+use shrek_superslam::classes::*;
 use shrek_superslam::files::{Bin, BinObject};
 use shrek_superslam::{MasterDat, MasterDir};
 
@@ -19,23 +18,23 @@ fn print_class_additional_info(bin: &Bin, object: &BinObject) {
                 .get_object_from_offset::<LocalizedString>(object.offset)
                 .unwrap();
             print!(" ({})", localized_string.string);
-        },
+        }
 
         "Game::EffectStringReference" => {
             let localized_string = bin
                 .get_object_from_offset::<EffectStringReference>(object.offset)
                 .unwrap();
             print!(" ({})", localized_string.string);
-        },
+        }
 
         "Game::AttackMoveType" => {
             let attack = bin
                 .get_object_from_offset::<AttackMoveType>(object.offset)
                 .unwrap();
             print!(" ({})", attack.name);
-        },
+        }
 
-        _ => {},
+        _ => {}
     };
 }
 

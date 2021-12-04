@@ -79,15 +79,17 @@ pub struct BinObject {
 impl BinObject {
     /// Create a new BinObject structure from the given `offset` in the `raw`
     /// bytes of the entire .bin file from the given `console` version.
-    ///
-    /// # Remarks
-    ///
-    /// If the given `offset` does not match the beginning of a serialised game
-    /// object, then `Ok(None)` is returned.
-    fn new(raw: &[u8], offset: u32, console: Console) -> Result<Option<BinObject>, Error> {
+    pub fn new(raw: &[u8], offset: u32, console: Console) -> Result<BinObject, Error> {
         let hash =
             console.read_u32(&raw[(0x40 + offset) as usize..(0x40 + offset + 0x04) as usize])?;
-        Ok(hash_lookup(hash).map(|name| BinObject { hash, name, offset }))
+
+        if let Some(name) = hash_lookup(hash) {
+            Ok(BinObject { hash, name, offset })
+        } else {
+            Err(Error::ClassDeserialiseError(
+                classes::Error::IncorrectType { hash },
+            ))
+        }
     }
 }
 
@@ -167,9 +169,8 @@ impl Bin {
                     let object_ptr_offset = (section.offset + (j * 0x04)) as usize;
                     let object_offset =
                         console.read_u32(&raw[object_ptr_offset..(object_ptr_offset + 0x04)])?;
-                    if let Some(obj) = BinObject::new(&raw, object_offset, console)? {
-                        objects.push(obj);
-                    }
+                    let obj = BinObject::new(&raw, object_offset, console)?;
+                    objects.push(obj);
                 }
             }
         }
@@ -190,7 +191,7 @@ impl Bin {
     ///
     /// ```no_run
     /// use shrek_superslam::Console;
-    /// use shrek_superslam::classes::attacks::AttackMoveType;
+    /// use shrek_superslam::classes::AttackMoveType;
     /// use shrek_superslam::files::Bin;
     ///
     /// // Get all Game::AttackMoveType objects contained within the .bin file
@@ -234,7 +235,7 @@ impl Bin {
     ///
     /// ```no_run
     /// use shrek_superslam::Console;
-    /// use shrek_superslam::classes::attacks::AttackMoveType;
+    /// use shrek_superslam::classes::AttackMoveType;
     /// use shrek_superslam::files::Bin;
     ///
     /// // Get a specific Game::AttackMoveType object located in the .bin file
@@ -322,7 +323,7 @@ impl Bin {
     /// ```no_run
     /// use shrek_superslam::Console;
     /// use shrek_superslam::files::Bin;
-    /// use shrek_superslam::classes::attacks::AttackMoveType;
+    /// use shrek_superslam::classes::AttackMoveType;
     ///
     /// // Overwrite the damage of a specific Game::AttackMoveType object
     /// # let my_file_bytes: Vec<u8> = vec![];

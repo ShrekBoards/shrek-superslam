@@ -3,7 +3,7 @@ use std::fs;
 use std::process;
 
 extern crate shrek_superslam;
-use shrek_superslam::classes::db::GfDb;
+use shrek_superslam::classes::GfDb;
 use shrek_superslam::files::Bin;
 
 mod args;
@@ -21,7 +21,7 @@ fn main() {
 
     // Dump the contents of the object list
     println!("name,type");
-    for object in &db.objects {
-        println!("{},{}", object.name, object.object.name);
+    for entry in &db.entries {
+        println!("{},{}", entry.0, entry.1.name);
     }
 }

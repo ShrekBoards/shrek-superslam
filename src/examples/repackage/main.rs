@@ -40,7 +40,9 @@ fn repackage_texpack(extracted_dir_path: &Path, texpack_path: &Path, console: Co
 
     // Write the texpack to a file, overwriting the original
     let mut texpack_outfile = File::create(texpack_path).unwrap();
-    texpack_outfile.write_all(&texpack.to_bytes().unwrap()).unwrap();
+    texpack_outfile
+        .write_all(&texpack.to_bytes().unwrap())
+        .unwrap();
 }
 
 /// Perform additional operations on a file if required.
@@ -75,7 +77,8 @@ fn excluded(path: &Path) -> bool {
     // Check the extension the parent directory. The current extractor ends
     // extracted file directories with the "-extracted" suffix, and the old
     // one made directories that ended with ".d". Both of these are excluded.
-    let parent = path.parent()
+    let parent = path
+        .parent()
         .unwrap_or(Path::new(""))
         .as_os_str()
         .to_str()

@@ -35,3 +35,7 @@ path = "src/examples/modify_attacks/main.rs"
 [[example]]
 name = "shreksuperslam-repackage"
 path = "src/examples/repackage/main.rs"
+
+[[example]]
+name = "shreksuperslam-db"
+path = "src/examples/db/main.rs"

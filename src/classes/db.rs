@@ -4,7 +4,7 @@ use crate::files::{Bin, BinObject};
 use crate::Console;
 
 /// Structure representing the in-game `gf::DB` object type.
-/// 
+///
 /// This type is the first object in every .db.bin file, and maps out the rest
 /// of the file.
 pub struct GfDb {
@@ -54,9 +54,7 @@ impl SerialisedShrekSuperSlamGameObject for GfDb {
             .map(|entry_bytes| create_object_entry(entry_bytes, bin, c))
             .collect();
 
-        Ok(GfDb {
-            entries: objects?,
-        })
+        Ok(GfDb { entries: objects? })
     }
 }
 

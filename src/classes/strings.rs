@@ -3,7 +3,7 @@ use crate::errors::Error;
 use crate::files::Bin;
 
 /// Structure representing the in-game `gf::LocalizedString` object type.
-/// 
+///
 /// This type is a thin wrapper around regular string types.
 pub struct LocalizedString {
     /// The contents of the string
@@ -67,7 +67,7 @@ impl LocalizedString {
 }
 
 /// Structure representing the in-game `Game::EffectStringReference` object type.
-/// 
+///
 /// This type is a thin wrapper around a string that names an effect.
 pub struct EffectStringReference {
     /// The contents of the string

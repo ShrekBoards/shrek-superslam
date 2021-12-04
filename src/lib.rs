@@ -15,7 +15,7 @@
 //! Here is an example of reading the MASTER.DAT file for the PC version, and
 //! listing its contents. Note that the console version the files come from
 //! must be manually specified.
-//! 
+//!
 //! ```no_run
 //! use std::path::Path;
 //! use shrek_superslam::{Console, MasterDat, MasterDir};

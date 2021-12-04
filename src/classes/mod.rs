@@ -32,7 +32,7 @@
 //! use shrek_superslam::{Console, MasterDat, MasterDir};
 //! use shrek_superslam::classes::GfDb;
 //! use shrek_superslam::files::Bin;
-//! 
+//!
 //! // Extract the .db.bin file from the MASTER.DAT
 //! let master_dir = MasterDir::from_file(Path::new("MASTER.DIR"), Console::PC).unwrap();
 //! let master_dat = MasterDat::from_file(Path::new("MASTER.DAT"), master_dir).unwrap();

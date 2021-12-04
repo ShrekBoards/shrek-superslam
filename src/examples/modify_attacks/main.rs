@@ -6,7 +6,7 @@ use std::path::Path;
 use std::process;
 
 extern crate shrek_superslam;
-use shrek_superslam::classes::attacks::AttackMoveType;
+use shrek_superslam::classes::AttackMoveType;
 use shrek_superslam::files::Bin;
 use shrek_superslam::Console;
 use shrek_superslam::{MasterDat, MasterDir};
@@ -109,16 +109,22 @@ fn write_new_attack_data(master_dat: &mut MasterDat, console: Console, json_path
         // along with the attack's offset within the file
         let original_attacks = bin.get_all_objects_of_type::<AttackMoveType>();
 
-        // Iterate over each of these attacks, find the matching attack in the
-        // updated JSON file, then overwrite the attack in the player.db.bin
-        // file with the updated one from the JSON
-        for (offset, attack) in original_attacks {
-            let matching_json_attack = match attacks.iter().find(|a| a.name == attack.name) {
-                Some(a) => a,
-                _ => panic!("Could not find attack '{}' in '{}'", attack.name, filename),
-            };
+        // Take each attack in the .bin file and replace it with its equivalent
+        // in the JSON file. This assumes that the attacks are in the exact same
+        // order in both lists, and panics if this is not the case. We cannot do
+        // a name lookup here, because one list may have multiple attacks with the
+        // same name.
+        for (replacement_attack, (offset, attack)) in attacks.iter().zip(original_attacks) {
+            // Sanity check the names match
+            if replacement_attack.name != attack.name {
+                panic!(
+                    "names '{}' and '{}' do not match!",
+                    replacement_attack.name, attack.name
+                );
+            }
 
-            if bin.overwrite_object(offset, matching_json_attack).is_err() {
+            // Overwrite the attack in the .bin file with the one from the JSON.
+            if bin.overwrite_object(offset, replacement_attack).is_err() {
                 panic!(
                     "error overwriting attack '{}' in '{}'",
                     attack.name, filename

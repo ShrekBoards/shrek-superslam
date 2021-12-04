@@ -205,7 +205,7 @@ impl MasterDat {
     /// ```no_run
     /// use std::path::Path;
     /// use shrek_superslam::{Console, MasterDat, MasterDir};
-    /// use shrek_superslam::classes::attacks::AttackMoveType;
+    /// use shrek_superslam::classes::AttackMoveType;
     /// use shrek_superslam::files::Bin;
     ///
     /// // Read the MASTER.DAT and MASTER.DIR pair

@@ -5,10 +5,22 @@ use crate::errors::Error;
 use crate::files::Bin;
 use crate::Console;
 
-/// Structure representing the in-game `Game::AttackMoveType` object type,
-/// which represents an attack (from a character or an item).
+/// Structure representing the in-game `Game::AttackMoveType` object type.
+///
+/// This type represents a single attack, from a player character or from an
+/// item.
 #[derive(Deserialize, Serialize)]
 pub struct AttackMoveType {
+    /// The distance at which the attack homes in on the opponent.
+    pub aim_range: f32,
+
+    /// The time (in seconds) for a strong move or throw to fully charge.
+    pub charge: f32,
+
+    /// The time (in seconds) for the flash effect to appear when charging a
+    /// strong move or throw.
+    pub charge_effect: f32,
+
     /// The first damage field, used for most damage calculations.
     pub damage1: f32,
 
@@ -37,6 +49,9 @@ pub struct AttackMoveType {
     /// If true, the attack passes through and does no damage or knockback.
     pub intangible: bool,
 
+    /// The amount the attack knocks the opponent back. Positive pushes away, negative pulls toward.
+    pub knockback: f32,
+
     /// True if the attack knocks the opponent down, false if not.
     pub knocks_down: bool,
 
@@ -45,6 +60,45 @@ pub struct AttackMoveType {
 
     /// The projectile type the attack spawns, if any.
     pub projectile: Option<ProjectileType>,
+
+    /// The amount of time the attack stuns for, in seconds.
+    pub stun: f32,
+
+    /// Unknown property at offset +008
+    pub unknown_008: f32,
+
+    /// Unknown property at offset +00C
+    pub unknown_00c: f32,
+
+    /// Unknown property at offset +010
+    pub unknown_010: f32,
+
+    /// Unknown property at offset +018
+    pub unknown_018: f32,
+
+    /// Unknown property at offset +0B0
+    pub unknown_0b0: f32,
+
+    /// Unknown property at offset +0B4
+    pub unknown_0b4: f32,
+
+    /// Unknown property at offset +0D8
+    pub unknown_0d8: f32,
+
+    /// Unknown property at offset +0DC
+    pub unknown_0dc: f32,
+
+    /// Unknown property at offset +0E0
+    pub unknown_0e0: f32,
+
+    /// Unknown property at offset +0E4
+    pub unknown_0e4: f32,
+
+    /// Unknown property at offset +0E8
+    pub unknown_0e8: f32,
+
+    /// Unknown property at offset +0EC
+    pub unknown_0ec: f32,
 
     /// The offsets within the player.db.bin file of each hitbox, in the same
     /// order they exist within the hitboxes property.
@@ -78,9 +132,8 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
     ///
     /// # Remarks
     ///
-    /// Prefer calling
-    /// [Bin::get_object_from_offset<T>()](../../files/struct.Bin.html#method.get_object_from_offset)
-    /// rather than calling this method.
+    /// Prefer calling [`Bin::get_object_from_offset`] rather than calling
+    /// this method.
     fn new(bin: &Bin, offset: usize) -> Result<AttackMoveType, Error> {
         let raw = &bin.raw;
         let c = bin.console;
@@ -88,10 +141,28 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         // Read numeric fields
         let endlag = c.read_f32(&raw[offset + 0x04..offset + 0x08])?;
         let fall_speed = c.read_f32(&raw[offset + 0x14..offset + 0x18])?;
+        let name_offset = c.read_u32(&raw[offset + 0x28..offset + 0x2C])?;
+        let aim_range = c.read_f32(&raw[offset + 0x74..offset + 0x78])?;
         let damage1 = c.read_f32(&raw[offset + 0x84..offset + 0x88])?;
         let damage2 = c.read_f32(&raw[offset + 0x88..offset + 0x8C])?;
         let damage3 = c.read_f32(&raw[offset + 0x8C..offset + 0x90])?;
-        let name_offset = c.read_u32(&raw[offset + 0x28..offset + 0x2C])?;
+        let charge_effect = c.read_f32(&raw[offset + 0x94..offset + 0x98])?;
+        let charge = c.read_f32(&raw[offset + 0x98..offset + 0x9C])?;
+        let stun = c.read_f32(&raw[offset + 0xA4..offset + 0xA8])?;
+        let knockback = c.read_f32(&raw[offset + 0xAC..offset + 0xB0])?;
+
+        let unknown_008 = c.read_f32(&raw[offset + 0x08..offset + 0x0C])?;
+        let unknown_00c = c.read_f32(&raw[offset + 0x0C..offset + 0x10])?;
+        let unknown_010 = c.read_f32(&raw[offset + 0x10..offset + 0x14])?;
+        let unknown_018 = c.read_f32(&raw[offset + 0x18..offset + 0x1C])?;
+        let unknown_0b0 = c.read_f32(&raw[offset + 0xB0..offset + 0xB4])?;
+        let unknown_0b4 = c.read_f32(&raw[offset + 0xB4..offset + 0xB8])?;
+        let unknown_0d8 = c.read_f32(&raw[offset + 0xD8..offset + 0xDC])?;
+        let unknown_0dc = c.read_f32(&raw[offset + 0xDC..offset + 0xE0])?;
+        let unknown_0e0 = c.read_f32(&raw[offset + 0xE0..offset + 0xE4])?;
+        let unknown_0e4 = c.read_f32(&raw[offset + 0xE4..offset + 0xE8])?;
+        let unknown_0e8 = c.read_f32(&raw[offset + 0xE8..offset + 0xEC])?;
+        let unknown_0ec = c.read_f32(&raw[offset + 0xEC..offset + 0xF0])?;
 
         // Read boolean flag fields
         let hits_otg = raw[offset + 0x33] != 0;
@@ -118,6 +189,9 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             .collect();
 
         Ok(AttackMoveType {
+            aim_range,
+            charge,
+            charge_effect,
             endlag,
             fall_speed,
             damage1,
@@ -128,10 +202,24 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             hits_otg,
             intangible,
             knocks_down,
+            knockback,
             name: bin.get_str_from_offset(name_offset)?,
             projectile,
+            stun,
             hitbox_offsets,
             projectile_offset,
+            unknown_008,
+            unknown_00c,
+            unknown_010,
+            unknown_018,
+            unknown_0b0,
+            unknown_0b4,
+            unknown_0d8,
+            unknown_0dc,
+            unknown_0e0,
+            unknown_0e4,
+            unknown_0e8,
+            unknown_0ec,
         })
     }
 }
@@ -144,7 +232,7 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
     /// ```no_run
     /// use shrek_superslam::Console;
     /// use shrek_superslam::classes::WriteableShrekSuperSlamGameObject;
-    /// use shrek_superslam::classes::attacks::AttackMoveType;
+    /// use shrek_superslam::classes::AttackMoveType;
     /// use shrek_superslam::files::Bin;
     ///
     /// // Load an attack from the .bin file, modify the damage, and write it back
@@ -168,11 +256,49 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
         bin.raw[offset + 0x35] = self.disabled as u8;
         bin.raw[offset + 0x3A] = self.intangible as u8;
         bin.raw
+            .splice(offset + 0x74..offset + 0x78, c.write_f32(self.aim_range)?);
+        bin.raw
             .splice(offset + 0x84..offset + 0x88, c.write_f32(self.damage1)?);
         bin.raw
             .splice(offset + 0x88..offset + 0x8C, c.write_f32(self.damage2)?);
         bin.raw
             .splice(offset + 0x8C..offset + 0x90, c.write_f32(self.damage3)?);
+        bin.raw.splice(
+            offset + 0x94..offset + 0x98,
+            c.write_f32(self.charge_effect)?,
+        );
+        bin.raw
+            .splice(offset + 0x98..offset + 0x9C, c.write_f32(self.charge)?);
+        bin.raw
+            .splice(offset + 0xA4..offset + 0xA8, c.write_f32(self.stun)?);
+        bin.raw
+            .splice(offset + 0xAC..offset + 0xB0, c.write_f32(self.knockback)?);
+
+        // Unknown fields
+        bin.raw
+            .splice(offset + 0x08..offset + 0x0C, c.write_f32(self.unknown_008)?);
+        bin.raw
+            .splice(offset + 0x0C..offset + 0x10, c.write_f32(self.unknown_00c)?);
+        bin.raw
+            .splice(offset + 0x10..offset + 0x14, c.write_f32(self.unknown_010)?);
+        bin.raw
+            .splice(offset + 0x18..offset + 0x1C, c.write_f32(self.unknown_018)?);
+        bin.raw
+            .splice(offset + 0xB0..offset + 0xB4, c.write_f32(self.unknown_0b0)?);
+        bin.raw
+            .splice(offset + 0xB4..offset + 0xB8, c.write_f32(self.unknown_0b4)?);
+        bin.raw
+            .splice(offset + 0xD8..offset + 0xDC, c.write_f32(self.unknown_0d8)?);
+        bin.raw
+            .splice(offset + 0xDC..offset + 0xE0, c.write_f32(self.unknown_0dc)?);
+        bin.raw
+            .splice(offset + 0xE0..offset + 0xE4, c.write_f32(self.unknown_0e0)?);
+        bin.raw
+            .splice(offset + 0xE4..offset + 0xE8, c.write_f32(self.unknown_0e4)?);
+        bin.raw
+            .splice(offset + 0xE8..offset + 0xEC, c.write_f32(self.unknown_0e8)?);
+        bin.raw
+            .splice(offset + 0xEC..offset + 0xF0, c.write_f32(self.unknown_0ec)?);
 
         // Write the attack's hitboxes back to the .bin file too
         //
@@ -185,7 +311,7 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
         {
             AttackMoveType::hitbox_offsets(&bin.raw, offset, c)?
                 .iter()
-                .map(|o| o + 0x40)
+                .map(|o| o + Bin::header_length() as u32)
                 .collect()
         } else {
             self.hitbox_offsets.clone()
@@ -230,11 +356,11 @@ impl AttackMoveType {
         //
         // We later use this information to construct a list of AttackMoveRegion
         // objects for the attack.
-        let num_hitboxes = AttackMoveType::number_of_hitboxes(&raw, offset, console)?;
+        let num_hitboxes = AttackMoveType::number_of_hitboxes(&raw, offset, console)? as usize;
         let regions_offset = console.read_u32(&raw[offset + 0x20..offset + 0x24])?;
         (0..num_hitboxes)
             .map(|i| {
-                let region_offset_offset = (regions_offset + 0x40 + (i * 4)) as usize;
+                let region_offset_offset = regions_offset as usize + Bin::header_length() + (i * 4);
                 console.read_u32(&raw[region_offset_offset..region_offset_offset + 4])
             })
             .collect()
@@ -256,8 +382,9 @@ impl AttackMoveType {
     }
 }
 
-/// Structure representing the in-game `Game::ProjectileType` object type,
-/// which represents a projectile generated by an attack.
+/// Structure representing the in-game `Game::ProjectileType` object type.
+///
+/// This type represents a projectile generated by an attack.
 #[derive(Deserialize, Serialize)]
 pub struct ProjectileType {
     /// Speed the projectile moves in the X-axis
@@ -300,9 +427,8 @@ impl SerialisedShrekSuperSlamGameObject for ProjectileType {
     ///
     /// # Remarks
     ///
-    /// Prefer calling
-    /// [Bin::get_object_from_offset<T>()](../../files/struct.Bin.html#method.get_object_from_offset)
-    /// rather than calling this method.
+    /// Prefer calling [`Bin::get_object_from_offset`] rather than calling
+    /// this method.
     fn new(bin: &Bin, offset: usize) -> Result<ProjectileType, Error> {
         let c = bin.console;
 
@@ -325,7 +451,7 @@ impl WriteableShrekSuperSlamGameObject for ProjectileType {
     /// ```no_run
     /// use shrek_superslam::Console;
     /// use shrek_superslam::classes::WriteableShrekSuperSlamGameObject;
-    /// use shrek_superslam::classes::attacks::ProjectileType;
+    /// use shrek_superslam::classes::ProjectileType;
     /// use shrek_superslam::files::Bin;
     ///
     /// // Load a projectile from the .bin file, modify the x vector, and write it back
@@ -357,8 +483,9 @@ impl WriteableShrekSuperSlamGameObject for ProjectileType {
     }
 }
 
-/// Structure representing the in-game `Game::AttackMoveRegion` object type,
-/// which represents an attack's hitbox.
+/// Structure representing the in-game `Game::AttackMoveRegion` object type.
+///
+/// This type represents a single hitbox generated by an attack or projectile.
 #[derive(Deserialize, Serialize)]
 pub struct AttackMoveRegion {
     /// The delay (in seconds?) from the attack starting to the hitbox coming out.
@@ -392,9 +519,8 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveRegion {
     ///
     /// # Remarks
     ///
-    /// Prefer calling
-    /// [Bin::get_object_from_offset<T>()](../../files/struct.Bin.html#method.get_object_from_offset)
-    /// rather than calling this method.
+    /// Prefer calling [`Bin::get_object_from_offset`] rather than calling
+    /// this method.
     fn new(bin: &Bin, offset: usize) -> Result<AttackMoveRegion, Error> {
         let c = bin.console;
 
@@ -414,7 +540,7 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveRegion {
     /// ```no_run
     /// use shrek_superslam::Console;
     /// use shrek_superslam::classes::WriteableShrekSuperSlamGameObject;
-    /// use shrek_superslam::classes::attacks::AttackMoveRegion;
+    /// use shrek_superslam::classes::AttackMoveRegion;
     /// use shrek_superslam::files::Bin;
     ///
     /// // Load a hitbox from the .bin file, modify the width, and write it back

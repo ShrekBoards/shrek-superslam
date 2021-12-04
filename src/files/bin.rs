@@ -62,8 +62,7 @@ impl BinSection {
 ///
 /// # Notes
 ///
-/// Use `offset` field as a parameter to the
-/// [Bin::get_object_from_offset](struct.Bin.html#method.get_object_from_offset)
+/// Use `offset` field as a parameter to the [`Bin::get_object_from_offset`]
 /// function to get the full deserialised object from the .bin file.
 pub struct BinObject {
     /// The hash of the object
@@ -79,15 +78,16 @@ pub struct BinObject {
 impl BinObject {
     /// Create a new BinObject structure from the given `offset` in the `raw`
     /// bytes of the entire .bin file from the given `console` version.
-    ///
-    /// # Remarks
-    ///
-    /// If the given `offset` does not match the beginning of a serialised game
-    /// object, then `Ok(None)` is returned.
-    fn new(raw: &[u8], offset: u32, console: Console) -> Result<Option<BinObject>, Error> {
-        let hash =
-            console.read_u32(&raw[(0x40 + offset) as usize..(0x40 + offset + 0x04) as usize])?;
-        Ok(hash_lookup(hash).map(|name| BinObject { hash, name, offset }))
+    pub fn new(raw: &[u8], offset: u32, console: Console) -> Result<BinObject, Error> {
+        let hash = console.read_u32(&raw[Bin::header_length() + offset as usize..Bin::header_length() + offset as usize + 0x04])?;
+
+        if let Some(name) = hash_lookup(hash) {
+            Ok(BinObject { hash, name, offset })
+        } else {
+            Err(Error::ClassDeserialiseError(
+                classes::Error::IncorrectType { hash },
+            ))
+        }
     }
 }
 
@@ -111,6 +111,11 @@ pub struct Bin {
 }
 
 impl Bin {
+    /// Returns the length of the .bin file header.
+    pub(crate) const fn header_length() -> usize {
+        0x40
+    }
+
     /// Construct a new `Bin` object from the given `raw` bytes of a
     /// decompressed .bin file, from the given `console` version.
     ///
@@ -128,18 +133,18 @@ impl Bin {
     /// ```
     pub fn new(raw: Vec<u8>, console: Console) -> Result<Bin, Error> {
         // Read the header
-        let header = BinHeader::new(&raw[0x00..0x40], console)?;
+        let header = BinHeader::new(&raw[0x00..Bin::header_length()], console)?;
 
         // The offsets and counts within the header are used to calculate
         // various offsets to the different sections within the .bin file
-        let file_begin_offset = 0x40;
+        let file_begin_offset = Bin::header_length() as u32;
         let section_begin_offset = file_begin_offset + header.offset1;
         let dependencies_begin_offset = section_begin_offset + (header.sections * 0x10);
         let ptr4_begin_offset = dependencies_begin_offset + (header.dependencies * 0x80);
 
         // Create an entry for each 'section', which is later used to access
         // different parts of the file
-        let mut section_dst_offset = ptr4_begin_offset + (header.offset4 * 0x40);
+        let mut section_dst_offset = ptr4_begin_offset + (header.offset4 * Bin::header_length() as u32);
         let mut sections: Vec<BinSection> = vec![];
         for i in 0..header.sections {
             let section_offset = (section_begin_offset + (i * 0x10)) as usize;
@@ -167,9 +172,8 @@ impl Bin {
                     let object_ptr_offset = (section.offset + (j * 0x04)) as usize;
                     let object_offset =
                         console.read_u32(&raw[object_ptr_offset..(object_ptr_offset + 0x04)])?;
-                    if let Some(obj) = BinObject::new(&raw, object_offset, console)? {
-                        objects.push(obj);
-                    }
+                    let obj = BinObject::new(&raw, object_offset, console)?;
+                    objects.push(obj);
                 }
             }
         }
@@ -190,7 +194,7 @@ impl Bin {
     ///
     /// ```no_run
     /// use shrek_superslam::Console;
-    /// use shrek_superslam::classes::attacks::AttackMoveType;
+    /// use shrek_superslam::classes::AttackMoveType;
     /// use shrek_superslam::files::Bin;
     ///
     /// // Get all Game::AttackMoveType objects contained within the .bin file
@@ -234,7 +238,7 @@ impl Bin {
     ///
     /// ```no_run
     /// use shrek_superslam::Console;
-    /// use shrek_superslam::classes::attacks::AttackMoveType;
+    /// use shrek_superslam::classes::AttackMoveType;
     /// use shrek_superslam::files::Bin;
     ///
     /// // Get a specific Game::AttackMoveType object located in the .bin file
@@ -264,7 +268,7 @@ impl Bin {
 
         // Ensure the requested type exists at the given offset by checking the
         // hash at the offset matches the expected hash of the type
-        let object_begin = (offset + 0x40) as usize;
+        let object_begin = offset as usize + Bin::header_length();
         let hash = self
             .console
             .read_u32(&self.raw[object_begin..object_begin + 4])?;
@@ -296,7 +300,7 @@ impl Bin {
     /// println!("At offset {}, there is the string '{}'", 0x500, my_string);
     /// ```
     pub fn get_str_from_offset(&self, offset: u32) -> Result<String, Error> {
-        let str_begin = (offset + 0x40) as usize;
+        let str_begin = offset as usize + Bin::header_length();
 
         // Find the first NULL byte, which ends the string. If not found,
         // default to the end of the slice, which will more than likely give us
@@ -322,7 +326,7 @@ impl Bin {
     /// ```no_run
     /// use shrek_superslam::Console;
     /// use shrek_superslam::files::Bin;
-    /// use shrek_superslam::classes::attacks::AttackMoveType;
+    /// use shrek_superslam::classes::AttackMoveType;
     ///
     /// // Overwrite the damage of a specific Game::AttackMoveType object
     /// # let my_file_bytes: Vec<u8> = vec![];
@@ -337,7 +341,7 @@ impl Bin {
     {
         // Check that the given offset actually contains an object of the type
         // given as a parameter before we overwrite it
-        let object_begin = (offset + 0x40) as usize;
+        let object_begin = offset as usize + Bin::header_length();
         let hash = self
             .console
             .read_u32(&self.raw[object_begin..object_begin + 4])?;

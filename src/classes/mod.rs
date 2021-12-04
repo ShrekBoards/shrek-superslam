@@ -1,10 +1,56 @@
 //! Module containing structures representing the various Shrek SuperSlam
 //! classes.
 //!
-//! See the [Bin](../files/struct.Bin.html) structure for information on how
-//! to deserialise these types from the .bin files they are contained within.
-pub mod attacks;
-pub mod strings;
+//! The .db.bin files seen throughout the extracted MASTER.DAT are essentially
+//! a collection of serialised game objects. The serialisation is very basic
+//! and is nearly the entire object as it would exist in memory dumped into
+//! the file.
+//!
+//! Each object begins with a unique hash identifier. This is created using the
+//! game's hashing method on the class name. At runtime, these hashes are
+//! converted to the vtable for the class, which is then used to call class
+//! methods. Many objects also contain offsets to other objects. These are
+//! stored as offsets within the file, excluding the header. Therefore all
+//! offsets need 0x40 added to find the true file offset. At runtime, these are
+//! converted to pointers to the real memory addresses.
+//!
+//! For the purpose of this library, we can define the data fields of a given
+//! class, then given the type we want to deserialise and an offset within the
+//! .db.bin file to find the object, flesh out a Rust type with the data fields
+//! found in the file. This module contains the structure definitions for the
+//! serialised classes, and the method [`Bin::get_object_from_offset`] constructs
+//! these types from a given offset in a .db.bin file.
+//!
+//! Of particular note is the [`db::GfDb`] class, which begins each .db.bin
+//! file and acts as a table of contents for the rest of the file, by
+//! containing an entry for each top-level class within the file, as well as a
+//! name for the object. This can then be used to determine other types within
+//! the file. An example of extracting this class is given here:
+//!
+//! ```no_run
+//! use std::path::Path;
+//! use shrek_superslam::{Console, MasterDat, MasterDir};
+//! use shrek_superslam::classes::GfDb;
+//! use shrek_superslam::files::Bin;
+//!
+//! // Extract the .db.bin file from the MASTER.DAT
+//! let master_dir = MasterDir::from_file(Path::new("MASTER.DIR"), Console::PC).unwrap();
+//! let master_dat = MasterDat::from_file(Path::new("MASTER.DAT"), master_dir).unwrap();
+//! let my_file_bytes = master_dat.decompressed_file("data\\players\\shrek\\player.db.bin").unwrap();
+//!
+//! // Parse the file and get the gf::DB object
+//! let bin = Bin::new(my_file_bytes, Console::PC).unwrap();
+//! let gf_db = bin.get_object_from_offset::<GfDb>(0x00).unwrap();
+//! ```
+mod db;
+mod level;
+mod player;
+mod strings;
+
+pub use db::*;
+pub use level::*;
+pub use player::*;
+pub use strings::*;
 
 use std::error;
 use std::fmt;
@@ -29,9 +75,8 @@ pub trait SerialisedShrekSuperSlamGameObject: Sized {
     ///
     /// # Remarks
     ///
-    /// Do not call directly, instead use
-    /// [Bin::get_object_from_offset<T>()](../files/struct.Bin.html#method.get_object_from_offset)
-    /// to get objects from a .bin file.
+    /// Do not call directly, instead use [`Bin::get_object_from_offset`] to
+    /// get objects from a .bin file.
     fn new(bin: &Bin, offset: usize) -> Result<Self, errors::Error>;
 }
 
@@ -54,7 +99,7 @@ pub enum Error {
         offset: usize,
     },
 
-    /// Caused by requesting a an object that does not match the type of object
+    /// Caused by requesting an object that does not match the type of object
     /// at the given offset
     IncorrectType { hash: u32 },
 }

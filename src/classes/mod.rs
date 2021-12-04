@@ -75,9 +75,8 @@ pub trait SerialisedShrekSuperSlamGameObject: Sized {
     ///
     /// # Remarks
     ///
-    /// Do not call directly, instead use
-    /// [Bin::get_object_from_offset<T>()](../files/struct.Bin.html#method.get_object_from_offset)
-    /// to get objects from a .bin file.
+    /// Do not call directly, instead use [`Bin::get_object_from_offset`] to
+    /// get objects from a .bin file.
     fn new(bin: &Bin, offset: usize) -> Result<Self, errors::Error>;
 }
 

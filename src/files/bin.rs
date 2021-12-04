@@ -62,8 +62,7 @@ impl BinSection {
 ///
 /// # Notes
 ///
-/// Use `offset` field as a parameter to the
-/// [Bin::get_object_from_offset](struct.Bin.html#method.get_object_from_offset)
+/// Use `offset` field as a parameter to the [`Bin::get_object_from_offset`]
 /// function to get the full deserialised object from the .bin file.
 pub struct BinObject {
     /// The hash of the object

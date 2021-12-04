@@ -4,7 +4,7 @@ use crate::files::Bin;
 
 /// Structure representing the in-game `Game::Spitter` object type.
 ///
-/// A 'spitter' is what players get slammed into, and are responsible for
+/// A 'spitter' is what players get slammed into, and is responsible for
 /// spawning the player back onto the battlefield, and the slam event
 /// animations.
 pub struct Spitter {
@@ -33,9 +33,8 @@ impl SerialisedShrekSuperSlamGameObject for Spitter {
     ///
     /// # Remarks
     ///
-    /// Prefer calling
-    /// [`Bin::get_object_from_offset`]
-    /// rather than calling this method.
+    /// Prefer calling [`Bin::get_object_from_offset`] rather than calling
+    /// this method.
     fn new(bin: &Bin, offset: usize) -> Result<Spitter, Error> {
         let raw = &bin.raw;
         let c = bin.console;

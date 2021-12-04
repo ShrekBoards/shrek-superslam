@@ -132,9 +132,8 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
     ///
     /// # Remarks
     ///
-    /// Prefer calling
-    /// [`Bin::get_object_from_offset`]
-    /// rather than calling this method.
+    /// Prefer calling [`Bin::get_object_from_offset`] rather than calling
+    /// this method.
     fn new(bin: &Bin, offset: usize) -> Result<AttackMoveType, Error> {
         let raw = &bin.raw;
         let c = bin.console;
@@ -428,9 +427,8 @@ impl SerialisedShrekSuperSlamGameObject for ProjectileType {
     ///
     /// # Remarks
     ///
-    /// Prefer calling
-    /// [`Bin::get_object_from_offset`]
-    /// rather than calling this method.
+    /// Prefer calling [`Bin::get_object_from_offset`] rather than calling
+    /// this method.
     fn new(bin: &Bin, offset: usize) -> Result<ProjectileType, Error> {
         let c = bin.console;
 
@@ -521,9 +519,8 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveRegion {
     ///
     /// # Remarks
     ///
-    /// Prefer calling
-    /// [`Bin::get_object_from_offset`]
-    /// rather than calling this method.
+    /// Prefer calling [`Bin::get_object_from_offset`] rather than calling
+    /// this method.
     fn new(bin: &Bin, offset: usize) -> Result<AttackMoveRegion, Error> {
         let c = bin.console;
 

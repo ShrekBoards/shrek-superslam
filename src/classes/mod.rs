@@ -42,12 +42,14 @@
 //! let bin = Bin::new(my_file_bytes, Console::PC).unwrap();
 //! let gf_db = bin.get_object_from_offset::<GfDb>(0x00).unwrap();
 //! ```
-mod attacks;
 mod db;
+mod level;
+mod player;
 mod strings;
 
-pub use attacks::*;
 pub use db::*;
+pub use level::*;
+pub use player::*;
 pub use strings::*;
 
 use std::error;

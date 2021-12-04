@@ -33,9 +33,8 @@ impl SerialisedShrekSuperSlamGameObject for GfDb {
     ///
     /// # Remarks
     ///
-    /// Prefer calling
-    /// [Bin::get_object_from_offset<T>()](../../files/struct.Bin.html#method.get_object_from_offset)
-    /// rather than calling this method.
+    /// Prefer calling [`Bin::get_object_from_offset`] rather than calling
+    /// this method.
     fn new(bin: &Bin, offset: usize) -> Result<GfDb, Error> {
         let raw = &bin.raw;
         let c = bin.console;
@@ -44,7 +43,7 @@ impl SerialisedShrekSuperSlamGameObject for GfDb {
         // +18 contains a count of the number of objects in this array.
         const OBJECT_ENTRY_SIZE: usize = 0x10;
         let objects_initial_offset =
-            0x40 + c.read_u32(&raw[offset + 0x14..offset + 0x18])? as usize;
+            Bin::header_length() + c.read_u32(&raw[offset + 0x14..offset + 0x18])? as usize;
         let objects_count = c.read_u32(&raw[offset + 0x18..offset + 0x1C])? as usize;
         let objects_end_offset = objects_initial_offset + (objects_count * OBJECT_ENTRY_SIZE);
 

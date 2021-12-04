@@ -133,7 +133,7 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
     /// # Remarks
     ///
     /// Prefer calling
-    /// [Bin::get_object_from_offset<T>()](../../files/struct.Bin.html#method.get_object_from_offset)
+    /// [`Bin::get_object_from_offset`]
     /// rather than calling this method.
     fn new(bin: &Bin, offset: usize) -> Result<AttackMoveType, Error> {
         let raw = &bin.raw;
@@ -312,7 +312,7 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
         {
             AttackMoveType::hitbox_offsets(&bin.raw, offset, c)?
                 .iter()
-                .map(|o| o + 0x40)
+                .map(|o| o + Bin::header_length() as u32)
                 .collect()
         } else {
             self.hitbox_offsets.clone()
@@ -357,11 +357,11 @@ impl AttackMoveType {
         //
         // We later use this information to construct a list of AttackMoveRegion
         // objects for the attack.
-        let num_hitboxes = AttackMoveType::number_of_hitboxes(&raw, offset, console)?;
+        let num_hitboxes = AttackMoveType::number_of_hitboxes(&raw, offset, console)? as usize;
         let regions_offset = console.read_u32(&raw[offset + 0x20..offset + 0x24])?;
         (0..num_hitboxes)
             .map(|i| {
-                let region_offset_offset = (regions_offset + 0x40 + (i * 4)) as usize;
+                let region_offset_offset = regions_offset as usize + Bin::header_length() + (i * 4);
                 console.read_u32(&raw[region_offset_offset..region_offset_offset + 4])
             })
             .collect()
@@ -429,7 +429,7 @@ impl SerialisedShrekSuperSlamGameObject for ProjectileType {
     /// # Remarks
     ///
     /// Prefer calling
-    /// [Bin::get_object_from_offset<T>()](../../files/struct.Bin.html#method.get_object_from_offset)
+    /// [`Bin::get_object_from_offset`]
     /// rather than calling this method.
     fn new(bin: &Bin, offset: usize) -> Result<ProjectileType, Error> {
         let c = bin.console;
@@ -522,7 +522,7 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveRegion {
     /// # Remarks
     ///
     /// Prefer calling
-    /// [Bin::get_object_from_offset<T>()](../../files/struct.Bin.html#method.get_object_from_offset)
+    /// [`Bin::get_object_from_offset`]
     /// rather than calling this method.
     fn new(bin: &Bin, offset: usize) -> Result<AttackMoveRegion, Error> {
         let c = bin.console;

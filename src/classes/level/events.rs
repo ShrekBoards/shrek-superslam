@@ -59,6 +59,6 @@ impl SerialisedShrekSuperSlamGameObject for EventSequence {
             .collect();
         let event_offsets = event_offsets?;
 
-        Ok(EventSequence { event_offsets, })
+        Ok(EventSequence { event_offsets })
     }
 }

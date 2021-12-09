@@ -43,16 +43,18 @@ impl SerialisedShrekSuperSlamGameObject for Spitter {
         // The count of keyframes is at offset +24.
         let keyframe_list_offset = c.read_u32(&raw[offset + 0x20..offset + 0x24])? as usize;
         let keyframes_count = c.read_u32(&raw[offset + 0x24..offset + 0x28])? as usize;
-        let keyframes: Result<Vec<SpitterKeyframe>, Error> =
-            (0..keyframes_count)
-                .map(|i| {
-                    let keyframe_list_entry_offset = (Bin::header_length() + keyframe_list_offset + (i * 4)) as usize; 
-                    c.read_u32(&raw[keyframe_list_entry_offset..keyframe_list_entry_offset + 4])
-                })
-                .map(|offset| { bin.get_object_from_offset::<SpitterKeyframe>(offset?) })
-                .collect();
+        let keyframes: Result<Vec<SpitterKeyframe>, Error> = (0..keyframes_count)
+            .map(|i| {
+                let keyframe_list_entry_offset =
+                    (Bin::header_length() + keyframe_list_offset + (i * 4)) as usize;
+                c.read_u32(&raw[keyframe_list_entry_offset..keyframe_list_entry_offset + 4])
+            })
+            .map(|offset| bin.get_object_from_offset::<SpitterKeyframe>(offset?))
+            .collect();
 
-        Ok(Spitter { keyframes: keyframes?, })
+        Ok(Spitter {
+            keyframes: keyframes?,
+        })
     }
 }
 
@@ -99,6 +101,6 @@ impl SerialisedShrekSuperSlamGameObject for SpitterKeyframe {
             None
         };
 
-        Ok(SpitterKeyframe { event, })
+        Ok(SpitterKeyframe { event })
     }
 }

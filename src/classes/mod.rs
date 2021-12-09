@@ -87,6 +87,23 @@ pub trait WriteableShrekSuperSlamGameObject {
     fn write(&self, bin: &mut Bin, offset: usize) -> Result<(), errors::Error>;
 }
 
+/// Enumeration of the different class types.
+///
+/// This allows parsing a .db.bin file to a collection of the types contained
+/// within it.
+pub enum ShrekSuperSlamObject {
+    AttackMoveRegion(AttackMoveRegion),
+    AttackMoveType(AttackMoveType),
+    EffectStringReference(EffectStringReference),
+    EventSequence(EventSequence),
+    GameWorld(GameWorld),
+    GfDb(GfDb),
+    LocalizedString(LocalizedString),
+    ProjectileType(ProjectileType),
+    Spitter(Spitter),
+    SpitterKeyframe(SpitterKeyframe),
+}
+
 /// Lookup a hash value and retrieve the name of the class corresponding to the hash
 ///
 /// # Parameters

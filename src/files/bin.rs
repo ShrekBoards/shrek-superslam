@@ -2,11 +2,11 @@ use encoding::all::ISO_8859_1;
 use encoding::{DecoderTrap, Encoding};
 
 use crate::classes;
-use crate::classes::{
-    hash_lookup, SerialisedShrekSuperSlamGameObject, WriteableShrekSuperSlamGameObject,
-};
+use crate::classes::*;
 use crate::console::Console;
 use crate::errors::Error;
+
+use std::collections::HashMap;
 
 /// Structure representing the header (the first 40 bytes) of a .bin file
 struct BinHeader {
@@ -79,7 +79,10 @@ impl BinObject {
     /// Create a new BinObject structure from the given `offset` in the `raw`
     /// bytes of the entire .bin file from the given `console` version.
     pub fn new(raw: &[u8], offset: u32, console: Console) -> Result<BinObject, Error> {
-        let hash = console.read_u32(&raw[Bin::header_length() + offset as usize..Bin::header_length() + offset as usize + 0x04])?;
+        let hash = console.read_u32(
+            &raw[Bin::header_length() + offset as usize
+                ..Bin::header_length() + offset as usize + 0x04],
+        )?;
 
         if let Some(name) = hash_lookup(hash) {
             Ok(BinObject { hash, name, offset })
@@ -105,7 +108,7 @@ impl BinObject {
 /// module, which contains structures representing the classes found within these
 /// .bin files.
 pub struct Bin {
-    objects: Vec<BinObject>,
+    pub(crate) objects: Vec<BinObject>,
     pub(crate) console: Console,
     pub(crate) raw: Vec<u8>,
 }
@@ -144,7 +147,8 @@ impl Bin {
 
         // Create an entry for each 'section', which is later used to access
         // different parts of the file
-        let mut section_dst_offset = ptr4_begin_offset + (header.offset4 * Bin::header_length() as u32);
+        let mut section_dst_offset =
+            ptr4_begin_offset + (header.offset4 * Bin::header_length() as u32);
         let mut sections: Vec<BinSection> = vec![];
         for i in 0..header.sections {
             let section_offset = (section_begin_offset + (i * 0x10)) as usize;
@@ -352,6 +356,88 @@ impl Bin {
         object.write(self, object_begin)?;
 
         Ok(())
+    }
+
+    /// Parse a .db.bin file to its named entries.
+    ///
+    /// Use this function to parse a .db.bin file as the game would - by
+    /// reading the `gf::DB` object at the top of the file, parsing out each
+    /// object in it along with its name, and resolving each reference to an
+    /// actual game type.
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use std::path::Path;
+    /// # use shrek_superslam::{Console, MasterDat, MasterDir};
+    /// # use shrek_superslam::classes::ShrekSuperSlamObject::AttackMoveType;
+    /// # use shrek_superslam::files::Bin;
+    /// #
+    /// # let master_dir = MasterDir::from_file(Path::new("MASTER.DIR"), Console::PC).unwrap();
+    /// # let master_dat = MasterDat::from_file(Path::new("MASTER.DAT"), master_dir).unwrap();
+    /// # let my_file_bytes = master_dat.decompressed_file("data\\players\\shrek\\player.db.bin").unwrap();
+    /// # let bin = Bin::new(my_file_bytes, Console::PC).unwrap();
+    /// // Get the 'Fast1Atk' object from a player .db.bin, and print the attack damage.
+    /// let parsed = bin.parse().unwrap();
+    /// if let Some(obj) = parsed.get("Fast1Atk") {
+    ///     if let AttackMoveType(fast_1_atk) = obj {
+    ///         println!("Fast1Atk damage: {}", fast_1_atk.damage1);
+    ///     }
+    /// }
+    /// ```
+    pub fn parse(&self) -> Result<HashMap<String, ShrekSuperSlamObject>, Error> {
+        // Get the gf::DB object, which resides at offset 0 always.
+        let db = self.get_object_from_offset::<GfDb>(0x00)?;
+
+        // Resolve each item in the DB to an actual type, and add it to the
+        // hashmap along with its name.
+        let mut mapping: HashMap<String, ShrekSuperSlamObject> = HashMap::new();
+        for (name, object) in db.entries {
+            mapping.insert(name, self.resolve_object(&object)?);
+        }
+
+        Ok(mapping)
+    }
+
+    /// Resolve a stub .bin `object` in the file to an actual object type.
+    ///
+    /// This function is used to take the stub object that identifies an object
+    /// in the .bin file, and fleshes it out to an actual type so that you can
+    /// use the data members.
+    pub fn resolve_object(&self, object: &BinObject) -> Result<ShrekSuperSlamObject, Error> {
+        match object.hash {
+            0xF2CFE08D => Ok(ShrekSuperSlamObject::AttackMoveRegion(
+                self.get_object_from_offset::<AttackMoveRegion>(object.offset)?,
+            )),
+            0xEBF07BB5 => Ok(ShrekSuperSlamObject::AttackMoveType(
+                self.get_object_from_offset::<AttackMoveType>(object.offset)?,
+            )),
+            0xC43D420D => Ok(ShrekSuperSlamObject::EffectStringReference(
+                self.get_object_from_offset::<EffectStringReference>(object.offset)?,
+            )),
+            0xD24634FE => Ok(ShrekSuperSlamObject::EventSequence(
+                self.get_object_from_offset::<EventSequence>(object.offset)?,
+            )),
+            0xB974E53B => Ok(ShrekSuperSlamObject::GameWorld(
+                self.get_object_from_offset::<GameWorld>(object.offset)?,
+            )),
+            0x9B3DDBED => Ok(ShrekSuperSlamObject::GfDb(
+                self.get_object_from_offset::<GfDb>(object.offset)?,
+            )),
+            0xBFC7788D => Ok(ShrekSuperSlamObject::LocalizedString(
+                self.get_object_from_offset::<LocalizedString>(object.offset)?,
+            )),
+            0x8811292E => Ok(ShrekSuperSlamObject::ProjectileType(
+                self.get_object_from_offset::<ProjectileType>(object.offset)?,
+            )),
+            0x90D8FCD6 => Ok(ShrekSuperSlamObject::Spitter(
+                self.get_object_from_offset::<Spitter>(object.offset)?,
+            )),
+            0x84AD7E70 => Ok(ShrekSuperSlamObject::SpitterKeyframe(
+                self.get_object_from_offset::<SpitterKeyframe>(object.offset)?,
+            )),
+            _ => Err(Error::NotImplementedError(object.name.to_string())),
+        }
     }
 
     /// Returns the raw bytes of the .bin file.

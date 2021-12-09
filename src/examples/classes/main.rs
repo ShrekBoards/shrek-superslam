@@ -34,6 +34,26 @@ fn print_class_additional_info(bin: &Bin, object: &BinObject) {
             print!(" ({})", attack.name);
         }
 
+        "Game::Spitter" => {
+            let spitter = bin
+                .get_object_from_offset::<Spitter>(object.offset)
+                .unwrap();
+
+            print!(" ({} keyframes)", spitter.keyframes.len());
+        }
+
+        "Game::SpitterKeyframe" => {
+            let keyframe = bin
+                .get_object_from_offset::<SpitterKeyframe>(object.offset)
+                .unwrap();
+
+            if let Some(event) = keyframe.event {
+                print!(" ({} events)", event.event_offsets.len());
+            } else {
+                print!(" (no events)");
+            }
+        }
+
         _ => {}
     };
 }

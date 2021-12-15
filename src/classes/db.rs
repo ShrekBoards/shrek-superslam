@@ -59,7 +59,8 @@ impl SerialisedShrekSuperSlamGameObject for GfDb {
 
 /// Structure representing the in-game `GF_TEMP::ScriptDB` object type.
 ///
-/// This type behaves very similarly to the `gf::DB`.
+/// This type behaves very similarly to the `gf::DB`, perhaps it is used for
+/// scripted events?
 pub struct ScriptDb {
     /// Objects within the DB
     pub entries: Vec<(String, BinObject)>,

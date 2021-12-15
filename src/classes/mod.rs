@@ -100,6 +100,7 @@ pub enum ShrekSuperSlamObject {
     GfDb(GfDb),
     LocalizedString(LocalizedString),
     ProjectileType(ProjectileType),
+    ScriptDb(ScriptDb),
     Spitter(Spitter),
     SpitterKeyframe(SpitterKeyframe),
 }

@@ -430,6 +430,9 @@ impl Bin {
             0x8811292E => Ok(ShrekSuperSlamObject::ProjectileType(
                 self.get_object_from_offset::<ProjectileType>(object.offset)?,
             )),
+            0xA128E61A => Ok(ShrekSuperSlamObject::ScriptDb(
+                self.get_object_from_offset::<ScriptDb>(object.offset)?,
+            )),
             0x90D8FCD6 => Ok(ShrekSuperSlamObject::Spitter(
                 self.get_object_from_offset::<Spitter>(object.offset)?,
             )),

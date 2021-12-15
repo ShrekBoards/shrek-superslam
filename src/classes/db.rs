@@ -57,6 +57,46 @@ impl SerialisedShrekSuperSlamGameObject for GfDb {
     }
 }
 
+/// Structure representing the in-game `GF_TEMP::ScriptDB` object type.
+///
+/// This type behaves very similarly to the `gf::DB`.
+pub struct ScriptDb {
+    /// Objects within the DB
+    pub entries: Vec<(String, BinObject)>,
+}
+
+impl SerialisedShrekSuperSlamGameObject for ScriptDb {
+    /// Returns the hashcode for the `GF_TEMP::ScriptDb` in-game object.
+    fn hash() -> u32 {
+        0xA128E61A
+    }
+
+    /// Returns the name of the in-game class.
+    fn name() -> &'static str {
+        "GF_TEMP::ScriptDB"
+    }
+
+    /// Returns the size of a serialised `GF_TEMP::ScriptDb` object.
+    fn size() -> usize {
+        0x24
+    }
+
+    /// Return a new `ScriptDb` using data located at the given
+    /// `offset` in the given `bin` file structure.
+    ///
+    /// # Remarks
+    ///
+    /// Prefer calling [`Bin::get_object_from_offset`] rather than calling
+    /// this method.
+    fn new(bin: &Bin, offset: usize) -> Result<ScriptDb, Error> {
+        // This object works the same way as the gf::DB type, so we'll just
+        // re-use the code for that.
+        let db = GfDb::new(bin, offset)?;
+
+        Ok(ScriptDb { entries: db.entries })
+    }
+}
+
 /// Extract the `raw` bytes of a single gf::DB array entry into its actual
 /// parts, and resolve them using the rest of the `bin`.
 fn create_object_entry(raw: &[u8], bin: &Bin, c: Console) -> Result<(String, BinObject), Error> {

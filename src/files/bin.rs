@@ -424,8 +424,17 @@ impl Bin {
             0x9B3DDBED => Ok(ShrekSuperSlamObject::GfDb(
                 self.get_object_from_offset::<GfDb>(object.offset)?,
             )),
+            0xCD47AA2B => Ok(ShrekSuperSlamObject::ItemSpawner(
+                self.get_object_from_offset::<ItemSpawner>(object.offset)?,
+            )),
             0xBFC7788D => Ok(ShrekSuperSlamObject::LocalizedString(
                 self.get_object_from_offset::<LocalizedString>(object.offset)?,
+            )),
+            0xF05C7BD3 => Ok(ShrekSuperSlamObject::PotionType(
+                self.get_object_from_offset::<PotionType>(object.offset)?,
+            )),
+            0xBE7B44BA => Ok(ShrekSuperSlamObject::PowerupType(
+                self.get_object_from_offset::<PowerupType>(object.offset)?,
             )),
             0x8811292E => Ok(ShrekSuperSlamObject::ProjectileType(
                 self.get_object_from_offset::<ProjectileType>(object.offset)?,
@@ -438,6 +447,9 @@ impl Bin {
             )),
             0x84AD7E70 => Ok(ShrekSuperSlamObject::SpitterKeyframe(
                 self.get_object_from_offset::<SpitterKeyframe>(object.offset)?,
+            )),
+            0xFE392AB6 => Ok(ShrekSuperSlamObject::WeaponType(
+                self.get_object_from_offset::<WeaponType>(object.offset)?,
             )),
             _ => Err(Error::NotImplementedError(object.name.to_string())),
         }

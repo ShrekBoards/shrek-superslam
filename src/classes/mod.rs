@@ -44,12 +44,15 @@
 //! ```
 mod db;
 mod error;
+mod item;
 mod level;
 mod player;
 mod strings;
+mod util;
 
 pub use db::*;
 pub use error::Error;
+pub use item::*;
 pub use level::*;
 pub use player::*;
 pub use strings::*;
@@ -98,11 +101,15 @@ pub enum ShrekSuperSlamObject {
     EventSequence(EventSequence),
     GameWorld(GameWorld),
     GfDb(GfDb),
+    ItemSpawner(ItemSpawner),
     LocalizedString(LocalizedString),
+    PotionType(PotionType),
+    PowerupType(PowerupType),
     ProjectileType(ProjectileType),
     ScriptDb(ScriptDb),
     Spitter(Spitter),
     SpitterKeyframe(SpitterKeyframe),
+    WeaponType(WeaponType),
 }
 
 /// Lookup a hash value and retrieve the name of the class corresponding to the hash

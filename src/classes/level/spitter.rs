@@ -1,4 +1,5 @@
 use crate::classes::{EventSequence, SerialisedShrekSuperSlamGameObject};
+use crate::classes::util;
 use crate::errors::Error;
 use crate::files::Bin;
 
@@ -36,25 +37,11 @@ impl SerialisedShrekSuperSlamGameObject for Spitter {
     /// Prefer calling [`Bin::get_object_from_offset`] rather than calling
     /// this method.
     fn new(bin: &Bin, offset: usize) -> Result<Spitter, Error> {
-        let raw = &bin.raw;
-        let c = bin.console;
-
         // The list of keyframes is at offset +20.
         // The count of keyframes is at offset +24.
-        let keyframe_list_offset = c.read_u32(&raw[offset + 0x20..offset + 0x24])? as usize;
-        let keyframes_count = c.read_u32(&raw[offset + 0x24..offset + 0x28])? as usize;
-        let keyframes: Result<Vec<SpitterKeyframe>, Error> = (0..keyframes_count)
-            .map(|i| {
-                let keyframe_list_entry_offset =
-                    (Bin::header_length() + keyframe_list_offset + (i * 4)) as usize;
-                c.read_u32(&raw[keyframe_list_entry_offset..keyframe_list_entry_offset + 4])
-            })
-            .map(|offset| bin.get_object_from_offset::<SpitterKeyframe>(offset?))
-            .collect();
+        let keyframes = util::construct_array(bin, offset, bin.console, 0x20, 0x24)?;
 
-        Ok(Spitter {
-            keyframes: keyframes?,
-        })
+        Ok(Spitter { keyframes })
     }
 }
 
@@ -90,16 +77,8 @@ impl SerialisedShrekSuperSlamGameObject for SpitterKeyframe {
     /// Prefer calling [`Bin::get_object_from_offset`] rather than calling
     /// this method.
     fn new(bin: &Bin, offset: usize) -> Result<SpitterKeyframe, Error> {
-        let raw = &bin.raw;
-        let c = bin.console;
-
         // The offset to a EventSequence, if any, is at +BC
-        let sequence_event_offset = c.read_u32(&raw[offset + 0xBC..offset + 0xC0])?;
-        let event = if sequence_event_offset != 0 {
-            Some(bin.get_object_from_offset::<EventSequence>(sequence_event_offset)?)
-        } else {
-            None
-        };
+        let event = util::construct_optional_type(bin, offset, bin.console, 0xBC)?;
 
         Ok(SpitterKeyframe { event })
     }

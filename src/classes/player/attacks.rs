@@ -61,6 +61,9 @@ pub struct AttackMoveType {
     /// The projectile type the attack spawns, if any.
     pub projectile: Option<ProjectileType>,
 
+    /// True if the attack breaks shield (block) on contact, false if not.
+    pub shield_breaks: bool,
+
     /// The amount of time the attack stuns for, in seconds.
     pub stun: f32,
 
@@ -165,6 +168,7 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         let unknown_0ec = c.read_f32(&raw[offset + 0xEC..offset + 0xF0])?;
 
         // Read boolean flag fields
+        let shield_breaks = raw[offset + 0x2E] != 0;
         let hits_otg = raw[offset + 0x33] != 0;
         let knocks_down = raw[offset + 0x34] != 0;
         let disabled = raw[offset + 0x35] != 0;
@@ -205,6 +209,7 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             knockback,
             name: bin.get_str_from_offset(name_offset)?,
             projectile,
+            shield_breaks,
             stun,
             hitbox_offsets,
             projectile_offset,
@@ -251,6 +256,7 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
             .splice(offset + 0x04..offset + 0x08, c.write_f32(self.endlag)?);
         bin.raw
             .splice(offset + 0x14..offset + 0x18, c.write_f32(self.fall_speed)?);
+        bin.raw[offset + 0x2E] = self.shield_breaks as u8;
         bin.raw[offset + 0x33] = self.hits_otg as u8;
         bin.raw[offset + 0x34] = self.knocks_down as u8;
         bin.raw[offset + 0x35] = self.disabled as u8;

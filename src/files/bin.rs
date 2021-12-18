@@ -430,6 +430,9 @@ impl Bin {
             0xBFC7788D => Ok(ShrekSuperSlamObject::LocalizedString(
                 self.get_object_from_offset::<LocalizedString>(object.offset)?,
             )),
+            0xADDDF1EC => Ok(ShrekSuperSlamObject::PhysicsFighting(
+                self.get_object_from_offset::<PhysicsFighting>(object.offset)?,
+            )),
             0xF05C7BD3 => Ok(ShrekSuperSlamObject::PotionType(
                 self.get_object_from_offset::<PotionType>(object.offset)?,
             )),

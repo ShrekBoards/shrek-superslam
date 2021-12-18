@@ -103,6 +103,7 @@ pub enum ShrekSuperSlamObject {
     GfDb(GfDb),
     ItemSpawner(ItemSpawner),
     LocalizedString(LocalizedString),
+    PhysicsFighting(PhysicsFighting),
     PotionType(PotionType),
     PowerupType(PowerupType),
     ProjectileType(ProjectileType),

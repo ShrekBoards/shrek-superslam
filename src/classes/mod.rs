@@ -97,6 +97,7 @@ pub trait WriteableShrekSuperSlamGameObject {
 pub enum ShrekSuperSlamObject {
     AttackMoveRegion(AttackMoveRegion),
     AttackMoveType(AttackMoveType),
+    BehaviorFightingControlShrek(BehaviorFightingControlShrek),
     EffectStringReference(EffectStringReference),
     EventSequence(EventSequence),
     GameWorld(GameWorld),

@@ -111,6 +111,7 @@ pub enum ShrekSuperSlamObject {
     PotionType(PotionType),
     PowerupType(PowerupType),
     ProjectileType(ProjectileType),
+    RenderSpawn(RenderSpawn),
     ScriptDb(ScriptDb),
     Spitter(Spitter),
     SpitterKeyframe(SpitterKeyframe),

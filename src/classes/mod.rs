@@ -101,6 +101,7 @@ pub enum ShrekSuperSlamObject {
     AttackMoveType(AttackMoveType),
     BehaviorAiFighting(BehaviorAiFighting),
     BehaviorFightingControlShrek(BehaviorFightingControlShrek),
+    DynamicThrowable(DynamicThrowable),
     EffectStringReference(EffectStringReference),
     Entity(Entity),
     EventSequence(EventSequence),

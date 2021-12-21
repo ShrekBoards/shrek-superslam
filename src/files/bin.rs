@@ -418,6 +418,9 @@ impl Bin {
             0xD306D805 => Ok(ShrekSuperSlamObject::BehaviorFightingControlShrek(
                 self.get_object_from_offset::<BehaviorFightingControlShrek>(object.offset)?,
             )),
+            0xC8E0C03F => Ok(ShrekSuperSlamObject::DynamicThrowable(
+                self.get_object_from_offset::<DynamicThrowable>(object.offset)?,
+            )),
             0xC43D420D => Ok(ShrekSuperSlamObject::EffectStringReference(
                 self.get_object_from_offset::<EffectStringReference>(object.offset)?,
             )),

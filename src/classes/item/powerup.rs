@@ -5,8 +5,7 @@ use crate::files::Bin;
 /// Structure representing the in-game `Game::PowerupType` object type.
 ///
 /// This class represents a single powerup type.
-pub struct PowerupType {
-}
+pub struct PowerupType {}
 
 impl SerialisedShrekSuperSlamGameObject for PowerupType {
     /// Returns the hashcode for the `Game::PowerupType` in-game object.

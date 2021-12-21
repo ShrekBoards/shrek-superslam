@@ -5,8 +5,7 @@ use crate::files::Bin;
 /// Structure representing the in-game `Game::ObjectInitializer` object type.
 ///
 /// This class initialises objects?
-pub struct ObjectInitializer {
-}
+pub struct ObjectInitializer {}
 
 impl SerialisedShrekSuperSlamGameObject for ObjectInitializer {
     /// Returns the hashcode for the `Game::ObjectInitializer` in-game object.

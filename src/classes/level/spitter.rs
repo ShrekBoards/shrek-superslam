@@ -1,5 +1,5 @@
-use crate::classes::{EventSequence, SerialisedShrekSuperSlamGameObject};
 use crate::classes::util;
+use crate::classes::{EventSequence, SerialisedShrekSuperSlamGameObject};
 use crate::errors::Error;
 use crate::files::Bin;
 

@@ -5,8 +5,7 @@ use crate::files::Bin;
 /// Structure representing the in-game `Game::Entity` object type.
 ///
 /// Used as the entry point to all the runtime information about a character.
-pub struct Entity {
-}
+pub struct Entity {}
 
 impl SerialisedShrekSuperSlamGameObject for Entity {
     /// Returns the hashcode for the `Game::Entity` in-game object.

@@ -1,6 +1,6 @@
-use crate::classes::SerialisedShrekSuperSlamGameObject;
 use crate::classes::item::{PotionType, PowerupType, WeaponType};
 use crate::classes::util;
+use crate::classes::SerialisedShrekSuperSlamGameObject;
 use crate::errors::Error;
 use crate::files::Bin;
 

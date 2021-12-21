@@ -5,8 +5,7 @@ use crate::files::Bin;
 /// Structure representing the in-game `Game::PhysicsFighting` object type.
 ///
 /// This object is mostly used to store a character's values at runtime.
-pub struct PhysicsFighting {
-}
+pub struct PhysicsFighting {}
 
 impl SerialisedShrekSuperSlamGameObject for PhysicsFighting {
     /// Returns the hashcode for the `Game::PhysicsFighting` in-game object.

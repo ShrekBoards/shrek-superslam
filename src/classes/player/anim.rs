@@ -5,8 +5,7 @@ use crate::files::Bin;
 /// Structure representing the in-game `anim::LookAtData` object type.
 ///
 /// Represents some kind of animation detail.
-pub struct LookAtData {
-}
+pub struct LookAtData {}
 
 impl SerialisedShrekSuperSlamGameObject for LookAtData {
     /// Returns the hashcode for the `anim::LookAtData` in-game object.

@@ -5,8 +5,7 @@ use crate::files::Bin;
 /// Structure representing the in-game `Game::WeaponType` object type.
 ///
 /// This class represents a single weapon type.
-pub struct WeaponType {
-}
+pub struct WeaponType {}
 
 impl SerialisedShrekSuperSlamGameObject for WeaponType {
     /// Returns the hashcode for the `Game::WeaponType` in-game object.

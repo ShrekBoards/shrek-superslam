@@ -94,7 +94,9 @@ impl SerialisedShrekSuperSlamGameObject for ScriptDb {
         // re-use the code for that.
         let db = GfDb::new(bin, offset)?;
 
-        Ok(ScriptDb { entries: db.entries })
+        Ok(ScriptDb {
+            entries: db.entries,
+        })
     }
 }
 

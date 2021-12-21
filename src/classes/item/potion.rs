@@ -5,8 +5,7 @@ use crate::files::Bin;
 /// Structure representing the in-game `Game::PotionType` object type.
 ///
 /// This class represents a single potion type.
-pub struct PotionType {
-}
+pub struct PotionType {}
 
 impl SerialisedShrekSuperSlamGameObject for PotionType {
     /// Returns the hashcode for the `Game::PotionType` in-game object.

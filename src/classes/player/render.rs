@@ -6,8 +6,7 @@ use crate::files::Bin;
 ///
 /// Holds some details about the player character during runtime, maybe
 /// animation-related?
-pub struct RenderSpawn {
-}
+pub struct RenderSpawn {}
 
 impl SerialisedShrekSuperSlamGameObject for RenderSpawn {
     /// Returns the hashcode for the `Game::RenderSpawn` in-game object.

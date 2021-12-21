@@ -412,6 +412,9 @@ impl Bin {
             0xEBF07BB5 => Ok(ShrekSuperSlamObject::AttackMoveType(
                 self.get_object_from_offset::<AttackMoveType>(object.offset)?,
             )),
+            0xE2AD9980 => Ok(ShrekSuperSlamObject::BehaviorAiFighting(
+                self.get_object_from_offset::<BehaviorAiFighting>(object.offset)?,
+            )),
             0xD306D805 => Ok(ShrekSuperSlamObject::BehaviorFightingControlShrek(
                 self.get_object_from_offset::<BehaviorFightingControlShrek>(object.offset)?,
             )),

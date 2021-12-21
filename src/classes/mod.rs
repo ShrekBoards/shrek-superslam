@@ -102,6 +102,7 @@ pub enum ShrekSuperSlamObject {
     BehaviorAiFighting(BehaviorAiFighting),
     BehaviorFightingControlShrek(BehaviorFightingControlShrek),
     EffectStringReference(EffectStringReference),
+    Entity(Entity),
     EventSequence(EventSequence),
     GameWorld(GameWorld),
     GfDb(GfDb),

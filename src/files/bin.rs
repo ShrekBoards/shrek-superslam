@@ -421,6 +421,9 @@ impl Bin {
             0xC43D420D => Ok(ShrekSuperSlamObject::EffectStringReference(
                 self.get_object_from_offset::<EffectStringReference>(object.offset)?,
             )),
+            0xDDEC024E => Ok(ShrekSuperSlamObject::Entity(
+                self.get_object_from_offset::<Entity>(object.offset)?,
+            )),
             0xD24634FE => Ok(ShrekSuperSlamObject::EventSequence(
                 self.get_object_from_offset::<EventSequence>(object.offset)?,
             )),

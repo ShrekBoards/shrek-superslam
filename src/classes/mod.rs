@@ -46,6 +46,7 @@ mod db;
 mod error;
 mod item;
 mod level;
+mod object_initializer;
 mod player;
 mod strings;
 mod util;
@@ -54,6 +55,7 @@ pub use db::*;
 pub use error::Error;
 pub use item::*;
 pub use level::*;
+pub use object_initializer::*;
 pub use player::*;
 pub use strings::*;
 
@@ -104,6 +106,7 @@ pub enum ShrekSuperSlamObject {
     GfDb(GfDb),
     ItemSpawner(ItemSpawner),
     LocalizedString(LocalizedString),
+    ObjectInitializer(ObjectInitializer),
     PhysicsFighting(PhysicsFighting),
     PotionType(PotionType),
     PowerupType(PowerupType),

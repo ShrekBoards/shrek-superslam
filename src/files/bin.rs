@@ -433,6 +433,9 @@ impl Bin {
             0xBFC7788D => Ok(ShrekSuperSlamObject::LocalizedString(
                 self.get_object_from_offset::<LocalizedString>(object.offset)?,
             )),
+            0xDBFB4A35 => Ok(ShrekSuperSlamObject::ObjectInitializer(
+                self.get_object_from_offset::<ObjectInitializer>(object.offset)?,
+            )),
             0xADDDF1EC => Ok(ShrekSuperSlamObject::PhysicsFighting(
                 self.get_object_from_offset::<PhysicsFighting>(object.offset)?,
             )),

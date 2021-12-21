@@ -370,7 +370,7 @@ impl Bin {
     /// ```no_run
     /// # use std::path::Path;
     /// # use shrek_superslam::{Console, MasterDat, MasterDir};
-    /// # use shrek_superslam::classes::ShrekSuperSlamObject::AttackMoveType;
+    /// # use shrek_superslam::classes::ShrekSuperSlamObject;
     /// # use shrek_superslam::files::Bin;
     /// #
     /// # let master_dir = MasterDir::from_file(Path::new("MASTER.DIR"), Console::PC).unwrap();
@@ -380,7 +380,7 @@ impl Bin {
     /// // Get the 'Fast1Atk' object from a player .db.bin, and print the attack damage.
     /// let parsed = bin.parse().unwrap();
     /// if let Some(obj) = parsed.get("Fast1Atk") {
-    ///     if let AttackMoveType(fast_1_atk) = obj {
+    ///     if let ShrekSuperSlamObject::AttackMoveType(fast_1_atk) = obj {
     ///         println!("Fast1Atk damage: {}", fast_1_atk.damage1);
     ///     }
     /// }

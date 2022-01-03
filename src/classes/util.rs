@@ -23,9 +23,9 @@ where
     )? as usize;
     let constructed_list: Result<Vec<T>, Error> = (0..list_count)
         .map(|i| {
-            let keyframe_list_entry_offset =
+            let list_entry_offset =
                 (Bin::header_length() + list_offset + (i * 4)) as usize;
-            console.read_u32(&bin.raw[keyframe_list_entry_offset..keyframe_list_entry_offset + 4])
+            console.read_u32(&bin.raw[list_entry_offset..list_entry_offset + 4])
         })
         .map(|offset| bin.get_object_from_offset::<T>(offset?))
         .collect();

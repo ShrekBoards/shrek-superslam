@@ -5,7 +5,10 @@ use crate::files::Bin;
 /// Structure representing the in-game `Game::PotionType` object type.
 ///
 /// This class represents a single potion type.
-pub struct PotionType {}
+pub struct PotionType {
+    /// The raw bytes of the object.
+    _bytes: Vec<u8>,
+}
 
 impl SerialisedShrekSuperSlamGameObject for PotionType {
     /// Returns the hashcode for the `Game::PotionType` in-game object.
@@ -30,7 +33,9 @@ impl SerialisedShrekSuperSlamGameObject for PotionType {
     ///
     /// Prefer calling [`Bin::get_object_from_offset`] rather than calling
     /// this method.
-    fn new(_bin: &Bin, _offset: usize) -> Result<PotionType, Error> {
-        Ok(PotionType {})
+    fn new(bin: &Bin, offset: usize) -> Result<PotionType, Error> {
+        Ok(PotionType {
+            _bytes: bin.raw[offset..(offset + Self::size())].to_vec(),
+        })
     }
 }

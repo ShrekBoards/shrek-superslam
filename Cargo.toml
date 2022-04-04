@@ -11,26 +11,16 @@ license = "ISC"
 byteorder = "1.3.2"
 encoding = "0.2.33"
 itertools = "0.10.0"
-serde = { version = "1.0.115", features = ["derive"] }
 
 [dev-dependencies]
 crossbeam = "0.6.0"
 getopts = "0.2.21"
 num_cpus = "1.13.0"
-serde_json = "1.0.57"
 walkdir = "2"
-
-[[example]]
-name = "shreksuperslam-classes"
-path = "src/examples/classes/main.rs"
 
 [[example]]
 name = "shreksuperslam-extract"
 path = "src/examples/extract/main.rs"
-
-[[example]]
-name = "shreksuperslam-modify-attacks"
-path = "src/examples/modify_attacks/main.rs"
 
 [[example]]
 name = "shreksuperslam-repackage"

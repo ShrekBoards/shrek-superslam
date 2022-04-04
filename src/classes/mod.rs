@@ -84,14 +84,6 @@ pub trait SerialisedShrekSuperSlamGameObject: Sized {
     fn new(bin: &Bin, offset: usize) -> Result<Self, errors::Error>;
 }
 
-/// Trait for structures representing Shrek SuperSlam game objects that can be
-/// written back to a .bin file to overwrite the original.
-pub trait WriteableShrekSuperSlamGameObject {
-    /// Overwrites the game object at the given `offset` within the given `Bin`
-    /// file.
-    fn write(&self, bin: &mut Bin, offset: usize) -> Result<(), errors::Error>;
-}
-
 /// Enumeration of the different class types.
 ///
 /// This allows parsing a .db.bin file to a collection of the types contained

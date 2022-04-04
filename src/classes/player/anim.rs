@@ -5,7 +5,10 @@ use crate::files::Bin;
 /// Structure representing the in-game `anim::LookAtData` object type.
 ///
 /// Represents some kind of animation detail.
-pub struct LookAtData {}
+pub struct LookAtData {
+    /// The raw bytes of the object.
+    _bytes: Vec<u8>,
+}
 
 impl SerialisedShrekSuperSlamGameObject for LookAtData {
     /// Returns the hashcode for the `anim::LookAtData` in-game object.
@@ -30,7 +33,9 @@ impl SerialisedShrekSuperSlamGameObject for LookAtData {
     ///
     /// Prefer calling [`Bin::get_object_from_offset`] rather than calling
     /// this method.
-    fn new(_bin: &Bin, _offset: usize) -> Result<LookAtData, Error> {
-        Ok(LookAtData {})
+    fn new(bin: &Bin, offset: usize) -> Result<LookAtData, Error> {
+        Ok(LookAtData {
+            _bytes: bin.raw[offset..(offset + Self::size())].to_vec(),
+        })
     }
 }

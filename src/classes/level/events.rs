@@ -1,5 +1,3 @@
-use serde::{Deserialize, Serialize};
-
 use crate::classes::SerialisedShrekSuperSlamGameObject;
 use crate::errors::Error;
 use crate::files::Bin;
@@ -7,10 +5,12 @@ use crate::files::Bin;
 /// Structure representing the in-game `Game::EventSequence` object type.
 ///
 /// This contains a series of events to be executed in a sequence.
-#[derive(Deserialize, Serialize)]
 pub struct EventSequence {
     /// The offsets to the events in the sequence.
     pub event_offsets: Vec<u32>,
+
+    /// The raw bytes of the object.
+    _bytes: Vec<u8>,
 }
 
 impl SerialisedShrekSuperSlamGameObject for EventSequence {
@@ -37,11 +37,11 @@ impl SerialisedShrekSuperSlamGameObject for EventSequence {
     /// Prefer calling [`Bin::get_object_from_offset`] rather than calling
     /// this method.
     fn new(bin: &Bin, offset: usize) -> Result<EventSequence, Error> {
-        let raw = &bin.raw;
         let c = bin.console;
+        let bytes = bin.raw[offset..(offset + Self::size())].to_vec();
 
         // Read numeric fields
-        let event_count = c.read_u32(&raw[offset + 0x08..offset + 0x0C])? as usize;
+        let event_count = c.read_u32(&bytes[0x08..0x0C])? as usize;
 
         // Read the offset to the events array, then read each offset in the
         // events array.
@@ -50,15 +50,18 @@ impl SerialisedShrekSuperSlamGameObject for EventSequence {
         //       for these, and so it could be one of many different event types.
         //       Does the current type system for extracting objects from .bin
         //       files handle this? If not, how can it?
-        let events_array_offset = c.read_u32(&raw[offset + 0x04..offset + 0x08])? as usize;
+        let events_array_offset = c.read_u32(&bytes[0x04..0x08])? as usize;
         let event_offsets: Result<Vec<u32>, Error> = (0..event_count)
             .map(|i| {
                 let event_offset_offset = events_array_offset + Bin::header_length() + (i * 4);
-                c.read_u32(&raw[event_offset_offset..event_offset_offset + 4])
+                c.read_u32(&bin.raw[event_offset_offset..event_offset_offset + 4])
             })
             .collect();
         let event_offsets = event_offsets?;
 
-        Ok(EventSequence { event_offsets })
+        Ok(EventSequence {
+            event_offsets,
+            _bytes: bytes
+        })
     }
 }

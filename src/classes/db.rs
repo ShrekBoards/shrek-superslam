@@ -10,6 +10,9 @@ use crate::Console;
 pub struct GfDb {
     /// Objects within the DB
     pub entries: Vec<(String, BinObject)>,
+
+    /// The raw bytes of the object.
+    _bytes: Vec<u8>,
 }
 
 impl SerialisedShrekSuperSlamGameObject for GfDb {
@@ -53,7 +56,10 @@ impl SerialisedShrekSuperSlamGameObject for GfDb {
             .map(|entry_bytes| create_object_entry(entry_bytes, bin, c))
             .collect();
 
-        Ok(GfDb { entries: objects? })
+        Ok(GfDb {
+            entries: objects?,
+            _bytes: bin.raw[offset..(offset + Self::size())].to_vec(),
+        })
     }
 }
 
@@ -64,6 +70,9 @@ impl SerialisedShrekSuperSlamGameObject for GfDb {
 pub struct ScriptDb {
     /// Objects within the DB
     pub entries: Vec<(String, BinObject)>,
+
+    /// The raw bytes of the object.
+    _bytes: Vec<u8>,
 }
 
 impl SerialisedShrekSuperSlamGameObject for ScriptDb {
@@ -96,6 +105,7 @@ impl SerialisedShrekSuperSlamGameObject for ScriptDb {
 
         Ok(ScriptDb {
             entries: db.entries,
+            _bytes: bin.raw[offset..(offset + Self::size())].to_vec(),
         })
     }
 }

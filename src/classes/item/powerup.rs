@@ -5,7 +5,10 @@ use crate::files::Bin;
 /// Structure representing the in-game `Game::PowerupType` object type.
 ///
 /// This class represents a single powerup type.
-pub struct PowerupType {}
+pub struct PowerupType {
+    /// The raw bytes of the object.
+    _bytes: Vec<u8>,
+}
 
 impl SerialisedShrekSuperSlamGameObject for PowerupType {
     /// Returns the hashcode for the `Game::PowerupType` in-game object.
@@ -30,7 +33,9 @@ impl SerialisedShrekSuperSlamGameObject for PowerupType {
     ///
     /// Prefer calling [`Bin::get_object_from_offset`] rather than calling
     /// this method.
-    fn new(_bin: &Bin, _offset: usize) -> Result<PowerupType, Error> {
-        Ok(PowerupType {})
+    fn new(bin: &Bin, offset: usize) -> Result<PowerupType, Error> {
+        Ok(PowerupType {
+            _bytes: bin.raw[offset..(offset + Self::size())].to_vec(),
+        })
     }
 }

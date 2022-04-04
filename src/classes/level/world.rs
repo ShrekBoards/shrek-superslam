@@ -20,6 +20,9 @@ pub struct GameWorld {
     _unknown_float_2_x: f32,
     _unknown_float_2_y: f32,
     _unknown_float_2_z: f32,
+
+    /// The raw bytes of the object.
+    _bytes: Vec<u8>,
 }
 
 impl SerialisedShrekSuperSlamGameObject for GameWorld {
@@ -46,20 +49,20 @@ impl SerialisedShrekSuperSlamGameObject for GameWorld {
     /// Prefer calling [`Bin::get_object_from_offset`] rather than calling
     /// this method.
     fn new(bin: &Bin, offset: usize) -> Result<GameWorld, Error> {
-        let raw = &bin.raw;
         let c = bin.console;
+        let bytes = bin.raw[offset..(offset + Self::size())].to_vec();
 
         // Playable flag is at +14
-        let playable = c.read_u32(&raw[offset + 0x14..offset + 0x18])?;
+        let playable = c.read_u32(&bytes[0x14..0x18])?;
 
         // Weird floats set one begin at +30
-        let unknown_float_1_x = c.read_f32(&raw[offset + 0x30..offset + 0x34])?;
-        let unknown_float_1_y = c.read_f32(&raw[offset + 0x34..offset + 0x38])?;
-        let unknown_float_1_z = c.read_f32(&raw[offset + 0x38..offset + 0x3C])?;
+        let unknown_float_1_x = c.read_f32(&bytes[0x30..0x34])?;
+        let unknown_float_1_y = c.read_f32(&bytes[0x34..0x38])?;
+        let unknown_float_1_z = c.read_f32(&bytes[0x38..0x3C])?;
 
-        let unknown_float_2_x = c.read_f32(&raw[offset + 0x40..offset + 0x44])?;
-        let unknown_float_2_y = c.read_f32(&raw[offset + 0x44..offset + 0x48])?;
-        let unknown_float_2_z = c.read_f32(&raw[offset + 0x48..offset + 0x4C])?;
+        let unknown_float_2_x = c.read_f32(&bytes[0x40..0x44])?;
+        let unknown_float_2_y = c.read_f32(&bytes[0x44..0x48])?;
+        let unknown_float_2_z = c.read_f32(&bytes[0x48..0x4C])?;
 
         Ok(GameWorld {
             _playable: playable,
@@ -69,6 +72,7 @@ impl SerialisedShrekSuperSlamGameObject for GameWorld {
             _unknown_float_2_x: unknown_float_2_x,
             _unknown_float_2_y: unknown_float_2_y,
             _unknown_float_2_z: unknown_float_2_z,
+            _bytes: bytes,
         })
     }
 }

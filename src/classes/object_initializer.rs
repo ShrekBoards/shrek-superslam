@@ -5,7 +5,10 @@ use crate::files::Bin;
 /// Structure representing the in-game `Game::ObjectInitializer` object type.
 ///
 /// This class initialises objects?
-pub struct ObjectInitializer {}
+pub struct ObjectInitializer {
+    /// The raw bytes of the object.
+    _bytes: Vec<u8>,
+}
 
 impl SerialisedShrekSuperSlamGameObject for ObjectInitializer {
     /// Returns the hashcode for the `Game::ObjectInitializer` in-game object.
@@ -30,7 +33,9 @@ impl SerialisedShrekSuperSlamGameObject for ObjectInitializer {
     ///
     /// Prefer calling [`Bin::get_object_from_offset`] rather than calling
     /// this method.
-    fn new(_bin: &Bin, _offset: usize) -> Result<ObjectInitializer, Error> {
-        Ok(ObjectInitializer {})
+    fn new(bin: &Bin, offset: usize) -> Result<ObjectInitializer, Error> {
+        Ok(ObjectInitializer {
+            _bytes: bin.raw[offset..(offset + Self::size())].to_vec(),
+        })
     }
 }

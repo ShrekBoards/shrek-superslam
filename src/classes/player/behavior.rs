@@ -5,7 +5,10 @@ use crate::files::Bin;
 /// Structure representing the in-game `Game::BehaviorFightingControlShrek` object type.
 ///
 /// This object controls some kind of fighting behaviour, likely at runtime.
-pub struct BehaviorFightingControlShrek {}
+pub struct BehaviorFightingControlShrek {
+    /// The raw bytes of the object.
+    _bytes: Vec<u8>,
+}
 
 impl SerialisedShrekSuperSlamGameObject for BehaviorFightingControlShrek {
     /// Returns the hashcode for the `Game::BehaviorFightingControlShrek` in-game object.
@@ -30,8 +33,10 @@ impl SerialisedShrekSuperSlamGameObject for BehaviorFightingControlShrek {
     ///
     /// Prefer calling [`Bin::get_object_from_offset`] rather than calling
     /// this method.
-    fn new(_bin: &Bin, _offset: usize) -> Result<BehaviorFightingControlShrek, Error> {
-        Ok(BehaviorFightingControlShrek {})
+    fn new(bin: &Bin, offset: usize) -> Result<BehaviorFightingControlShrek, Error> {
+        Ok(BehaviorFightingControlShrek {
+            _bytes: bin.raw[offset..(offset + Self::size())].to_vec(),
+        })
     }
 }
 
@@ -39,7 +44,10 @@ impl SerialisedShrekSuperSlamGameObject for BehaviorFightingControlShrek {
 ///
 /// This object controls some kind of fighting behaviour, likely at runtime,
 /// and likely for AI rather than player characters.
-pub struct BehaviorAiFighting {}
+pub struct BehaviorAiFighting {
+    /// The raw bytes of the object.
+    _bytes: Vec<u8>,
+}
 
 impl SerialisedShrekSuperSlamGameObject for BehaviorAiFighting {
     /// Returns the hashcode for the `Game::BehaviorAIFighting` in-game object.
@@ -64,7 +72,9 @@ impl SerialisedShrekSuperSlamGameObject for BehaviorAiFighting {
     ///
     /// Prefer calling [`Bin::get_object_from_offset`] rather than calling
     /// this method.
-    fn new(_bin: &Bin, _offset: usize) -> Result<BehaviorAiFighting, Error> {
-        Ok(BehaviorAiFighting {})
+    fn new(bin: &Bin, offset: usize) -> Result<BehaviorAiFighting, Error> {
+        Ok(BehaviorAiFighting {
+            _bytes: bin.raw[offset..(offset + Self::size())].to_vec(),
+        })
     }
 }

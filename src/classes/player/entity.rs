@@ -18,6 +18,9 @@ pub struct Entity {
 
     /// The player render.
     pub render: RenderSpawn,
+
+    /// The raw bytes of the object.
+    _bytes: Vec<u8>,
 }
 
 impl SerialisedShrekSuperSlamGameObject for Entity {
@@ -63,6 +66,7 @@ impl SerialisedShrekSuperSlamGameObject for Entity {
             name: bin.get_str_from_offset(name_offset)?,
             physics: bin.get_object_from_offset(physics_offset)?,
             render: bin.get_object_from_offset(render_offset)?,
+            _bytes: bin.raw[offset..(offset + Self::size())].to_vec(),
         })
     }
 }

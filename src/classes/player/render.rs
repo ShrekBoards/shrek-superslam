@@ -6,7 +6,10 @@ use crate::files::Bin;
 ///
 /// Holds some details about the player character during runtime, maybe
 /// animation-related?
-pub struct RenderSpawn {}
+pub struct RenderSpawn {
+    /// The raw bytes of the object.
+    _bytes: Vec<u8>,
+}
 
 impl SerialisedShrekSuperSlamGameObject for RenderSpawn {
     /// Returns the hashcode for the `Game::RenderSpawn` in-game object.
@@ -31,7 +34,9 @@ impl SerialisedShrekSuperSlamGameObject for RenderSpawn {
     ///
     /// Prefer calling [`Bin::get_object_from_offset`] rather than calling
     /// this method.
-    fn new(_bin: &Bin, _offset: usize) -> Result<RenderSpawn, Error> {
-        Ok(RenderSpawn {})
+    fn new(bin: &Bin, offset: usize) -> Result<RenderSpawn, Error> {
+        Ok(RenderSpawn {
+            _bytes: bin.raw[offset..(offset + Self::size())].to_vec(),
+        })
     }
 }

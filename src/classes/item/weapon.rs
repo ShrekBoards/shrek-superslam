@@ -5,7 +5,10 @@ use crate::files::Bin;
 /// Structure representing the in-game `Game::WeaponType` object type.
 ///
 /// This class represents a single weapon type.
-pub struct WeaponType {}
+pub struct WeaponType {
+    /// The raw bytes of the object.
+    _bytes: Vec<u8>,
+}
 
 impl SerialisedShrekSuperSlamGameObject for WeaponType {
     /// Returns the hashcode for the `Game::WeaponType` in-game object.
@@ -30,7 +33,9 @@ impl SerialisedShrekSuperSlamGameObject for WeaponType {
     ///
     /// Prefer calling [`Bin::get_object_from_offset`] rather than calling
     /// this method.
-    fn new(_bin: &Bin, _offset: usize) -> Result<WeaponType, Error> {
-        Ok(WeaponType {})
+    fn new(bin: &Bin, offset: usize) -> Result<WeaponType, Error> {
+        Ok(WeaponType {
+            _bytes: bin.raw[offset..(offset + Self::size())].to_vec(),
+        })
     }
 }

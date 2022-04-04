@@ -11,6 +11,9 @@ pub struct LocalizedString {
 
     /// Unknown value that resides at +04, seems to be 0 if the string is empty
     unknown: u32,
+
+    /// The raw bytes of the object.
+    _bytes: Vec<u8>,
 }
 
 impl SerialisedShrekSuperSlamGameObject for LocalizedString {
@@ -42,15 +45,14 @@ impl SerialisedShrekSuperSlamGameObject for LocalizedString {
     /// - `bin`: The .bin containing the object
     /// - `offset`: The offset the object begins at within the .bin file
     fn new(bin: &Bin, offset: usize) -> Result<LocalizedString, Error> {
-        let x = bin
-            .console
-            .read_u32(&bin.raw[offset + 0x04..offset + 0x08])?;
-        let str_offset = bin
-            .console
-            .read_u32(&bin.raw[offset + 0x08..offset + 0x0C])?;
+        let c = bin.console;
+        let bytes = bin.raw[offset..(offset + Self::size())].to_vec();
+        let x = c.read_u32(&bytes[0x04..0x08])?;
+        let str_offset = c.read_u32(&bytes[0x08..0x0C])?;
         Ok(LocalizedString {
             string: bin.get_str_from_offset(str_offset)?,
             unknown: x,
+            _bytes: bytes,
         })
     }
 }
@@ -103,9 +105,9 @@ impl SerialisedShrekSuperSlamGameObject for EffectStringReference {
     /// - `bin`: The .bin containing the object
     /// - `offset`: The offset the object begins at within the .bin file
     fn new(bin: &Bin, offset: usize) -> Result<EffectStringReference, Error> {
-        let str_offset = bin
-            .console
-            .read_u32(&bin.raw[offset + 0x04..offset + 0x08])?;
+        let c = bin.console;
+        let bytes = bin.raw[offset..(offset + Self::size())].to_vec();
+        let str_offset = c.read_u32(&bytes[0x04..0x08])?;
         Ok(EffectStringReference {
             string: bin.get_str_from_offset(str_offset)?,
         })

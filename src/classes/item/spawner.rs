@@ -16,6 +16,9 @@ pub struct ItemSpawner {
 
     /// The list of powerups spawned by the item spawner.
     pub powerups: Vec<PowerupType>,
+
+    /// The raw bytes of the object.
+    _bytes: Vec<u8>,
 }
 
 impl SerialisedShrekSuperSlamGameObject for ItemSpawner {
@@ -58,6 +61,7 @@ impl SerialisedShrekSuperSlamGameObject for ItemSpawner {
             weapons,
             potions,
             powerups,
+            _bytes: bin.raw[offset..(offset + Self::size())].to_vec(),
         })
     }
 }

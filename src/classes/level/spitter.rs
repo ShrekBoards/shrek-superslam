@@ -11,6 +11,9 @@ use crate::files::Bin;
 pub struct Spitter {
     /// The keyframes of the spitter.
     pub keyframes: Vec<SpitterKeyframe>,
+
+    /// The raw bytes of the object.
+    _bytes: Vec<u8>,
 }
 
 impl SerialisedShrekSuperSlamGameObject for Spitter {
@@ -41,7 +44,10 @@ impl SerialisedShrekSuperSlamGameObject for Spitter {
         // The count of keyframes is at offset +24.
         let keyframes = util::construct_array(bin, offset, bin.console, 0x20, 0x24)?;
 
-        Ok(Spitter { keyframes })
+        Ok(Spitter {
+            keyframes,
+            _bytes: bin.raw[offset..(offset + Self::size())].to_vec(),
+        })
     }
 }
 
@@ -51,6 +57,9 @@ impl SerialisedShrekSuperSlamGameObject for Spitter {
 pub struct SpitterKeyframe {
     /// The event to run on the keyframe, if any.
     pub event: Option<EventSequence>,
+
+    /// The raw bytes of the object.
+    _bytes: Vec<u8>,
 }
 
 impl SerialisedShrekSuperSlamGameObject for SpitterKeyframe {
@@ -80,6 +89,9 @@ impl SerialisedShrekSuperSlamGameObject for SpitterKeyframe {
         // The offset to a EventSequence, if any, is at +BC
         let event = util::construct_optional_type(bin, offset, bin.console, 0xBC)?;
 
-        Ok(SpitterKeyframe { event })
+        Ok(SpitterKeyframe {
+            event,
+            _bytes: bin.raw[offset..(offset + Self::size())].to_vec(),            
+        })
     }
 }

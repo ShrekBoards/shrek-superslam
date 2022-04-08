@@ -59,6 +59,7 @@ pub use object_initializer::*;
 pub use player::*;
 pub use strings::*;
 
+use crate::console::Console;
 use crate::errors;
 use crate::files::Bin;
 
@@ -82,6 +83,14 @@ pub trait SerialisedShrekSuperSlamGameObject: Sized {
     /// Do not call directly, instead use [`Bin::get_object_from_offset`] to
     /// get objects from a .bin file.
     fn new(bin: &Bin, offset: usize) -> Result<Self, errors::Error>;
+}
+
+/// Trait for converting structures representing serialised Shrek SuperSlam
+/// game objects back to their byte representation that the game can read.
+pub trait WriteableShrekSuperSlamGameObject {
+    /// Return a byte representation of the object that can be written to a
+    /// .db.bin file at the given `offset`.
+    fn to_bytes(&self, offset: usize, console: Console) -> Result<Vec<u8>, errors::Error>;
 }
 
 /// Enumeration of the different class types.

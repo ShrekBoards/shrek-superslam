@@ -1,4 +1,8 @@
-use crate::classes::SerialisedShrekSuperSlamGameObject;
+use encoding::all::ISO_8859_1;
+use encoding::{Encoding, EncoderTrap};
+
+use crate::console::Console;
+use crate::classes::{SerialisedShrekSuperSlamGameObject, WriteableShrekSuperSlamGameObject};
 use crate::errors::Error;
 use crate::files::Bin;
 
@@ -13,7 +17,7 @@ pub struct LocalizedString {
     unknown: u32,
 
     /// The raw bytes of the object.
-    _bytes: Vec<u8>,
+    bytes: Vec<u8>,
 }
 
 impl SerialisedShrekSuperSlamGameObject for LocalizedString {
@@ -52,8 +56,29 @@ impl SerialisedShrekSuperSlamGameObject for LocalizedString {
         Ok(LocalizedString {
             string: bin.get_str_from_offset(str_offset)?,
             unknown: x,
-            _bytes: bytes,
+            bytes: bytes,
         })
+    }
+}
+
+impl WriteableShrekSuperSlamGameObject for LocalizedString {
+    /// Get the byte representation of the gf::LocalizedString object.
+    fn to_bytes(&self, offset: usize, console: Console) -> Result<Vec<u8>, Error> {
+        let mut bytes = Vec::new();
+
+        // Steal values +00 through to +08 from the original.
+        bytes.extend(&self.bytes[0x00..0x08]);
+
+        // The offset to the string is at +0C.
+        // We will place the contents of the string immediately after the
+        // object content, so the offset to the string is the given offset plus
+        // the size of the object.
+        bytes.extend(console.write_u32((offset + 0x0C) as u32)?);
+
+        // Write the string immediately after, encoded as ISO 8859-1.
+        bytes.extend(ISO_8859_1.encode(&self.string, EncoderTrap::Strict)?);
+
+        Ok(bytes)
     }
 }
 
@@ -72,8 +97,11 @@ impl LocalizedString {
 ///
 /// This type is a thin wrapper around a string that names an effect.
 pub struct EffectStringReference {
-    /// The contents of the string
+    /// The contents of the string.
     pub string: String,
+
+    /// The raw bytes of the object.
+    bytes: Vec<u8>,
 }
 
 impl SerialisedShrekSuperSlamGameObject for EffectStringReference {
@@ -110,6 +138,28 @@ impl SerialisedShrekSuperSlamGameObject for EffectStringReference {
         let str_offset = c.read_u32(&bytes[0x04..0x08])?;
         Ok(EffectStringReference {
             string: bin.get_str_from_offset(str_offset)?,
+            bytes,
         })
+    }
+}
+
+impl WriteableShrekSuperSlamGameObject for EffectStringReference {
+    /// Get the byte representation of the Game::EffectStringReference object.
+    fn to_bytes(&self, offset: usize, console: Console) -> Result<Vec<u8>, Error> {
+        let mut bytes = Vec::new();
+
+        // Steal values +00 through to +08 from the original.
+        bytes.extend(&self.bytes[0x00..0x08]);
+
+        // The offset to the string is at +0C.
+        // We will place the contents of the string immediately after the
+        // object content, so the offset to the string is the given offset plus
+        // the size of the object.
+        bytes.extend(console.write_u32((offset + 0x0C) as u32)?);
+
+        // Write the string immediately after, encoded as ISO 8859-1.
+        bytes.extend(ISO_8859_1.encode(&self.string, EncoderTrap::Strict)?);
+
+        Ok(bytes)
     }
 }

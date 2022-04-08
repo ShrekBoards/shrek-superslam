@@ -368,6 +368,9 @@ impl Bin {
             0xCD47AA2B => Ok(ShrekSuperSlamObject::ItemSpawner(
                 self.get_object_from_offset::<ItemSpawner>(object.offset)?,
             )),
+            0xF32EBBA9 => Ok(ShrekSuperSlamObject::LoadingScreen(
+                self.get_object_from_offset::<LoadingScreen>(object.offset)?,
+            )),
             0xBFC7788D => Ok(ShrekSuperSlamObject::LocalizedString(
                 self.get_object_from_offset::<LocalizedString>(object.offset)?,
             )),
@@ -400,9 +403,6 @@ impl Bin {
             )),
             0x84AD7E70 => Ok(ShrekSuperSlamObject::SpitterKeyframe(
                 self.get_object_from_offset::<SpitterKeyframe>(object.offset)?,
-            )),
-            0xF32EBBA9 => Ok(ShrekSuperSlamObject::LoadingScreen(
-                self.get_object_from_offset::<LoadingScreen>(object.offset)?,
             )),
             0xFE392AB6 => Ok(ShrekSuperSlamObject::WeaponType(
                 self.get_object_from_offset::<WeaponType>(object.offset)?,

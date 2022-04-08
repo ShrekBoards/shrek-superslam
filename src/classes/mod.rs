@@ -45,6 +45,7 @@
 mod db;
 mod error;
 mod item;
+mod loadingscreen;
 mod level;
 mod object_initializer;
 mod player;
@@ -55,6 +56,7 @@ pub use db::*;
 pub use error::Error;
 pub use item::*;
 pub use level::*;
+pub use loadingscreen::*;
 pub use object_initializer::*;
 pub use player::*;
 pub use strings::*;
@@ -109,6 +111,7 @@ pub enum ShrekSuperSlamObject {
     GameWorld(GameWorld),
     GfDb(GfDb),
     ItemSpawner(ItemSpawner),
+    LoadingScreen(LoadingScreen),
     LocalizedString(LocalizedString),
     LookAtData(LookAtData),
     ObjectInitializer(ObjectInitializer),

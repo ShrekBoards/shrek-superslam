@@ -67,7 +67,7 @@ use crate::files::Bin;
 
 /// Trait for structures representing serialised Shrek SuperSlam game objects
 /// that appear in the game's .bin files
-pub trait SerialisedShrekSuperSlamGameObject: Sized {
+pub(crate) trait SerialisedShrekSuperSlamGameObject: Sized {
     /// Returns the hash value identifying the class.
     fn hash() -> u32;
 
@@ -89,7 +89,7 @@ pub trait SerialisedShrekSuperSlamGameObject: Sized {
 
 /// Trait for converting structures representing serialised Shrek SuperSlam
 /// game objects back to their byte representation that the game can read.
-pub trait WriteableShrekSuperSlamGameObject {
+pub(crate) trait WriteableShrekSuperSlamGameObject {
     /// Return a byte representation of the object that can be written to a
     /// .db.bin file at the given `offset`.
     fn to_bytes(&self, offset: usize, console: Console) -> Result<Vec<u8>, errors::Error>;

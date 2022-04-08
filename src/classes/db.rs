@@ -1,4 +1,6 @@
-use crate::classes::SerialisedShrekSuperSlamGameObject;
+use std::collections::HashMap;
+
+use crate::classes::{SerialisedShrekSuperSlamGameObject, ShrekSuperSlamObject};
 use crate::errors::Error;
 use crate::files::{Bin, BinObject};
 use crate::Console;
@@ -9,7 +11,10 @@ use crate::Console;
 /// of the file.
 pub struct GfDb {
     /// Objects within the DB
-    pub entries: Vec<(String, BinObject)>,
+    pub objects: HashMap<String, ShrekSuperSlamObject>,
+
+    /// Closer representation of the DB and how it was originally ordered.
+    entries: Vec<(String, BinObject)>,
 
     /// The raw bytes of the object.
     _bytes: Vec<u8>,
@@ -45,19 +50,27 @@ impl SerialisedShrekSuperSlamGameObject for GfDb {
         // +14 contains the offset to the start of the array of objects in the DB.
         // +18 contains a count of the number of objects in this array.
         const OBJECT_ENTRY_SIZE: usize = 0x10;
-        let objects_initial_offset =
+        let object_entries_initial_offset =
             Bin::header_length() + c.read_u32(&raw[offset + 0x14..offset + 0x18])? as usize;
-        let objects_count = c.read_u32(&raw[offset + 0x18..offset + 0x1C])? as usize;
-        let objects_end_offset = objects_initial_offset + (objects_count * OBJECT_ENTRY_SIZE);
+        let object_entries_count = c.read_u32(&raw[offset + 0x18..offset + 0x1C])? as usize;
+        let object_entries_end_offset = object_entries_initial_offset + (object_entries_count * OBJECT_ENTRY_SIZE);
 
-        let objects: Result<Vec<(String, BinObject)>, Error> = raw
-            [objects_initial_offset..objects_end_offset]
+        let object_entries: Result<Vec<(String, BinObject)>, Error> = raw
+            [object_entries_initial_offset..object_entries_end_offset]
             .chunks(OBJECT_ENTRY_SIZE)
             .map(|entry_bytes| create_object_entry(entry_bytes, bin, c))
             .collect();
+        let object_entries = object_entries?;
+
+        // Resolve each object to usable Rust object.
+        let mut objects: HashMap<String, ShrekSuperSlamObject> = HashMap::new();
+        for (name, object) in &object_entries {
+            objects.insert(name.clone(), bin.resolve_object(object)?);
+        }
 
         Ok(GfDb {
-            entries: objects?,
+            objects,
+            entries: object_entries,
             _bytes: bin.raw[offset..(offset + Self::size())].to_vec(),
         })
     }
@@ -69,7 +82,10 @@ impl SerialisedShrekSuperSlamGameObject for GfDb {
 /// scripted events?
 pub struct ScriptDb {
     /// Objects within the DB
-    pub entries: Vec<(String, BinObject)>,
+    pub objects: HashMap<String, ShrekSuperSlamObject>,
+
+    /// Closer representation of the DB and how it was originally ordered.
+    entries: Vec<(String, BinObject)>,
 
     /// The raw bytes of the object.
     _bytes: Vec<u8>,
@@ -104,6 +120,7 @@ impl SerialisedShrekSuperSlamGameObject for ScriptDb {
         let db = GfDb::new(bin, offset)?;
 
         Ok(ScriptDb {
+            objects: db.objects,
             entries: db.entries,
             _bytes: bin.raw[offset..(offset + Self::size())].to_vec(),
         })

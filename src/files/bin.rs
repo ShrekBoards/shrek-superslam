@@ -219,15 +219,7 @@ impl Bin {
     pub fn parse(&self) -> Result<HashMap<String, ShrekSuperSlamObject>, Error> {
         // Get the gf::DB object, which resides at offset 0 always.
         let db = self.get_object_from_offset::<GfDb>(0x00)?;
-
-        // Resolve each item in the DB to an actual type, and add it to the
-        // hashmap along with its name.
-        let mut mapping: HashMap<String, ShrekSuperSlamObject> = HashMap::new();
-        for (name, object) in db.entries {
-            mapping.insert(name, self.resolve_object(&object)?);
-        }
-
-        Ok(mapping)
+        Ok(db.objects)
     }
 
     /// Returns the raw bytes of the .bin file.
@@ -333,7 +325,7 @@ impl Bin {
     /// This function is used to take the stub object that identifies an object
     /// in the .bin file, and fleshes it out to an actual type so that you can
     /// use the data members.
-    fn resolve_object(&self, object: &BinObject) -> Result<ShrekSuperSlamObject, Error> {
+    pub(crate) fn resolve_object(&self, object: &BinObject) -> Result<ShrekSuperSlamObject, Error> {
         match object.hash {
             0xF2CFE08D => Ok(ShrekSuperSlamObject::AttackMoveRegion(
                 self.get_object_from_offset::<AttackMoveRegion>(object.offset)?,

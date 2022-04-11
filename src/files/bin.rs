@@ -64,6 +64,11 @@ struct BinSection {
 }
 
 impl BinSection {
+    /// Get the size in bytes of a single section.
+    const fn size() -> usize {
+        0x10
+    }
+
     /// Create a new BinSection struct from the given `raw` section bytes for
     /// the given `console` platform.
     fn new(raw: &[u8], offset: u32, console: Console) -> Result<BinSection, Error> {
@@ -74,6 +79,20 @@ impl BinSection {
         })
     }
 }
+
+/// Structure describing the dependency of a .bin file to another .bin file.
+struct BinDependency {}
+
+impl BinDependency {
+    /// Get the size in bytes of a single dependency descriptor.
+    const fn size() -> usize {
+        0x80
+    }
+}
+
+/// Structure that comes after the dependencies in the .bin file, don't yet
+/// know what it does.
+struct BinOffset4Struct {}
 
 /// Thin structure that represents the beginning of a serialised Shrek SuperSlam
 /// class within a .bin file.
@@ -126,7 +145,9 @@ impl BinObject {
 /// module, which contains structures representing the classes found within these
 /// .bin files.
 pub struct Bin {
-    header: BinHeader,
+    sections: Vec<BinSection>,
+    dependencies: Vec<BinDependency>,
+    offset4objs: Vec<BinOffset4Struct>,
     pub(crate) console: Console,
     pub(crate) raw: Vec<u8>,
 }
@@ -160,8 +181,8 @@ impl Bin {
         // various offsets to the different sections within the .bin file
         let file_begin_offset = Bin::header_length() as u32;
         let section_begin_offset = file_begin_offset + header.offset1;
-        let dependencies_begin_offset = section_begin_offset + (header.sections * 0x10);
-        let ptr4_begin_offset = dependencies_begin_offset + (header.dependencies * 0x80);
+        let dependencies_begin_offset = section_begin_offset + (header.sections * BinSection::size() as u32);
+        let ptr4_begin_offset = dependencies_begin_offset + (header.dependencies * BinDependency::size() as u32);
 
         // Create an entry for each 'section', which is later used to access
         // different parts of the file
@@ -176,6 +197,7 @@ impl Bin {
                 section_dst_offset,
                 console,
             )?;
+
             let section_size = section.size;
             sections.push(section);
 
@@ -184,7 +206,7 @@ impl Bin {
 
         // Create an object for each serialised game object in the .bin
         let mut objects: Vec<BinObject> = vec![];
-        for section in sections {
+        for section in &sections {
             // The 'section' with a value of 1 in its first field details the
             // number of objects within the .bin file
             if section.number == 1 {
@@ -201,7 +223,9 @@ impl Bin {
         }
 
         Ok(Bin {
-            header,
+            sections,
+            dependencies: Vec::new(),
+            offset4objs: Vec::new(),
             console,
             raw,
         })
@@ -242,8 +266,48 @@ impl Bin {
 
     /// Get the bytes representation for this .bin file.
     pub fn to_bytes(&self) -> Result<Vec<u8>, Error> {
-        let console = self.console;
-        let bytes = self.header.to_bytes(console)?;
+        // The first section, immediately following the header, is the initial
+        // gf::DB object. This contains both the header information for the
+        // gf::DB object itself, and the name-offset directory that make up the
+        // entries within the DB.
+        //
+        // We need to get this prior to making the header since we need to know
+        // how big it is.
+        let my_fake_db_bin_as_bytes: Vec<u8> = vec![0xab; 0x10];
+
+        /*
+         * offset1 = total size of gf::DB field, when 0x40 is added becomes offset to sections
+         * sections = number of sections
+         * offset2 = ????
+         * dependencies = number of dependencies
+         * offset4 = number of entries for offset4 struct
+         */
+        // With the gf::DB converted to bytes, we can construct the header of
+        // the file and convert it to bytes, which is the start of the file.
+        // The header contains counts of structure in each section, and empty
+        // spaces to put pointers to those sections when the game loads it at
+        // runtime.
+        let header = BinHeader {
+            offset1: my_fake_db_bin_as_bytes.len() as u32,
+            sections: self.sections.len() as u32,
+            offset2: 0x00,
+            dependencies: self.dependencies.len() as u32,
+            offset4: self.offset4objs.len() as u32,
+        };
+        let mut bytes = header.to_bytes(self.console)?;
+
+        // Put the bytes of the gf::DB object immediately after the header.
+        bytes.extend(my_fake_db_bin_as_bytes);
+
+        // Write the second section, which contains entries that point to other
+        // places within the file.
+
+        // Write the third section, which contains an entry for each dependency
+        // this .bin file has on another .bin file.
+
+        // Write the forth section, which contains objects that do ????
+
+        // Finally, write each object within the .bin.
 
         Ok(bytes)
     }

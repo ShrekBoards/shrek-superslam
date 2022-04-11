@@ -41,6 +41,7 @@ impl BinHeader {
         bytes.extend(console.write_u32(self.dependencies)?);  // 0x24 - 0x28
         bytes.extend(vec![0x00; 4]);                          // 0x28 - 0x2C
         bytes.extend(console.write_u32(self.offset4)?);       // 0x2C - 0x30
+        bytes.extend(vec![0x00; 0x10]);                       // 0x30 - 0x40
 
         assert_eq!(Bin::header_length(), bytes.len());
 

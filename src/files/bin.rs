@@ -29,6 +29,23 @@ impl BinHeader {
             offset4: console.read_u32(&raw[0x2C..0x30])?,
         })
     }
+
+    /// Get a representation of the header as raw bytes.
+    fn to_bytes(&self, console: Console) -> Result<Vec<u8>, Error> {
+        let mut bytes: Vec<u8> = vec![0x00; 0x10];            // 0x00 - 0x10
+        bytes.extend(console.write_u32(self.offset1)?);       // 0x10 - 0x14
+        bytes.extend(vec![0x00; 4]);                          // 0x14 - 0x18
+        bytes.extend(console.write_u32(self.sections)?);      // 0x18 - 0x1C
+        bytes.extend(console.write_u32(self.offset2)?);       // 0x1C - 0x20
+        bytes.extend(vec![0x00; 4]);                          // 0x20 - 0x24
+        bytes.extend(console.write_u32(self.dependencies)?);  // 0x24 - 0x28
+        bytes.extend(vec![0x00; 4]);                          // 0x28 - 0x2C
+        bytes.extend(console.write_u32(self.offset4)?);       // 0x2C - 0x30
+
+        assert_eq!(Bin::header_length(), bytes.len());
+
+        Ok(bytes)
+    }
 }
 
 /// Poorly-named struct that represents the description a 'section' within a
@@ -108,7 +125,7 @@ impl BinObject {
 /// module, which contains structures representing the classes found within these
 /// .bin files.
 pub struct Bin {
-    pub(crate) objects: Vec<BinObject>,
+    header: BinHeader,
     pub(crate) console: Console,
     pub(crate) raw: Vec<u8>,
 }
@@ -183,7 +200,7 @@ impl Bin {
         }
 
         Ok(Bin {
-            objects,
+            header,
             console,
             raw,
         })
@@ -222,14 +239,12 @@ impl Bin {
         Ok(db.objects)
     }
 
-    /// Returns the raw bytes of the .bin file.
-    pub fn raw(&self) -> &[u8] {
-        &self.raw
-    }
+    /// Get the bytes representation for this .bin file.
+    pub fn to_bytes(&self) -> Result<Vec<u8>, Error> {
+        let console = self.console;
+        let bytes = self.header.to_bytes(console)?;
 
-    /// Returns a list of objects within the .bin file.
-    pub fn objects(&self) -> &Vec<BinObject> {
-        &self.objects
+        Ok(bytes)
     }
 
     /// Returns a deserialised object of type `T` contained at given `offset`

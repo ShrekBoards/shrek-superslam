@@ -82,10 +82,10 @@ impl SerialisedShrekSuperSlamGameObject for GfDb {
 /// scripted events?
 pub struct ScriptDb {
     /// Objects within the DB
-    pub objects: HashMap<String, ShrekSuperSlamObject>,
+    pub _objects: HashMap<String, ShrekSuperSlamObject>,
 
     /// Closer representation of the DB and how it was originally ordered.
-    entries: Vec<(String, BinObject)>,
+    _entries: Vec<(String, BinObject)>,
 
     /// The raw bytes of the object.
     _bytes: Vec<u8>,
@@ -120,8 +120,8 @@ impl SerialisedShrekSuperSlamGameObject for ScriptDb {
         let db = GfDb::new(bin, offset)?;
 
         Ok(ScriptDb {
-            objects: db.objects,
-            entries: db.entries,
+            _objects: db.objects,
+            _entries: db.entries,
             _bytes: bin.raw[offset..(offset + Self::size())].to_vec(),
         })
     }

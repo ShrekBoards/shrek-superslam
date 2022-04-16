@@ -21,7 +21,7 @@
 ///! file plus the header, so an offset in the file 0x00 in reality is
 ///! referring to +0x40.
 ///!
-///! The .bin file has a header, and is then split into four sections.
+///! The .bin file has a header, and is then split into five sections.
 ///!
 ///! * Top-level DB - a `gf::DB` object that is used as a name-pointer mapping
 ///!   to each other object within the .bin file. The game uses this to find
@@ -34,6 +34,7 @@
 ///!   game recursively loads these at runtime with the function at
 ///!   `loc_4111D0`.
 ///! * 'Offset4Types' (better name pending) - unknown what this does.
+///! * A collection of lists of offsets pointed to by the 'sections'.
 ///!
 ///! Then the remainder of the file is the objects pointed to by the DB.
 ///!
@@ -73,7 +74,21 @@
 ///! | ptr    | +0x08  | 4             | The offset the collection of pointers begins within the file, calculated at runtime. |
 ///! | unused | +0x0C  | 4             |                                                                                      |
 ///!
+///! The collections of pointers pointed to by these entries occur after the
+///! fourth section.
+///!
 ///! ### Dependencies
+///!
+///! Each entry describes a dependency this .bin file has on another, that the
+///! game will need to load beforehand. This is implemented in this module with
+///! the [`dependency::BinDependency`] structure.
+///!
+///! | Name      | Offset | Size in bytes | Notes                                                  |
+///! |-----------|--------|---------------|--------------------------------------------------------|
+///! | path      | +0x00  | 60            | String containing the path to the dependant .bin file. |
+///! | desc      | +0x3C  | 60            | Another string, purpose unknown.                       |
+///! | is_loaded | +0x78  | 4             | Flag for if the dependency is loaded or not.           |
+///! | offset    | +0x7C  | 4             |                                                        |
 ///!
 ///! ### 'Offset4Type'
 ///!

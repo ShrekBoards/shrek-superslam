@@ -66,12 +66,12 @@
 ///! entries found at the offset. They are a simple type, and implemented in
 ///! module with the [`section::BinSection`] structure.
 ///!
-///! | Name   | Offset | Size in bytes | Notes                                                         |
-///! |--------|--------|---------------|---------------------------------------------------------------|
-///! | number | +0x00  | 4             | Number identifying the type this entry points to.             |
-///! | count  | +0x04  | 4             | The number of pointers in the section.                        |
-///! | ptr    | +0x08  | 4             | The offset the collection of pointers begins within the file. |
-///! | unused | +0x0C  | 4             |                                                               |
+///! | Name   | Offset | Size in bytes | Notes                                                                                |
+///! |--------|--------|---------------|--------------------------------------------------------------------------------------|
+///! | number | +0x00  | 4             | Number identifying the type this entry points to.                                    |
+///! | count  | +0x04  | 4             | The number of pointers in the section.                                               |
+///! | ptr    | +0x08  | 4             | The offset the collection of pointers begins within the file, calculated at runtime. |
+///! | unused | +0x0C  | 4             |                                                                                      |
 ///!
 ///! ### Dependencies
 ///!

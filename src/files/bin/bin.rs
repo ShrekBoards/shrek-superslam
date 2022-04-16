@@ -192,17 +192,14 @@ impl Bin {
          */
         // With the gf::DB converted to bytes, we can construct the header of
         // the file and convert it to bytes, which is the start of the file.
-        // The header contains counts of structure in each section, and empty
-        // spaces to put pointers to those sections when the game loads it at
-        // runtime.
-        let header = BinHeader {
+        // The header contains counts of structure in each section.
+        let mut bytes = BinHeader {
             gf_db_size: my_fake_db_bin_as_bytes.len() as u32,
             sections: self.sections.len() as u32,
             unknown: 0x00,
             dependencies: self.dependencies.len() as u32,
             offset4_count: self.offset4objs.len() as u32,
-        };
-        let mut bytes = header.to_bytes(self.console)?;
+        }.to_bytes(self.console)?;
 
         // Put the bytes of the gf::DB object immediately after the header.
         bytes.extend(my_fake_db_bin_as_bytes);
@@ -216,7 +213,10 @@ impl Bin {
         // Write the third section, which contains an entry for each dependency
         // this .bin file has on another .bin file.
 
-        // Write the forth section, which contains objects that do ????
+        // Write the fourth section, which contains objects that do ????
+
+        // After the fourth section, there is the lists of pointers referenced
+        // by the thin objects in the second section.
 
         // Finally, write each object within the .bin.
 

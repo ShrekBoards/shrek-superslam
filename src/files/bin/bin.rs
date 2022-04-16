@@ -5,94 +5,14 @@ use crate::classes;
 use crate::classes::*;
 use crate::console::Console;
 use crate::errors::Error;
+use crate::files::bin::{
+    dependency::BinDependency,
+    header::BinHeader,
+    offset4type::BinOffset4Struct,
+    section::BinSection,
+};
 
 use std::collections::HashMap;
-
-/// Structure representing the header (the first 40 bytes) of a .bin file
-struct BinHeader {
-    pub offset1: u32,
-    pub sections: u32,
-    pub offset2: u32,
-    pub dependencies: u32,
-    pub offset4: u32,
-}
-
-impl BinHeader {
-    /// Create a new BinHeader struct from the given `raw` header bytes from
-    /// the given `console` platform.
-    fn new(raw: &[u8], console: Console) -> Result<BinHeader, Error> {
-        Ok(BinHeader {
-            offset1: console.read_u32(&raw[0x10..0x14])?,
-            sections: console.read_u32(&raw[0x18..0x1C])?,
-            offset2: console.read_u32(&raw[0x1C..0x20])?,
-            dependencies: console.read_u32(&raw[0x24..0x28])?,
-            offset4: console.read_u32(&raw[0x2C..0x30])?,
-        })
-    }
-
-    /// Get a representation of the header as raw bytes.
-    fn to_bytes(&self, console: Console) -> Result<Vec<u8>, Error> {
-        let mut bytes: Vec<u8> = vec![0x00; 0x10];            // 0x00 - 0x10
-        bytes.extend(console.write_u32(self.offset1)?);       // 0x10 - 0x14
-        bytes.extend(vec![0x00; 4]);                          // 0x14 - 0x18
-        bytes.extend(console.write_u32(self.sections)?);      // 0x18 - 0x1C
-        bytes.extend(console.write_u32(self.offset2)?);       // 0x1C - 0x20
-        bytes.extend(vec![0x00; 4]);                          // 0x20 - 0x24
-        bytes.extend(console.write_u32(self.dependencies)?);  // 0x24 - 0x28
-        bytes.extend(vec![0x00; 4]);                          // 0x28 - 0x2C
-        bytes.extend(console.write_u32(self.offset4)?);       // 0x2C - 0x30
-        bytes.extend(vec![0x00; 0x10]);                       // 0x30 - 0x40
-
-        assert_eq!(Bin::header_length(), bytes.len());
-
-        Ok(bytes)
-    }
-}
-
-/// Poorly-named struct that represents the description a 'section' within a
-/// .bin - a small 16-byte area that describes and points to a big list of
-/// offsets to entries of a certain type within the file
-struct BinSection {
-    /// Determines the type of each thing being pointed to
-    pub number: u32,
-
-    /// The number of pointers in the section
-    pub size: u32,
-
-    /// What offset the section begins within the file
-    pub offset: u32,
-}
-
-impl BinSection {
-    /// Get the size in bytes of a single section.
-    const fn size() -> usize {
-        0x10
-    }
-
-    /// Create a new BinSection struct from the given `raw` section bytes for
-    /// the given `console` platform.
-    fn new(raw: &[u8], offset: u32, console: Console) -> Result<BinSection, Error> {
-        Ok(BinSection {
-            number: console.read_u32(&raw[0x00..0x04])?,
-            size: console.read_u32(&raw[0x04..0x08])?,
-            offset,
-        })
-    }
-}
-
-/// Structure describing the dependency of a .bin file to another .bin file.
-struct BinDependency {}
-
-impl BinDependency {
-    /// Get the size in bytes of a single dependency descriptor.
-    const fn size() -> usize {
-        0x80
-    }
-}
-
-/// Structure that comes after the dependencies in the .bin file, don't yet
-/// know what it does.
-struct BinOffset4Struct {}
 
 /// Thin structure that represents the beginning of a serialised Shrek SuperSlam
 /// class within a .bin file.
@@ -117,8 +37,8 @@ impl BinObject {
     /// bytes of the entire .bin file from the given `console` version.
     pub fn new(raw: &[u8], offset: u32, console: Console) -> Result<BinObject, Error> {
         let hash = console.read_u32(
-            &raw[Bin::header_length() + offset as usize
-                ..Bin::header_length() + offset as usize + 0x04],
+            &raw[BinHeader::size() + offset as usize
+                ..BinHeader::size() + offset as usize + 0x04],
         )?;
 
         if let Some(name) = hash_lookup(hash) {
@@ -155,7 +75,7 @@ pub struct Bin {
 impl Bin {
     /// Returns the length of the .bin file header.
     pub(crate) const fn header_length() -> usize {
-        0x40
+        BinHeader::size()
     }
 
     /// Construct a new `Bin` object from the given `raw` bytes of a
@@ -175,33 +95,21 @@ impl Bin {
     /// ```
     pub fn new(raw: Vec<u8>, console: Console) -> Result<Bin, Error> {
         // Read the header
-        let header = BinHeader::new(&raw[0x00..Bin::header_length()], console)?;
+        let header = BinHeader::new(&raw[0x00..BinHeader::size()], console)?;
 
         // The offsets and counts within the header are used to calculate
-        // various offsets to the different sections within the .bin file
-        let file_begin_offset = Bin::header_length() as u32;
-        let section_begin_offset = file_begin_offset + header.offset1;
-        let dependencies_begin_offset = section_begin_offset + (header.sections * BinSection::size() as u32);
-        let ptr4_begin_offset = dependencies_begin_offset + (header.dependencies * BinDependency::size() as u32);
+        // various offsets to the different sections within the .bin file.
+        let file_begin_offset = BinHeader::size();
+        let section_begin_offset = file_begin_offset + header.gf_db_size as usize;
+        let dependencies_begin_offset = section_begin_offset + (header.sections as usize * BinSection::size());
+        let ptr4_begin_offset = dependencies_begin_offset + (header.dependencies as usize * BinDependency::size());
+        let mut sections_data_begin_offset = ptr4_begin_offset + (header.offset4_count as usize * BinOffset4Struct::size());
 
-        // Create an entry for each 'section', which is later used to access
-        // different parts of the file
-        let mut section_dst_offset =
-            ptr4_begin_offset + (header.offset4 * Bin::header_length() as u32);
-        let mut sections: Vec<BinSection> = vec![];
-        for i in 0..header.sections {
-            let section_offset = (section_begin_offset + (i * 0x10)) as usize;
-            let next_section_offset = section_offset + 0x10;
-            let section = BinSection::new(
-                &raw[section_offset..next_section_offset],
-                section_dst_offset,
-                console,
-            )?;
-
-            let section_size = section.size;
-            sections.push(section);
-
-            section_dst_offset += section_size * 4;
+        // Read in each section, then the offset in each needs to be set.
+        let mut sections = BinSection::new(&raw[section_begin_offset..dependencies_begin_offset], console)?;
+        for section in &mut sections {
+            section.offset = sections_data_begin_offset as u32;
+            sections_data_begin_offset += section.count as usize * 4;
         }
 
         // Create an object for each serialised game object in the .bin
@@ -212,7 +120,7 @@ impl Bin {
             if section.number == 1 {
                 // This region contains a list of offsets within the file to
                 // each object contained within it
-                for j in 0..section.size {
+                for j in 0..section.count {
                     let object_ptr_offset = (section.offset + (j * 0x04)) as usize;
                     let object_offset =
                         console.read_u32(&raw[object_ptr_offset..(object_ptr_offset + 0x04)])?;
@@ -288,11 +196,11 @@ impl Bin {
         // spaces to put pointers to those sections when the game loads it at
         // runtime.
         let header = BinHeader {
-            offset1: my_fake_db_bin_as_bytes.len() as u32,
+            gf_db_size: my_fake_db_bin_as_bytes.len() as u32,
             sections: self.sections.len() as u32,
-            offset2: 0x00,
+            unknown: 0x00,
             dependencies: self.dependencies.len() as u32,
-            offset4: self.offset4objs.len() as u32,
+            offset4_count: self.offset4objs.len() as u32,
         };
         let mut bytes = header.to_bytes(self.console)?;
 
@@ -301,6 +209,9 @@ impl Bin {
 
         // Write the second section, which contains entries that point to other
         // places within the file.
+        for section in &self.sections {
+            bytes.extend(section.to_bytes(self.console)?);
+        }
 
         // Write the third section, which contains an entry for each dependency
         // this .bin file has on another .bin file.
@@ -355,7 +266,7 @@ impl Bin {
 
         // Ensure the requested type exists at the given offset by checking the
         // hash at the offset matches the expected hash of the type
-        let object_begin = offset as usize + Bin::header_length();
+        let object_begin = offset as usize + BinHeader::size();
         let hash = self
             .console
             .read_u32(&self.raw[object_begin..object_begin + 4])?;
@@ -387,7 +298,7 @@ impl Bin {
     /// println!("At offset {}, there is the string '{}'", 0x500, my_string);
     /// ```
     pub(crate) fn get_str_from_offset(&self, offset: u32) -> Result<String, Error> {
-        let str_begin = offset as usize + Bin::header_length();
+        let str_begin = offset as usize + BinHeader::size();
 
         // Find the first NULL byte, which ends the string. If not found,
         // default to the end of the slice, which will more than likely give us

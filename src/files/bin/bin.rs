@@ -112,6 +112,9 @@ impl Bin {
             sections_data_begin_offset += section.count as usize * 4;
         }
 
+        // Read in each dependency.
+        let dependencies = BinDependency::new(&raw[dependencies_begin_offset..ptr4_begin_offset], console)?;
+
         // Create an object for each serialised game object in the .bin
         let mut objects: Vec<BinObject> = vec![];
         for section in &sections {
@@ -132,7 +135,7 @@ impl Bin {
 
         Ok(Bin {
             sections,
-            dependencies: Vec::new(),
+            dependencies,
             offset4objs: Vec::new(),
             console,
             raw,
@@ -212,6 +215,9 @@ impl Bin {
 
         // Write the third section, which contains an entry for each dependency
         // this .bin file has on another .bin file.
+        for dependency in &self.dependencies {
+            bytes.extend(dependency.to_bytes(self.console)?);
+        }
 
         // Write the fourth section, which contains objects that do ????
 

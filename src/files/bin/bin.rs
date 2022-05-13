@@ -103,17 +103,25 @@ impl Bin {
         let section_begin_offset = file_begin_offset + header.gf_db_size as usize;
         let dependencies_begin_offset = section_begin_offset + (header.sections as usize * BinSection::size());
         let ptr4_begin_offset = dependencies_begin_offset + (header.dependencies as usize * BinDependency::size());
-        let mut sections_data_begin_offset = ptr4_begin_offset + (header.offset4_count as usize * BinOffset4Struct::size());
+        let sections_data_begin_offset = ptr4_begin_offset + (header.offset4_count as usize * BinOffset4Struct::size());
 
         // Read in each section, then the offset in each needs to be set.
+        let mut section_offset = sections_data_begin_offset;
         let mut sections = BinSection::new(&raw[section_begin_offset..dependencies_begin_offset], console)?;
         for section in &mut sections {
-            section.offset = sections_data_begin_offset as u32;
-            sections_data_begin_offset += section.count as usize * 4;
+            section.offset = section_offset as u32;
+            section_offset += section.count as usize * 4;
         }
 
         // Read in each dependency.
         let dependencies = BinDependency::new(&raw[dependencies_begin_offset..ptr4_begin_offset], console)?;
+
+        // Read in each offset 4 type.
+        println!("begin: {:04X}, end: {:04X}", ptr4_begin_offset, sections_data_begin_offset);
+        let offset4objs = BinOffset4Struct::new(&raw[ptr4_begin_offset..sections_data_begin_offset], console)?;
+        for o in &offset4objs {
+            println!("'{}', 0x{:04X}", o.s, o.n);
+        }
 
         // Create an object for each serialised game object in the .bin
         let mut objects: Vec<BinObject> = vec![];
@@ -136,7 +144,7 @@ impl Bin {
         Ok(Bin {
             sections,
             dependencies,
-            offset4objs: Vec::new(),
+            offset4objs,
             console,
             raw,
         })

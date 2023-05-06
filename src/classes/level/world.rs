@@ -1,25 +1,28 @@
-use crate::classes::SerialisedShrekSuperSlamGameObject;
+use serde::{Deserialize, Serialize};
+
+use crate::classes::{SerialisedShrekSuperSlamGameObject, WriteableShrekSuperSlamGameObject};
 use crate::errors::Error;
 use crate::files::Bin;
 
 /// Structure representing the in-game `Game::GameWorld` object type.
 ///
 /// This contains information about a level.
+#[derive(Deserialize, Serialize)]
 pub struct GameWorld {
     // Setting this field to anything but 1 locks the players in place. It is
     // always set to 1, at least in the files. Possibly modified at runtime?
-    _playable: u32,
+    pub playable: u32,
 
     // These unknown floats seem to be related to out-of-bounds somehow? Making
     // any of them really small seems to shift the OOB boundary. In almost all
     // cases, the first set are all 100, and the second set are -100, -10 and
     // -100 each.
-    _unknown_float_1_x: f32,
-    _unknown_float_1_y: f32,
-    _unknown_float_1_z: f32,
-    _unknown_float_2_x: f32,
-    _unknown_float_2_y: f32,
-    _unknown_float_2_z: f32,
+    pub unknown_float_1_x: f32,
+    pub unknown_float_1_y: f32,
+    pub unknown_float_1_z: f32,
+    pub unknown_float_2_x: f32,
+    pub unknown_float_2_y: f32,
+    pub unknown_float_2_z: f32,
 }
 
 impl SerialisedShrekSuperSlamGameObject for GameWorld {
@@ -62,13 +65,41 @@ impl SerialisedShrekSuperSlamGameObject for GameWorld {
         let unknown_float_2_z = c.read_f32(&raw[offset + 0x48..offset + 0x4C])?;
 
         Ok(GameWorld {
-            _playable: playable,
-            _unknown_float_1_x: unknown_float_1_x,
-            _unknown_float_1_y: unknown_float_1_y,
-            _unknown_float_1_z: unknown_float_1_z,
-            _unknown_float_2_x: unknown_float_2_x,
-            _unknown_float_2_y: unknown_float_2_y,
-            _unknown_float_2_z: unknown_float_2_z,
+            playable,
+            unknown_float_1_x,
+            unknown_float_1_y,
+            unknown_float_1_z,
+            unknown_float_2_x,
+            unknown_float_2_y,
+            unknown_float_2_z,
         })
+    }
+}
+
+impl WriteableShrekSuperSlamGameObject for GameWorld {
+    /// Writes the object back to its `bin` file at the given `offset`.
+    fn write(&self, bin: &mut Bin, offset: usize) -> Result<(), Error> {
+        // Write back only fixed-length numeric fields to the new object - other
+        // fields such as strings would modify the size of the file and
+        // invalidate all offsets
+        let c = bin.console;
+        bin.raw
+            .splice(offset + 0x14..offset + 0x18, c.write_u32(self.playable)?);
+
+        bin.raw
+            .splice(offset + 0x30..offset + 0x34, c.write_f32(self.unknown_float_1_x)?);
+        bin.raw
+            .splice(offset + 0x34..offset + 0x38, c.write_f32(self.unknown_float_1_y)?);
+        bin.raw
+            .splice(offset + 0x38..offset + 0x3C, c.write_f32(self.unknown_float_1_z)?);
+
+        bin.raw
+            .splice(offset + 0x40..offset + 0x44, c.write_f32(self.unknown_float_2_x)?);
+        bin.raw
+            .splice(offset + 0x44..offset + 0x48, c.write_f32(self.unknown_float_2_y)?);
+        bin.raw
+            .splice(offset + 0x48..offset + 0x4C, c.write_f32(self.unknown_float_2_z)?);
+
+        Ok(())
     }
 }

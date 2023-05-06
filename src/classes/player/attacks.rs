@@ -634,6 +634,12 @@ pub struct AttackMoveRegion {
 
     /// The height of the hitbox - larger extends out wider.
     pub radius: f32,
+
+    /// Unknown property at offset +10
+    pub unknown_010: f32,
+
+    /// Unknown property at offset +24
+    pub unknown_024: f32,
 }
 
 impl SerialisedShrekSuperSlamGameObject for AttackMoveRegion {
@@ -666,6 +672,8 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveRegion {
             delay: c.read_f32(&bin.raw[offset + 0x04..offset + 0x08])?,
             width: c.read_f32(&bin.raw[offset + 0x30..offset + 0x34])?,
             radius: c.read_f32(&bin.raw[offset + 0x38..offset + 0x3C])?,
+            unknown_010: c.read_f32(&bin.raw[offset + 0x10..offset + 0x14])?,
+            unknown_024: c.read_f32(&bin.raw[offset + 0x24..offset + 0x28])?,
         })
     }
 }
@@ -700,6 +708,11 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveRegion {
             .splice(offset + 0x30..offset + 0x34, c.write_f32(self.width)?);
         bin.raw
             .splice(offset + 0x38..offset + 0x3C, c.write_f32(self.radius)?);
+
+        bin.raw
+            .splice(offset + 0x10..offset + 0x14, c.write_f32(self.unknown_010)?);
+        bin.raw
+            .splice(offset + 0x24..offset + 0x28, c.write_f32(self.unknown_024)?);
 
         Ok(())
     }

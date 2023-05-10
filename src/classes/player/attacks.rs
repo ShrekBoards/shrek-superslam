@@ -52,6 +52,10 @@ pub struct AttackMoveType {
     /// Period of seconds to grant invincibility for. Expires if another attack is performed.
     pub invincibility: f32,
 
+    /// If true, the attack slams the opponent on contact, when the user's SLAM
+    /// meter is full.
+    pub is_slam: bool,
+
     /// The amount the attack knocks the opponent back. Positive pushes away, negative pulls toward.
     pub knockback: f32,
 
@@ -78,9 +82,6 @@ pub struct AttackMoveType {
 
     /// Unknown property at offset +018
     pub unknown_018: f32,
-
-    /// Unknown property at offset +02C
-    pub unknown_02c: bool,
 
     /// Unknown property at offset +02D
     pub unknown_02d: bool,
@@ -238,13 +239,13 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         let unknown_12c = c.read_f32(&raw[offset + 0x12C..offset + 0x130])?;
 
         // Read boolean flag fields
+        let is_slam = raw[offset + 0x2C] != 0;
         let shield_breaks = raw[offset + 0x2E] != 0;
         let hits_otg = raw[offset + 0x33] != 0;
         let knocks_down = raw[offset + 0x34] != 0;
         let disabled = raw[offset + 0x35] != 0;
         let intangible = raw[offset + 0x3A] != 0;
 
-        let unknown_02c = raw[offset + 0x2C] != 0;
         let unknown_02d = raw[offset + 0x2D] != 0;
         let unknown_02f = raw[offset + 0x2F] != 0;
         let unknown_030 = raw[offset + 0x30] != 0;
@@ -287,6 +288,7 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             hits_otg,
             intangible,
             invincibility,
+            is_slam,
             knocks_down,
             knockback,
             name: bin.get_str_from_offset(name_offset)?,
@@ -298,7 +300,6 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             unknown_008,
             unknown_010,
             unknown_018,
-            unknown_02c,
             unknown_02d,
             unknown_02f,
             unknown_030,
@@ -359,6 +360,7 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
             .splice(offset + 0x0C..offset + 0x10, c.write_f32(self.invincibility)?);
         bin.raw
             .splice(offset + 0x14..offset + 0x18, c.write_f32(self.fall_speed)?);
+        bin.raw[offset + 0x2C] = self.is_slam as u8;
         bin.raw[offset + 0x2E] = self.shield_breaks as u8;
         bin.raw[offset + 0x33] = self.hits_otg as u8;
         bin.raw[offset + 0x34] = self.knocks_down as u8;
@@ -427,7 +429,6 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
         bin.raw
             .splice(offset + 0x12C..offset + 0x130, c.write_f32(self.unknown_12c)?);
 
-        bin.raw[offset + 0x2C] = self.unknown_02c as u8;
         bin.raw[offset + 0x2D] = self.unknown_02d as u8;
         bin.raw[offset + 0x2F] = self.unknown_02f as u8;
         bin.raw[offset + 0x30] = self.unknown_030 as u8;

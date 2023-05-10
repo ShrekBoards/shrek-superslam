@@ -68,6 +68,10 @@ pub struct AttackMoveType {
     /// The attack's name.
     pub name: String,
 
+    /// If true, the move will not make contact with the opponent. The move
+    /// will still make contact with walls and throwables.
+    pub no_opponent_contact: bool,
+
     /// The projectile type the attack spawns, if any.
     pub projectile: Option<ProjectileType>,
 
@@ -94,9 +98,6 @@ pub struct AttackMoveType {
 
     /// Unknown property at offset +030
     pub unknown_030: bool,
-
-    /// Unknown property at offset +032
-    pub unknown_032: bool,
 
     /// Unknown property at offset +036
     pub unknown_036: bool,
@@ -242,6 +243,7 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         let is_slam = raw[offset + 0x2C] != 0;
         let shield_breaks = raw[offset + 0x2E] != 0;
         let lock_position = raw[offset + 0x31] != 0;
+        let no_opponent_contact = raw[offset + 0x32] != 0;
         let hits_otg = raw[offset + 0x33] != 0;
         let knocks_down = raw[offset + 0x34] != 0;
         let disabled = raw[offset + 0x35] != 0;
@@ -250,7 +252,6 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         let unknown_02d = raw[offset + 0x2D] != 0;
         let unknown_02f = raw[offset + 0x2F] != 0;
         let unknown_030 = raw[offset + 0x30] != 0;
-        let unknown_032 = raw[offset + 0x32] != 0;
         let unknown_036 = raw[offset + 0x36] != 0;
         let unknown_037 = raw[offset + 0x37] != 0;
         let unknown_038 = raw[offset + 0x38] != 0;
@@ -293,6 +294,7 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             knockback,
             lock_position,
             name: bin.get_str_from_offset(name_offset)?,
+            no_opponent_contact,
             projectile,
             shield_breaks,
             stun,
@@ -304,7 +306,6 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             unknown_02d,
             unknown_02f,
             unknown_030,
-            unknown_032,
             unknown_036,
             unknown_037,
             unknown_038,
@@ -363,6 +364,7 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
         bin.raw[offset + 0x2C] = self.is_slam as u8;
         bin.raw[offset + 0x2E] = self.shield_breaks as u8;
         bin.raw[offset + 0x31] = self.lock_position as u8;
+        bin.raw[offset + 0x32] = self.no_opponent_contact as u8;
         bin.raw[offset + 0x33] = self.hits_otg as u8;
         bin.raw[offset + 0x34] = self.knocks_down as u8;
         bin.raw[offset + 0x35] = self.disabled as u8;
@@ -433,7 +435,6 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
         bin.raw[offset + 0x2D] = self.unknown_02d as u8;
         bin.raw[offset + 0x2F] = self.unknown_02f as u8;
         bin.raw[offset + 0x30] = self.unknown_030 as u8;
-        bin.raw[offset + 0x32] = self.unknown_032 as u8;
         bin.raw[offset + 0x36] = self.unknown_036 as u8;
         bin.raw[offset + 0x37] = self.unknown_037 as u8;
         bin.raw[offset + 0x38] = self.unknown_038 as u8;

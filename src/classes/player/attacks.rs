@@ -220,7 +220,7 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         let unknown_018 = c.read_f32(&raw[offset + 0x18..offset + 0x1C])?;
         let unknown_03c = c.read_u32(&raw[offset + 0x3C..offset + 0x40])?;
         let unknown_070 = c.read_f32(&raw[offset + 0x70..offset + 0x74])?;
-        let unknown_078 = c.read_f32(&raw[offset + 0x78..offset + 0x78])?;
+        let unknown_078 = c.read_f32(&raw[offset + 0x78..offset + 0x7C])?;
         let unknown_07c = c.read_f32(&raw[offset + 0x7C..offset + 0x80])?;
         let unknown_0a0 = c.read_f32(&raw[offset + 0xA0..offset + 0xA4])?;
         let unknown_0a8 = c.read_f32(&raw[offset + 0xA8..offset + 0xAC])?;

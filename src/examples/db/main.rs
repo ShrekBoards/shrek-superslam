@@ -20,8 +20,8 @@ fn main() {
     let db = bin.get_object_from_offset::<GfDb>(0x00).unwrap();
 
     // Dump the contents of the object list
-    println!("name,type");
+    println!("offset,name,type");
     for entry in &db.entries {
-        println!("{},{}", entry.0, entry.1.name);
+        println!("{:08X},{},{}", entry.1.offset + 0x40, entry.0, entry.1.name);
     }
 }

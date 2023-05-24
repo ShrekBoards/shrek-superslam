@@ -1,4 +1,7 @@
-use crate::classes::{EventSequence, SerialisedShrekSuperSlamGameObject};
+use serde::{Deserialize, Serialize};
+
+use crate::Console;
+use crate::classes::{EventSequence, SerialisedShrekSuperSlamGameObject, WriteableShrekSuperSlamGameObject};
 use crate::errors::Error;
 use crate::files::Bin;
 
@@ -7,9 +10,33 @@ use crate::files::Bin;
 /// A 'spitter' is what players get slammed into, and is responsible for
 /// spawning the player back onto the battlefield, and the slam event
 /// animations.
+#[derive(Deserialize, Serialize)]
 pub struct Spitter {
     /// The keyframes of the spitter.
     pub keyframes: Vec<SpitterKeyframe>,
+
+    /// Unknown property at offset +038.
+    pub unknown_004: u32,
+
+    /// Unknown property at offset +038.
+    pub unknown_038: u32,
+
+    /// Unknown property at offset +044.
+    pub unknown_044: u8,
+
+    /// Unknown property at offset +045.
+    pub unknown_045: u8,
+
+    /// Unknown property at offset +046.
+    pub unknown_046: u8,
+
+    /// Unknown property at offset +047.
+    pub unknown_047: u8,
+
+    /// The offsets within the level.db.bin file of each keyframe, in the same
+    /// order they exist within the keyframes property.
+    #[serde(skip)]
+    keyframe_offsets: Vec<u32>,
 }
 
 impl SerialisedShrekSuperSlamGameObject for Spitter {
@@ -39,27 +66,111 @@ impl SerialisedShrekSuperSlamGameObject for Spitter {
         let raw = &bin.raw;
         let c = bin.console;
 
-        // The list of keyframes is at offset +20.
-        // The count of keyframes is at offset +24.
-        let keyframe_list_offset = c.read_u32(&raw[offset + 0x20..offset + 0x24])? as usize;
-        let keyframes_count = c.read_u32(&raw[offset + 0x24..offset + 0x28])? as usize;
-        let keyframes: Result<Vec<SpitterKeyframe>, Error> =
-            (0..keyframes_count)
-                .map(|i| {
-                    let keyframe_list_entry_offset = (Bin::header_length() + keyframe_list_offset + (i * 4)) as usize; 
-                    c.read_u32(&raw[keyframe_list_entry_offset..keyframe_list_entry_offset + 4])
-                })
-                .map(|offset| { bin.get_object_from_offset::<SpitterKeyframe>(offset?) })
-                .collect();
+        // Read the list of keyframe offsets, and use those to read each keyframe
+        let keyframe_offsets = Spitter::keyframe_offsets(&raw, offset, c)?;
+        let keyframes = keyframe_offsets
+            .iter()
+            .map(|o| bin.get_object_from_offset::<SpitterKeyframe>(*o).unwrap())
+            .collect();
 
-        Ok(Spitter { keyframes: keyframes?, })
+        // Unknown fields
+        let unknown_004 = c.read_u32(&raw[offset + 0x04..offset + 0x08])?;
+        let unknown_038 = c.read_u32(&raw[offset + 0x38..offset + 0x3C])?;
+
+        let unknown_044 = raw[offset + 0x44];
+        let unknown_045 = raw[offset + 0x45];
+        let unknown_046 = raw[offset + 0x46];
+        let unknown_047 = raw[offset + 0x47];
+
+        Ok(Spitter {
+            keyframes,
+            keyframe_offsets,
+            unknown_004,
+            unknown_038,
+            unknown_044,
+            unknown_045,
+            unknown_046,
+            unknown_047,
+        })
+    }
+}
+
+impl WriteableShrekSuperSlamGameObject for Spitter {
+    /// Writes the object back to its `bin` file at the given `offset`.
+    fn write(&self, bin: &mut Bin, offset: usize) -> Result<(), Error> {
+        // Write back only fixed-length numeric fields to the new object - other
+        // fields such as strings would modify the size of the file and
+        // invalidate all offsets
+        let c = bin.console;
+
+        // Unknown fields
+        bin.raw
+            .splice(offset + 0x04..offset + 0x08, c.write_u32(self.unknown_004)?);
+        bin.raw
+            .splice(offset + 0x38..offset + 0x3C, c.write_u32(self.unknown_038)?);
+
+        bin.raw[offset + 0x44] = self.unknown_044;
+        bin.raw[offset + 0x45] = self.unknown_045;
+        bin.raw[offset + 0x46] = self.unknown_046;
+        bin.raw[offset + 0x47] = self.unknown_047;
+
+        // Write the spitter's keyframes back to the .bin file
+        //
+        // If this Spitter was deserialised (e.g. from a JSON version),
+        // we will not know where the keyframes are supposed to go in the .bin
+        // file, so read out the offsets from the object that we are about to
+        // replace
+        let keyframes_count = c.read_u32(&bin.raw[offset + 0x24..offset + 0x28])? as usize;
+        let keyframe_offsets = if keyframes_count > self.keyframe_offsets.len()
+        {
+            Spitter::keyframe_offsets(&bin.raw, offset, c)?
+                .iter()
+                .map(|o| o + Bin::header_length() as u32)
+                .collect()
+        } else {
+            self.keyframe_offsets.clone()
+        };
+
+        for (offset, keyframe) in keyframe_offsets.iter().zip(self.keyframes.iter()) {
+            keyframe.write(bin, *offset as usize)?;
+        }
+
+        Ok(())
+    }
+}
+
+impl Spitter {
+    /// Retrieve a list of offsets for a spitter's keyframes within the .bin file
+    fn keyframe_offsets(raw: &[u8], offset: usize, console: Console) -> Result<Vec<u32>, Error> {
+        // Offset 0x20 of the Spitter contains an offset within the .bin
+        // file to a list of further offsets, each of which points to an
+        // SpitterKeyframe object. These are the keyframes for the Spitter.
+        //
+        // The number of items in the list pointed by the offset is located at
+        // offset 0x24 within the Spitter object.
+        //
+        // We later use this information to construct a list of AttackMoveRegion
+        // objects for the attack.
+        let keyframes_count = console.read_u32(&raw[offset + 0x24..offset + 0x28])? as usize;
+        let keyframes_offset = console.read_u32(&raw[offset + 0x20..offset + 0x24])?;
+        (0..keyframes_count)
+            .map(|i| {
+                let region_offset_offset = keyframes_offset as usize + Bin::header_length() + (i * 4);
+                console.read_u32(&raw[region_offset_offset..region_offset_offset + 4])
+            })
+            .collect()
     }
 }
 
 /// Structure representing the in-game `Game::SpitterKeyframe` object type.
 ///
 /// This represents an individual keyframe within a spitter animation.
+#[derive(Deserialize, Serialize)]
 pub struct SpitterKeyframe {
+    /// Unknown property at offset +00c.
+    pub unknown_00c: u32,
+
+    #[serde(skip)]
     /// The event to run on the keyframe, if any.
     pub event: Option<EventSequence>,
 }
@@ -91,6 +202,9 @@ impl SerialisedShrekSuperSlamGameObject for SpitterKeyframe {
         let raw = &bin.raw;
         let c = bin.console;
 
+        // Unknown fields
+        let unknown_00c = c.read_u32(&raw[offset + 0x0C..offset + 0x10])?;
+
         // The offset to a EventSequence, if any, is at +BC
         let sequence_event_offset = c.read_u32(&raw[offset + 0xBC..offset + 0xC0])?;
         let event = if sequence_event_offset != 0 {
@@ -99,6 +213,22 @@ impl SerialisedShrekSuperSlamGameObject for SpitterKeyframe {
             None
         };
 
-        Ok(SpitterKeyframe { event, })
+        Ok(SpitterKeyframe { unknown_00c, event, })
+    }
+}
+
+impl WriteableShrekSuperSlamGameObject for SpitterKeyframe {
+    /// Writes the object back to its `bin` file at the given `offset`.
+    fn write(&self, bin: &mut Bin, offset: usize) -> Result<(), Error> {
+        // Write back only fixed-length numeric fields to the new object - other
+        // fields such as strings would modify the size of the file and
+        // invalidate all offsets
+        let c = bin.console;
+
+        // Unknown fields
+        bin.raw
+            .splice(offset + 0x0C..offset + 0x10, c.write_u32(self.unknown_00c)?);
+
+        Ok(())
     }
 }

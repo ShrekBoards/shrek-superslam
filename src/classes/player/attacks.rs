@@ -46,6 +46,9 @@ pub struct AttackMoveType {
     /// If true, the attack hits characters that are knocked down.
     pub hits_otg: bool,
 
+    /// If true, move is unaffected by gravity (e.g. Cyclops and Hook airdash).
+    pub ignore_gravity: bool,
+
     /// If true, the attack passes through and does no damage or knockback.
     pub intangible: bool,
 
@@ -127,9 +130,6 @@ pub struct AttackMoveType {
 
     /// Unknown property at offset +041
     pub unknown_041: bool,
-
-    /// Unknown property at offset +042
-    pub unknown_042: bool,
 
     /// Unknown property at offset +043
     pub unknown_043: bool,
@@ -320,6 +320,7 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         let knocks_down = raw[offset + 0x34] != 0;
         let disabled = raw[offset + 0x35] != 0;
         let intangible = raw[offset + 0x3A] != 0;
+        let ignore_gravity = raw[offset + 0x42] != 0;
         let is_slam_at_any_percent = raw[offset + 0x4A] != 0;
 
         let unknown_02d = raw[offset + 0x2D] != 0;
@@ -331,7 +332,6 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         let unknown_039 = raw[offset + 0x39] != 0;
         let unknown_040 = raw[offset + 0x40] != 0;
         let unknown_041 = raw[offset + 0x41] != 0;
-        let unknown_042 = raw[offset + 0x42] != 0;
         let unknown_043 = raw[offset + 0x43] != 0;
         let unknown_044 = raw[offset + 0x44] != 0;
         let unknown_045 = raw[offset + 0x45];
@@ -370,6 +370,7 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             disabled,
             hitboxes,
             hits_otg,
+            ignore_gravity,
             intangible,
             invincibility,
             is_slam,
@@ -398,7 +399,6 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             unknown_03c,
             unknown_040,
             unknown_041,
-            unknown_042,
             unknown_043,
             unknown_044,
             unknown_045_max_255: unknown_045,
@@ -472,6 +472,7 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
         bin.raw[offset + 0x34] = self.knocks_down as u8;
         bin.raw[offset + 0x35] = self.disabled as u8;
         bin.raw[offset + 0x3A] = self.intangible as u8;
+        bin.raw[offset + 0x42] = self.ignore_gravity as u8;
         bin.raw[offset + 0x4A] = self.is_slam_at_any_percent as u8;
         bin.raw
             .splice(offset + 0x74..offset + 0x78, c.write_f32(self.aim_range)?);
@@ -563,7 +564,6 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
         bin.raw[offset + 0x39] = self.unknown_039 as u8;
         bin.raw[offset + 0x40] = self.unknown_040 as u8;
         bin.raw[offset + 0x41] = self.unknown_041 as u8;
-        bin.raw[offset + 0x42] = self.unknown_042 as u8;
         bin.raw[offset + 0x43] = self.unknown_043 as u8;
         bin.raw[offset + 0x44] = self.unknown_044 as u8;
         bin.raw[offset + 0x45] = self.unknown_045_max_255;

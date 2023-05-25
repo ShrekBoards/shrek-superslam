@@ -56,6 +56,10 @@ pub struct AttackMoveType {
     /// meter is full.
     pub is_slam: bool,
 
+    /// If true, slams the opponent on contact and drains the SLAM bar to zero,
+    /// no matter the SLAM bar's current value.
+    pub is_slam_at_any_percent: bool,
+
     /// The amount the attack knocks the opponent back. Positive pushes away, negative pulls toward.
     pub knockback: f32,
 
@@ -144,9 +148,6 @@ pub struct AttackMoveType {
 
     /// Unknown property at offset +049
     pub unknown_049_does_something_if_5_max_value_255: u8,
-
-    /// Unknown property at offset +04A
-    pub unknown_04a: bool,
 
     /// Unknown property at offset +04B
     pub unknown_04b: bool,
@@ -319,6 +320,7 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         let knocks_down = raw[offset + 0x34] != 0;
         let disabled = raw[offset + 0x35] != 0;
         let intangible = raw[offset + 0x3A] != 0;
+        let is_slam_at_any_percent = raw[offset + 0x4A] != 0;
 
         let unknown_02d = raw[offset + 0x2D] != 0;
         let unknown_02f = raw[offset + 0x2F] != 0;
@@ -336,7 +338,6 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         let unknown_046 = raw[offset + 0x46] as i8;
         let unknown_047 = raw[offset + 0x47] != 0;
         let unknown_049 = raw[offset + 0x49];
-        let unknown_04a = raw[offset + 0x4A] != 0;
         let unknown_04b = raw[offset + 0x4B] != 0;
 
         // Read the projectile type the attack spawns, if any
@@ -372,6 +373,7 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             intangible,
             invincibility,
             is_slam,
+            is_slam_at_any_percent,
             knocks_down,
             knockback,
             lock_position,
@@ -403,7 +405,6 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             unknown_046_max_128: unknown_046,
             unknown_047,
             unknown_049_does_something_if_5_max_value_255: unknown_049,
-            unknown_04a,
             unknown_04b,
             unknown_070,
             unknown_078,
@@ -471,6 +472,7 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
         bin.raw[offset + 0x34] = self.knocks_down as u8;
         bin.raw[offset + 0x35] = self.disabled as u8;
         bin.raw[offset + 0x3A] = self.intangible as u8;
+        bin.raw[offset + 0x4A] = self.is_slam_at_any_percent as u8;
         bin.raw
             .splice(offset + 0x74..offset + 0x78, c.write_f32(self.aim_range)?);
         bin.raw
@@ -568,7 +570,6 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
         bin.raw[offset + 0x46] = self.unknown_046_max_128 as u8;
         bin.raw[offset + 0x47] = self.unknown_047 as u8;
         bin.raw[offset + 0x49] = self.unknown_049_does_something_if_5_max_value_255;
-        bin.raw[offset + 0x4A] = self.unknown_04a as u8;
         bin.raw[offset + 0x4B] = self.unknown_04b as u8;
 
         // Write the attack's hitboxes back to the .bin file too

@@ -763,8 +763,8 @@ pub struct AttackMoveRegion {
     /// The delay (in seconds?) from the attack starting to the hitbox coming out.
     pub delay: f32,
 
-    /// The angle of the hitbox - smaller wraps more around the character.
-    pub width: f32,
+    /// The arc of the hitbox - smaller wraps more around the character.
+    pub arc: f32,
 
     /// The height of the hitbox - larger extends out wider.
     pub radius: f32,
@@ -804,7 +804,7 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveRegion {
 
         Ok(AttackMoveRegion {
             delay: c.read_f32(&bin.raw[offset + 0x04..offset + 0x08])?,
-            width: c.read_f32(&bin.raw[offset + 0x30..offset + 0x34])?,
+            arc: c.read_f32(&bin.raw[offset + 0x30..offset + 0x34])?,
             radius: c.read_f32(&bin.raw[offset + 0x38..offset + 0x3C])?,
             unknown_010: c.read_f32(&bin.raw[offset + 0x10..offset + 0x14])?,
             unknown_024: c.read_f32(&bin.raw[offset + 0x24..offset + 0x28])?,
@@ -823,12 +823,12 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveRegion {
     /// use shrek_superslam::classes::AttackMoveRegion;
     /// use shrek_superslam::files::Bin;
     ///
-    /// // Load a hitbox from the .bin file, modify the width, and write it back
+    /// // Load a hitbox from the .bin file, modify the arc, and write it back
     /// # let my_bin_bytes = vec![0x00, 0x01, 0x02];
     /// let mut bin = Bin::new(my_bin_bytes, Console::PC)
     ///                    .unwrap_or_else(|e| panic!("Failed to read bin bytes: {:?}", e));
     /// let mut hitbox = bin.get_object_from_offset::<AttackMoveRegion>(0x1500).unwrap();
-    /// hitbox.width = 5.0;
+    /// hitbox.arc = 5.0;
     /// hitbox.write(&mut bin, 0x1500).unwrap();
     /// ```
     fn write(&self, bin: &mut Bin, offset: usize) -> Result<(), Error> {
@@ -839,7 +839,7 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveRegion {
         bin.raw
             .splice(offset + 0x04..offset + 0x08, c.write_f32(self.delay)?);
         bin.raw
-            .splice(offset + 0x30..offset + 0x34, c.write_f32(self.width)?);
+            .splice(offset + 0x30..offset + 0x34, c.write_f32(self.arc)?);
         bin.raw
             .splice(offset + 0x38..offset + 0x3C, c.write_f32(self.radius)?);
 

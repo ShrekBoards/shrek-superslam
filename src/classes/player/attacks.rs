@@ -196,6 +196,9 @@ pub struct AttackMoveType {
     /// Unknown property at offset +0C4
     pub unknown_0c4: f32,
 
+    /// Unknown property at offset +0C8
+    pub unknown_0c8: f32,
+
     /// Unknown property at offset +0D8
     pub unknown_0d8: f32,
 
@@ -302,6 +305,7 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         let unknown_0b8 = c.read_f32(&raw[offset + 0xB8..offset + 0xBC])?;
         let unknown_0c0 = c.read_f32(&raw[offset + 0xC0..offset + 0xC4])?;
         let unknown_0c4 = c.read_f32(&raw[offset + 0xC4..offset + 0xC8])?;
+        let unknown_0c8 = c.read_f32(&raw[offset + 0xC8..offset + 0xCC])?;
         let unknown_0d8 = c.read_f32(&raw[offset + 0xD8..offset + 0xDC])?;
         let unknown_0dc = c.read_f32(&raw[offset + 0xDC..offset + 0xE0])?;
         let unknown_0e0 = c.read_f32(&raw[offset + 0xE0..offset + 0xE4])?;
@@ -423,6 +427,7 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             unknown_0b8,
             unknown_0c0_shielded_opponent_horizontal_vector: unknown_0c0,
             unknown_0c4,
+            unknown_0c8,
             unknown_0d8,
             unknown_0dc,
             unknown_0e0,
@@ -536,6 +541,8 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
             .splice(offset + 0xC0..offset + 0xC4, c.write_f32(self.unknown_0c0_shielded_opponent_horizontal_vector)?);
         bin.raw
             .splice(offset + 0xC4..offset + 0xC8, c.write_f32(self.unknown_0c4)?);
+        bin.raw
+            .splice(offset + 0xC8..offset + 0xCC, c.write_f32(self.unknown_0c8)?);
         bin.raw
             .splice(offset + 0xD8..offset + 0xDC, c.write_f32(self.unknown_0d8)?);
         bin.raw

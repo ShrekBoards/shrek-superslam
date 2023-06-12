@@ -34,6 +34,13 @@ fn print_class_additional_info(bin: &Bin, object: &BinObject) {
             print!(" ({})", attack.name);
         }
 
+        "Game::PhysicsFighting" => {
+            let physics = bin
+                .get_object_from_offset::<PhysicsFighting>(object.offset)
+                .unwrap();
+            print!(" (hit_pause_delay: {})", physics.hit_pause_delay);
+        }
+
         _ => {}
     };
 }

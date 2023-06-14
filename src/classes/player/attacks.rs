@@ -52,6 +52,9 @@ pub struct AttackMoveType {
     /// If true, the attack hits characters that are knocked down.
     pub hits_otg: bool,
 
+    /// The amount the attack knocks the opponent back. Positive pushes away, negative pulls toward.
+    pub horizontal_knockback: f32,
+
     /// If true, move is unaffected by gravity (e.g. Cyclops and Hook airdash).
     pub ignore_gravity: bool,
 
@@ -68,9 +71,6 @@ pub struct AttackMoveType {
     /// If true, slams the opponent on contact and drains the SLAM bar to zero,
     /// no matter the SLAM bar's current value.
     pub is_slam_at_any_percent: bool,
-
-    /// The amount the attack knocks the opponent back. Positive pushes away, negative pulls toward.
-    pub knockback: f32,
 
     /// True if the attack knocks the opponent down, false if not.
     pub knocks_down: bool,
@@ -287,7 +287,7 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         let multi_hit_speed = c.read_f32(&raw[offset + 0xA0..offset + 0xA4])?;
         let stun = c.read_f32(&raw[offset + 0xA4..offset + 0xA8])?;
         let shield_break_stun_time = c.read_f32(&raw[offset + 0xA8..offset + 0xAC])?;
-        let knockback = c.read_f32(&raw[offset + 0xAC..offset + 0xB0])?;
+        let horizontal_knockback = c.read_f32(&raw[offset + 0xAC..offset + 0xB0])?;
         let vertical_knockback = c.read_f32(&raw[offset + 0xBC..offset + 0xC0])?;
         let animation_speed_on_hit = c.read_f32(&raw[offset + 0x138..offset + 0x13C])?;
         let animation_speed_on_miss = c.read_f32(&raw[offset + 0x13C..offset + 0x140])?;
@@ -380,13 +380,13 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             disabled,
             hitboxes,
             hits_otg,
+            horizontal_knockback,
             ignore_gravity,
             intangible,
             invincibility,
             is_slam,
             is_slam_at_any_percent,
             knocks_down,
-            knockback,
             lock_position,
             maintain_direction,
             multi_hit_speed,
@@ -506,7 +506,7 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
         bin.raw
             .splice(offset + 0xA8..offset + 0xAC, c.write_f32(self.shield_break_stun_time)?);
         bin.raw
-            .splice(offset + 0xAC..offset + 0xB0, c.write_f32(self.knockback)?);
+            .splice(offset + 0xAC..offset + 0xB0, c.write_f32(self.horizontal_knockback)?);
         bin.raw
             .splice(offset + 0xBC..offset + 0xC0, c.write_f32(self.vertical_knockback)?);
         bin.raw

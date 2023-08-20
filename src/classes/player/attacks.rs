@@ -112,7 +112,14 @@ pub struct AttackMoveType {
 
     /// Distance the move connecting launches an opponent upwards. Negative
     /// values launch downwards.
-    pub vertical_knockback: f32,
+    pub vertical_knockback1: f32,
+
+    /// Distance the move connecting launches an opponent upwards. Unlike
+    /// vertical_knockback1, does not effect high wall attacks.
+    pub vertical_knockback2: f32,
+
+    /// Another value relating to vertical knockback.
+    pub vertical_knockback3: f32,
 
     /// Unknown property at offset +008
     pub unknown_008: f32,
@@ -185,13 +192,6 @@ pub struct AttackMoveType {
 
     /// Unknown property at offset +0B4
     pub unknown_0b4: f32,
-
-    /// Unknown property at offset +0B8
-    pub unknown_0b8: f32,
-
-    /// Unknown property at offset +0C0, relates to opponents horizontal vector
-    /// when colliding with a shielded opponent?
-    pub unknown_0c0_shielded_opponent_horizontal_vector: f32,
 
     /// Unknown property at offset +0C4
     pub unknown_0c4: f32,
@@ -288,7 +288,9 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         let stun = c.read_f32(&raw[offset + 0xA4..offset + 0xA8])?;
         let shield_break_stun_time = c.read_f32(&raw[offset + 0xA8..offset + 0xAC])?;
         let horizontal_knockback = c.read_f32(&raw[offset + 0xAC..offset + 0xB0])?;
-        let vertical_knockback = c.read_f32(&raw[offset + 0xBC..offset + 0xC0])?;
+        let vertical_knockback1 = c.read_f32(&raw[offset + 0xB8..offset + 0xBC])?;
+        let vertical_knockback2 = c.read_f32(&raw[offset + 0xBC..offset + 0xC0])?;
+        let vertical_knockback3 = c.read_f32(&raw[offset + 0xC0..offset + 0xC4])?;
         let animation_speed_on_hit = c.read_f32(&raw[offset + 0x138..offset + 0x13C])?;
         let animation_speed_on_miss = c.read_f32(&raw[offset + 0x13C..offset + 0x140])?;
 
@@ -302,8 +304,6 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         let unknown_090 = c.read_f32(&raw[offset + 0x90..offset + 0x94])?;
         let unknown_0b0 = c.read_f32(&raw[offset + 0xB0..offset + 0xB4])?;
         let unknown_0b4 = c.read_f32(&raw[offset + 0xB4..offset + 0xB8])?;
-        let unknown_0b8 = c.read_f32(&raw[offset + 0xB8..offset + 0xBC])?;
-        let unknown_0c0 = c.read_f32(&raw[offset + 0xC0..offset + 0xC4])?;
         let unknown_0c4 = c.read_f32(&raw[offset + 0xC4..offset + 0xC8])?;
         let unknown_0c8 = c.read_f32(&raw[offset + 0xC8..offset + 0xCC])?;
         let unknown_0d8 = c.read_f32(&raw[offset + 0xD8..offset + 0xDC])?;
@@ -397,7 +397,9 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             shield_breaks_without_stun,
             shield_break_stun_time,
             stun,
-            vertical_knockback,
+            vertical_knockback1,
+            vertical_knockback2,
+            vertical_knockback3,
             hitbox_offsets,
             projectile_offset,
             unknown_008,
@@ -424,8 +426,6 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             unknown_090,
             unknown_0b0,
             unknown_0b4,
-            unknown_0b8,
-            unknown_0c0_shielded_opponent_horizontal_vector: unknown_0c0,
             unknown_0c4,
             unknown_0c8,
             unknown_0d8,
@@ -508,7 +508,11 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
         bin.raw
             .splice(offset + 0xAC..offset + 0xB0, c.write_f32(self.horizontal_knockback)?);
         bin.raw
-            .splice(offset + 0xBC..offset + 0xC0, c.write_f32(self.vertical_knockback)?);
+            .splice(offset + 0xB8..offset + 0xBC, c.write_f32(self.vertical_knockback1)?);
+        bin.raw
+            .splice(offset + 0xBC..offset + 0xC0, c.write_f32(self.vertical_knockback2)?);
+        bin.raw
+            .splice(offset + 0xC0..offset + 0xC4, c.write_f32(self.vertical_knockback3)?);
         bin.raw
             .splice(offset + 0x138..offset + 0x13C, c.write_f32(self.animation_speed_on_hit)?);
         bin.raw
@@ -535,10 +539,6 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
             .splice(offset + 0xB0..offset + 0xB4, c.write_f32(self.unknown_0b0)?);
         bin.raw
             .splice(offset + 0xB4..offset + 0xB8, c.write_f32(self.unknown_0b4)?);
-        bin.raw
-            .splice(offset + 0xB8..offset + 0xBC, c.write_f32(self.unknown_0b8)?);
-        bin.raw
-            .splice(offset + 0xC0..offset + 0xC4, c.write_f32(self.unknown_0c0_shielded_opponent_horizontal_vector)?);
         bin.raw
             .splice(offset + 0xC4..offset + 0xC8, c.write_f32(self.unknown_0c4)?);
         bin.raw

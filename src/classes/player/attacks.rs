@@ -53,7 +53,13 @@ pub struct AttackMoveType {
     pub hits_otg: bool,
 
     /// The amount the attack knocks the opponent back. Positive pushes away, negative pulls toward.
-    pub horizontal_knockback: f32,
+    pub horizontal_knockback1: f32,
+
+    /// Sometimes used in place of horizontal_knockback1.
+    pub horizontal_knockback2: f32,
+
+    /// Sometimes used in place of horizontal_knockback1.
+    pub horizontal_knockback3: f32,
 
     /// If true, move is unaffected by gravity (e.g. Cyclops and Hook airdash).
     pub ignore_gravity: bool,
@@ -187,12 +193,6 @@ pub struct AttackMoveType {
     /// Unknown property at offset +090
     pub unknown_090: f32,
 
-    /// Unknown property at offset +0B0
-    pub unknown_0b0: f32,
-
-    /// Unknown property at offset +0B4
-    pub unknown_0b4: f32,
-
     /// Unknown property at offset +0C4
     pub unknown_0c4: f32,
 
@@ -287,7 +287,9 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         let multi_hit_speed = c.read_f32(&raw[offset + 0xA0..offset + 0xA4])?;
         let stun = c.read_f32(&raw[offset + 0xA4..offset + 0xA8])?;
         let shield_break_stun_time = c.read_f32(&raw[offset + 0xA8..offset + 0xAC])?;
-        let horizontal_knockback = c.read_f32(&raw[offset + 0xAC..offset + 0xB0])?;
+        let horizontal_knockback1 = c.read_f32(&raw[offset + 0xAC..offset + 0xB0])?;
+        let horizontal_knockback2 = c.read_f32(&raw[offset + 0xB0..offset + 0xB4])?;
+        let horizontal_knockback3 = c.read_f32(&raw[offset + 0xB4..offset + 0xB8])?;
         let vertical_knockback1 = c.read_f32(&raw[offset + 0xB8..offset + 0xBC])?;
         let vertical_knockback2 = c.read_f32(&raw[offset + 0xBC..offset + 0xC0])?;
         let vertical_knockback3 = c.read_f32(&raw[offset + 0xC0..offset + 0xC4])?;
@@ -302,8 +304,6 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
         let unknown_078 = c.read_f32(&raw[offset + 0x78..offset + 0x7C])?;
         let unknown_07c = c.read_f32(&raw[offset + 0x7C..offset + 0x80])?;
         let unknown_090 = c.read_f32(&raw[offset + 0x90..offset + 0x94])?;
-        let unknown_0b0 = c.read_f32(&raw[offset + 0xB0..offset + 0xB4])?;
-        let unknown_0b4 = c.read_f32(&raw[offset + 0xB4..offset + 0xB8])?;
         let unknown_0c4 = c.read_f32(&raw[offset + 0xC4..offset + 0xC8])?;
         let unknown_0c8 = c.read_f32(&raw[offset + 0xC8..offset + 0xCC])?;
         let unknown_0d8 = c.read_f32(&raw[offset + 0xD8..offset + 0xDC])?;
@@ -380,7 +380,9 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             disabled,
             hitboxes,
             hits_otg,
-            horizontal_knockback,
+            horizontal_knockback1,
+            horizontal_knockback2,
+            horizontal_knockback3,
             ignore_gravity,
             intangible,
             invincibility,
@@ -424,8 +426,6 @@ impl SerialisedShrekSuperSlamGameObject for AttackMoveType {
             unknown_078,
             unknown_07c,
             unknown_090,
-            unknown_0b0,
-            unknown_0b4,
             unknown_0c4,
             unknown_0c8,
             unknown_0d8,
@@ -506,7 +506,11 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
         bin.raw
             .splice(offset + 0xA8..offset + 0xAC, c.write_f32(self.shield_break_stun_time)?);
         bin.raw
-            .splice(offset + 0xAC..offset + 0xB0, c.write_f32(self.horizontal_knockback)?);
+            .splice(offset + 0xAC..offset + 0xB0, c.write_f32(self.horizontal_knockback1)?);
+        bin.raw
+            .splice(offset + 0xB0..offset + 0xB4, c.write_f32(self.horizontal_knockback2)?);
+        bin.raw
+            .splice(offset + 0xB4..offset + 0xB8, c.write_f32(self.horizontal_knockback3)?);
         bin.raw
             .splice(offset + 0xB8..offset + 0xBC, c.write_f32(self.vertical_knockback1)?);
         bin.raw
@@ -535,10 +539,6 @@ impl WriteableShrekSuperSlamGameObject for AttackMoveType {
             .splice(offset + 0x7C..offset + 0x80, c.write_f32(self.unknown_07c)?);
         bin.raw
             .splice(offset + 0x90..offset + 0x94, c.write_f32(self.unknown_090)?);
-        bin.raw
-            .splice(offset + 0xB0..offset + 0xB4, c.write_f32(self.unknown_0b0)?);
-        bin.raw
-            .splice(offset + 0xB4..offset + 0xB8, c.write_f32(self.unknown_0b4)?);
         bin.raw
             .splice(offset + 0xC4..offset + 0xC8, c.write_f32(self.unknown_0c4)?);
         bin.raw
